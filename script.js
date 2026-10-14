@@ -116,7 +116,11 @@ function genTables() {
   if (t === 0) { q = `${a} × ${b} = ${inp('num')}`; ans = a * b; }
   else if (t === 1) { q = `${a} × ${inp('num')} = ${a * b}`; ans = b; }
   else { q = `${a * b} ÷ ${a} = ${inp('num')}`; ans = b; }
+  const hints = t === 0 ? [`Récite la table de ${a}.`, `${a} × ${b - 1} = ${a * (b - 1)} : ajoute encore ${a}.`]
+    : t === 1 ? [`Cherche ${a * b} dans la table de ${a}.`, `${a} × ${b - 1} = ${a * (b - 1)} : il manque encore ${a}.`]
+      : [`${a * b} ÷ ${a} : combien de fois ${a} dans ${a * b} ?`, `Cherche dans la table de ${a} : ${a} × … = ${a * b}.`];
   return {
+    hints,
     q: `<p class="big">${q}</p>`,
     check(r) {
       const x = val(r); if (!x) return null;
@@ -133,8 +137,10 @@ const USUELLES = [[1, 2], [1, 4], [3, 4], [3, 2], [4, 2], [5, 2], [1, 10], [100,
 function genDecimal() {
   const [n, d] = pick(USUELLES), v = n / d;
   const why = d === 1 ? `Diviser par 1 ne change rien : ${F(n, d)} = ${n}.` : `${F(n, d)} = ${n} ÷ ${d} = ${fmt(v)}.`;
+  const known = { 2: `${F(1, 2)} = 0,5 (un demi).`, 4: `${F(1, 4)} = 0,25 (un quart).`, 10: `${F(1, 10)} = 0,1 (un dixième).`, 5: `${F(1, 5)} = 0,2 (un cinquième).`, 100: `${F(1, 100)} = 0,01 (un centième).`, 1: 'Diviser par 1 ne change pas le nombre.', 3: 'Pense à la table de 3.' }[d];
   if (Math.random() < 0.6) {
     return {
+      hints: [`Une fraction, c'est une division : ${F(n, d)} = ${n} ÷ ${d}.`, known + (n > 1 && d > 1 ? ` Ici, il y en a ${n}.` : '')],
       q: `<p class="big">${F(n, d)} = ${inp('num')}</p><p class="hint">Donne l'écriture décimale.</p>`,
       check(r) {
         const x = val(r); if (!x) return null;
@@ -145,6 +151,7 @@ function genDecimal() {
     };
   }
   return {
+    hints: [`Lis le nombre : combien de dixièmes ou de centièmes dans ${fmt(v)} ?`, `${fmt(v)} = ${F(Math.round(v * 100), 100)} : tu peux ensuite simplifier.`],
     q: `<p class="big">${fmt(v)} = ${inp('frac')}</p><p class="hint">Écris ce nombre sous forme de fraction (exemple : 3/4).</p>`,
     check(r) {
       const x = val(r); if (!x) return null;
@@ -161,6 +168,7 @@ function genQuotient() {
   let b = rand(1, 60);
   if (b % a === 0 && Math.random() < 0.75) b++;
   return {
+    hints: [`Le nombre manquant, c'est ${b} ÷ ${a}.`, `En fraction : le résultat (${b}) en haut, le nombre connu (${a}) en bas.`],
     q: `<p class="big">${a} × ${inp('frac')} = ${b}</p><p class="hint">Écris le nombre manquant sous forme de fraction.</p>`,
     check(r) {
       const x = val(r); if (!x) return null;
@@ -177,6 +185,7 @@ function genQuotient() {
 function genLire() {
   const L = pickLine(), i = pickTick(L), v = i / L.den;
   return {
+    hints: ['Repère l\'unité : en combien de parts égales est partagé l\'écart entre 0 et 1 ?', `L'unité est partagée en ${L.den} : chaque graduation vaut ${F(1, L.den)}.`, `A est à ${Math.abs(i)} graduation${Math.abs(i) > 1 ? 's' : ''} ${i < 0 ? 'à gauche' : 'à droite'} de 0.`],
     q: `<p>Quelle est l'abscisse du point <b>A</b> ? <span class="hint">(fraction ou écriture décimale)</span></p>
         <div class="nl">${drawLine({ ...L, points: [{ v, label: 'A' }] })}</div>
         <p class="big">A ( ${inp('frac')} )</p>`,
@@ -194,6 +203,7 @@ function genPlacer() {
   const asFrac = i % L.den !== 0 && Math.random() < (L.den === 10 ? 0.3 : 0.55);
   const disp = asFrac ? Fs(i, L.den) : fmt(v);
   return {
+    hints: ['Compte en combien de parts égales l\'unité (de 0 à 1) est partagée.', `Chaque graduation vaut ${F(1, L.den)}.`, `${disp} = ${F(i, L.den)} : compte ${Math.abs(i)} graduation${Math.abs(i) > 1 ? 's' : ''} ${i < 0 ? 'vers la gauche' : 'vers la droite'} à partir de 0.`],
     q: `<p>Place le nombre <b class="big-inline">${disp}</b> : clique sur la bonne graduation.</p>
         <div class="nl">${drawLine({ ...L, clickable: true })}</div>`,
     mount(r) {
@@ -247,6 +257,7 @@ function genEgales() {
   };
 
   return {
+    hints: [`Simplifie d'abord ${F(n, d)} au maximum.`, `${F(n, d)} = ${F(p, q)}. Cherche les fractions qui se simplifient aussi en ${F(p, q)}.`, 'Attention : ajouter le même nombre en haut et en bas ne donne jamais une fraction égale.'],
     q: `<p>Coche <b>toutes</b> les fractions égales à ${F(n, d)} :</p>
         <div class="choices">${items.map((it, j) => `<label class="choice"><input type="checkbox" class="cb" data-j="${j}"> ${F(it.f[0], it.f[1])}</label>`).join('')}</div>`,
     check(r) {
@@ -276,7 +287,9 @@ function genSimplifier() {
   do { p = rand(1, 20); q = rand(2, 12); } while (gcd(p, q) !== 1 || p === q);
   const k = pick([2, 3, 4, 5, 6, 7, 8, 9, 10]);
   const n = p * k, d = q * k;
+  const spf = [2, 3, 5, 7].find((x) => k % x === 0) || k;
   return {
+    hints: [`Cherche un nombre qui divise à la fois ${n} et ${d} (essaie 2, 3, 5…).`, `${n} et ${d} sont tous les deux dans la table de ${spf}.`, `Tu peux diviser en haut et en bas par ${k} d'un seul coup.`],
     q: `<p class="big">${F(n, d)} = ${inp('frac')}</p><p class="hint">Simplifie au maximum (exemple de saisie : 13/4).</p>`,
     check(r) {
       const x = val(r); if (!x) return null;
@@ -302,6 +315,7 @@ function genFormes() {
   const g = gcd(n, den), irrN = n / g, irrD = den / g;
   const rg = gcd(rest, den), rN = rest / rg, rD = den / rg;
   return {
+    hints: [`La partie entière, c'est le nombre avant la virgule : ${E}.`, `${fmt(v)} = ${E} + ${fmt(v - E)}.`, `${fmt(v)} = ${F(decN, D)} : simplifie cette fraction pour obtenir la fraction irréductible.`],
     q: `<p>Écris le nombre <b>${fmt(v)}</b> sous trois formes :</p>
       <div class="form-lines">
         <div class="form-line">${fmt(v)} = ${inp('frac', 'Fraction décimale')}<small>fraction de dénominateur 10 ou 100</small></div>
@@ -426,7 +440,7 @@ function buildExpr(tpls) {
     });
     const clean = toks.map((k) => (k.ph ? { t: 'n', v: k.v } : k));
     const ev = evalSteps(clean, 400);
-    if (!ev) continue;
+    if (!ev || ev.steps.some((st) => st.res === 0)) continue;
     return { toks: clean, ...ev };
   }
   return null;
@@ -444,7 +458,13 @@ function genCalcFrom(tpls) {
   return () => {
     const e = buildExpr(tpls);
     const name = pick(['A', 'B', 'C', 'D', 'E', 'F']);
+    const s0 = e.steps[0];
     return {
+      hints: [
+        'Rappel de l\'ordre : 1. les parenthèses (les plus intérieures d\'abord) ; 2. × et : ; 3. + et −, de gauche à droite.',
+        `Commence par <b>${s0.a} ${s0.op} ${s0.b}</b> (${s0.rule}).`,
+        `Après la première étape : ${name} = ${tokStr(s0.toks)}`,
+      ],
       q: `<p>Calcule en respectant les règles :</p><p class="big">${name} = ${tokStr(e.toks)}</p><p class="big">${name} = ${inp('num', 'Résultat')}</p>`,
       check(r) {
         const x = val(r); if (!x) return null;
@@ -461,7 +481,12 @@ function genFirstOp() {
   const html = e.toks.map((k, i) => (k.t === 'op'
     ? `<button type="button" class="opbtn" data-i="${i}" aria-label="${OPNOM[k.v]}">${k.v}</button>`
     : `<span class="${k.t === 'n' ? 'tn' : 'tp'}">${tokTxt(k)}</span>`)).join('');
+  const hasPar = e.toks.some((k) => k.t === '(');
   return {
+    hints: [
+      hasPar ? 'Il y a des parenthèses : on commence par l\'intérieur, et par les plus intérieures s\'il y en a plusieurs.' : 'Il n\'y a pas de parenthèses : regarde s\'il y a des × ou des :.',
+      `Règle à utiliser : ${first.rule}.`,
+    ],
     q: `<p>Clique sur l'opération à effectuer <b>en premier</b> :</p><div class="expr">${html}</div>`,
     mount(r) {
       r.querySelectorAll('.opbtn').forEach((b) => b.addEventListener('click', () => {
@@ -510,6 +535,8 @@ function genTrees() {
 }
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
+const withHints = (o, h) => { o.hints = h; return o; };
+
 /** QCM générique (boutons radio) */
 function mcq(prompt, options, correct, explain, { col = false, label } = {}) {
   const order = shuffle(options.map((_, i) => i));
@@ -553,7 +580,7 @@ function genMot() {
         `L'opération est une ${OPNOM[op]}, donc ${ex} est ${opts[['+', '−', '×', ':'].indexOf(op)]}.`, { col: true });
     },
   ];
-  return pick(qs)();
+  return withHints(pick(qs)(), ['Somme et différence : les nombres s\'appellent des termes. Produit : des facteurs.', 'Quotient : le premier nombre est le dividende, le second est le diviseur.']);
 }
 
 function genDerniere() {
@@ -561,27 +588,30 @@ function genDerniere() {
   const toks = treeToks(tree);
   const name = pick(['A', 'B', 'C', 'D', 'E']);
   const ops = ['+', '−', '×', ':'];
-  return mcq(`<p class="big">${name} = ${tokStr(toks)}</p><p>${name} est …</p>`,
+  return withHints(mcq(`<p class="big">${name} = ${tokStr(toks)}</p><p>${name} est …</p>`,
     ops.map((o) => TYPE[o]), ops.indexOf(tree.op),
-    `Pour calculer ${name}, la dernière opération effectuée est une <b>${OPNOM[tree.op]}</b>.<br>${name} est ${phrase(tree)}.${stepsHTML(name, toks)}`);
+    `Pour calculer ${name}, la dernière opération effectuée est une <b>${OPNOM[tree.op]}</b>.<br>${name} est ${phrase(tree)}.${stepsHTML(name, toks)}`),
+    ['Fais le calcul dans l\'ordre des priorités. Quelle opération fais-tu en <b>dernier</b> ?', 'Addition → somme ; soustraction → différence ; multiplication → produit ; division → quotient.']);
 }
 
 function genPhraseVersCalcul() {
   const { all, tree } = genTrees();
   const name = pick(['A', 'B', 'C', 'D', 'E']);
   const opts = all.map((t) => `${name} = ${tokStr(treeToks(t))}`);
-  return mcq(`<p class="statement">Quel calcul correspond à la phrase :<br><b>« ${name} est ${phrase(tree)} »</b> ?</p>`,
+  return withHints(mcq(`<p class="statement">Quel calcul correspond à la phrase :<br><b>« ${name} est ${phrase(tree)} »</b> ?</p>`,
     opts, all.indexOf(tree),
-    `« ${cap(phrase(tree))} » : on commence par le premier mot. C'est ${TYPE[tree.op]}, donc la <b>dernière</b> opération est une ${OPNOM[tree.op]}.<br>${name} = ${tokStr(treeToks(tree))}`, { col: true });
+    `« ${cap(phrase(tree))} » : on commence par le premier mot. C'est ${TYPE[tree.op]}, donc la <b>dernière</b> opération est une ${OPNOM[tree.op]}.<br>${name} = ${tokStr(treeToks(tree))}`, { col: true }),
+    ['Le premier mot de la phrase (somme, différence, produit, quotient) donne la <b>dernière</b> opération.', `Ici, c'est ${TYPE[tree.op]} : la dernière opération est une ${OPNOM[tree.op]}.`, 'Ce qui doit être calculé avant doit être entre parenthèses (sauf si × ou : est déjà prioritaire).']);
 }
 
 function genCalculVersPhrase() {
   const { all, tree } = genTrees();
   const name = pick(['A', 'B', 'C', 'D', 'E']);
   const opts = all.map((t) => `${name} est ${phrase(t)}.`);
-  return mcq(`<p>Quelle phrase traduit le calcul :</p><p class="big">${name} = ${tokStr(treeToks(tree))}</p>`,
+  return withHints(mcq(`<p>Quelle phrase traduit le calcul :</p><p class="big">${name} = ${tokStr(treeToks(tree))}</p>`,
     opts, all.indexOf(tree),
-    `La dernière opération effectuée est une <b>${OPNOM[tree.op]}</b>, donc ${name} est ${TYPE[tree.op]} :<br>${name} est ${phrase(tree)}.`, { col: true });
+    `La dernière opération effectuée est une <b>${OPNOM[tree.op]}</b>, donc ${name} est ${TYPE[tree.op]} :<br>${name} est ${phrase(tree)}.`, { col: true }),
+    ['Cherche la dernière opération effectuée dans le calcul.', `La dernière opération est une ${OPNOM[tree.op]} : la phrase commence par « ${cap(NOM[tree.op][0])} ».`]);
 }
 
 /** Démonstrations de la fiche */
@@ -653,6 +683,7 @@ const TOOLS = [
   { id: 'point', icon: '●', label: 'Point' },
   { id: 'line', icon: '⟷', label: 'Droite' },
   { id: 'perp', icon: '⊥', label: 'Équerre' },
+  { id: 'pan', icon: '✋', label: 'Déplacer' },
 ];
 const HELP = {
   seg: ['Règle : clique sur le point de départ.', 'Déplace, puis clique pour placer l\'extrémité.'],
@@ -660,6 +691,7 @@ const HELP = {
   circle: ['Compas : clique sur le centre.', 'Écarte le compas, puis clique pour tracer le cercle.'],
   angle: ['Rapporteur : clique sur le sommet de l\'angle (un point déjà placé).', 'Clique sur un point du côté de départ (le 0°).', 'Tourne jusqu\'à la bonne mesure, puis clique pour tracer la demi-droite.'],
   point: ['Point : clique pour placer un point. Il s\'accroche aux intersections.'],
+  pan: ['Déplacer : fais glisser la feuille pour déplacer toute la figure (si elle sort du cadre).'],
   perp: ['Équerre : clique sur la droite ou le segment de référence.', 'Clique sur le point par lequel doit passer la perpendiculaire.'],
 };
 
@@ -809,6 +841,7 @@ function createBoard(host, opts = {}) {
   function setTool(t) {
     cancel(); st.tool = t; st.adj = null;
     host.querySelectorAll('.tool[data-t]').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
+    svg.classList.toggle('panning', t === 'pan');
     help(); render();
   }
   function startPoint(s) {
@@ -1005,12 +1038,22 @@ function createBoard(host, opts = {}) {
     e.preventDefault();
     try { svg.setPointerCapture(e.pointerId); } catch (_) { /* rien */ }
     const p = toCm(e); st.cur = p;
+    if (st.tool === 'pan') { down = { p, pan: true }; svg.classList.add('grabbing'); return; }
     down = { p, started: st.step === 0 };
     if (st.step === 0) handle(p);
   });
-  svg.addEventListener('pointermove', (e) => { st.cur = toCm(e); preview(); });
+  svg.addEventListener('pointermove', (e) => {
+    st.cur = toCm(e);
+    if (down && down.pan) {
+      const dx = st.cur.x - down.p.x, dy = st.cur.y - down.p.y;
+      st.points.forEach((q) => { q.x += dx; q.y += dy; });
+      down.p = st.cur; render(); return;
+    }
+    preview();
+  });
   svg.addEventListener('pointerup', (e) => {
     if (!down) return;
+    if (down.pan) { down = null; svg.classList.remove('grabbing'); return; }
     const p = toCm(e); st.cur = p;
     const moved = G.dist(p, down.p) > 0.35;
     if (!down.started) handle(p);
@@ -1156,6 +1199,7 @@ function makeConstruction(mode) {
       type, names: [P, Q, R],
       text: `Trace le triangle ${tri} tel que ${P}${Q} = ${cm(c)}, ${P}${R} = ${cm(b)} et ${Q}${R} = ${cm(a)}.`,
       sides: [[P, Q, c], [P, R, b], [Q, R, a]], angles: [],
+      scene: () => scene3c([P, Q, R], T, { a, b, c }),
       method: [`Trace le segment [${P}${Q}] de ${cm(c)}.`, `Au compas, trace un arc de centre ${P} et de rayon ${cm(b)}.`, `Trace un arc de centre ${Q} et de rayon ${cm(a)}.`, `${R} est à l'intersection des deux arcs : place-le avec l'outil Point, puis trace [${P}${R}] et [${Q}${R}].`],
       fig: () => figure({ [P]: T[0], [Q]: T[1], [R]: T[2] }, [
         F2.arcAround(T[0], b, T[2]), F2.arcAround(T[1], a, T[2]),
@@ -1177,6 +1221,7 @@ function makeConstruction(mode) {
       type, names: [X, V, Y],
       text: `Trace le triangle ${tri} tel que ${X}${V} = ${cm(l1)}, ${Y}${V} = ${cm(l2)} et ${angHTML(X, V, Y)} = ${th}°.`,
       sides: [[X, V, l1], [Y, V, l2]], angles: [[X, V, Y, th]], segs: [[X, V], [V, Y], [X, Y]],
+      scene: () => scene2c1a([X, V, Y], T, { l1, l2, th }),
       method: [`Trace le segment [${X}${V}] de ${cm(l1)}.`, `Rapporteur : clique sur ${V} (le sommet), puis sur ${X} (le 0°), tourne jusqu'à ${th}° et clique.`, `Avec la règle, pars de ${V} le long de la demi-droite et place ${Y} à ${cm(l2)}.`, `Trace [${X}${Y}].`],
       fig: () => figure({ [X]: T[0], [V]: T[1], [Y]: T[2] }, [
         F2.seg(T[0], T[1]), F2.seg(T[1], T[2]), F2.seg(T[0], T[2]),
@@ -1197,6 +1242,7 @@ function makeConstruction(mode) {
     type, names: [E, F, Gn],
     text: `Trace le triangle ${tri} tel que ${E}${F} = ${cm(L)}, ${angHTML(F, E, Gn)} = ${al}° et ${angHTML(E, F, Gn)} = ${be}°.`,
     sides: [[E, F, L]], angles: [[F, E, Gn, al], [E, F, Gn, be]],
+    scene: () => scene1c2a([E, F, Gn], T, { L, al, be }),
     method: [`Trace le segment [${E}${F}] de ${cm(L)}.`, `Rapporteur : clique sur ${E}, puis sur ${F}, et trace la demi-droite à ${al}°.`, `Rapporteur : clique sur ${F}, puis sur ${E}, et trace la demi-droite à ${be}°, <b>du même côté</b>.`, `${Gn} est à l'intersection des deux demi-droites : place-le, puis trace [${E}${Gn}] et [${F}${Gn}].`],
     fig: () => figure({ [E]: T[0], [F]: T[1], [Gn]: T[2] }, [
       F2.seg(T[0], T[1]), F2.seg(T[0], T[2]), F2.seg(T[1], T[2]),
@@ -1240,6 +1286,8 @@ let CONSTRUCT_MODE = '';
 function genConstruire() {
   const spec = makeConstruction(CONSTRUCT_MODE);
   return {
+    hints: spec.method.slice(0, 3).map((m, i) => `Étape ${i + 1} : ${m}`),
+    anim: spec.scene,
     q: `<p class="statement">${spec.text}</p><div class="board"></div>`,
     mount(r) { r._board = createBoard(r.querySelector('.board'), { names: spec.names }); },
     check(r) { return checkTriangle(r._board, spec); },
@@ -1269,6 +1317,10 @@ function genTraceMediatrice() {
   const [nA, nB] = set;
   const names = ['I', 'J', 'K'].filter((n) => !set.includes(n));
   return {
+    hints: [`La médiatrice de [${nA}${nB}] est perpendiculaire à [${nA}${nB}] et passe par son milieu.`,
+      `Compas : trace un cercle de centre ${nA} puis un cercle de centre ${nB}, avec le même rayon, plus grand que ${cm(L / 2)}.`,
+      'Place les deux points où les cercles se coupent, puis trace la droite qui passe par ces deux points (outil Droite).'],
+    anim: () => sceneMediatrice([nA, nB], A, B, names),
     q: `<p class="statement">Trace la <b>médiatrice</b> du segment [${nA}${nB}] (${nA}${nB} = ${cm(L)}).</p><div class="board"></div>`,
     mount(r) { r._board = createBoard(r.querySelector('.board'), { names, tool: 'circle', given: { points: [{ name: nA, ...A }, { name: nB, ...B }], segs: [[nA, nB]] } }); },
     check(r) {
@@ -1294,6 +1346,10 @@ function genTraceDroite() {
   const BC = G.sub(C, B), M = G.mid(B, C);
   const foot = G.add(B, G.mul(G.norm(BC), G.dot(G.sub(A, B), G.norm(BC))));
   return {
+    hints: kind === 'médiane'
+      ? [`La médiane issue de ${nA} passe par ${nA} et par le milieu de [${nB}${nC}].`, `${nB}${nC} = ${cm(L)}, donc le milieu est à ${cm(L / 2)} de ${nB}.`, `Règle : pars de ${nB} en glissant sur [${nB}${nC}], arrête-toi à ${cm(L / 2)}, puis relie ${nA} à ce point.`]
+      : [`La hauteur issue de ${nA} passe par ${nA} et est perpendiculaire au côté opposé [${nB}${nC}].`, `Prends l'Équerre et clique d'abord sur le côté [${nB}${nC}]…`, `… puis clique sur ${nA}.`],
+    anim: () => (kind === 'médiane' ? sceneMediane([nA, nB, nC], A, B, C, L, names[0]) : sceneHauteur([nA, nB, nC], A, B, C, names[0])),
     q: `<p class="statement">Dans le triangle ${tri}, trace la <b>${kind}</b> issue de ${nA}${kind === 'médiane' ? ` (${nB}${nC} = ${cm(L)})` : ''}.</p><div class="board"></div>`,
     mount(r) {
       r._board = createBoard(r.querySelector('.board'), {
@@ -1340,9 +1396,10 @@ function genInegalite() {
   const correct = eq(big[1], s) ? 2 : big[1] > s ? 1 : 0;
   const cmp = correct === 2 ? '=' : correct === 1 ? '>' : '<';
   const concl = ['donc le triangle existe : on peut le construire.', 'donc le triangle n\'existe pas : on ne peut pas le construire.', 'donc le triangle est aplati : les trois points sont alignés.'][correct];
-  return mcq(`<p class="statement">Peut-on construire un triangle ${set.join('')} tel que ${sides.map(([n, v]) => `${n} = ${cm(v)}`).join(', ')} ?</p>`,
+  return withHints(mcq(`<p class="statement">Peut-on construire un triangle ${set.join('')} tel que ${sides.map(([n, v]) => `${n} = ${cm(v)}`).join(', ')} ?</p>`,
     ['Oui, on peut le construire', 'Non, il n\'existe pas', 'Oui, mais il est aplati (points alignés)'], correct,
-    `Le plus grand côté est ${big[0]} = ${cm(big[1])}. La somme des deux autres vaut ${fmt(sorted[1][1])} + ${fmt(sorted[2][1])} = ${cm(s)}.<br>${fmt(big[1])} ${cmp} ${fmt(s)}, ${concl}`, { col: true });
+    `Le plus grand côté est ${big[0]} = ${cm(big[1])}. La somme des deux autres vaut ${fmt(sorted[1][1])} + ${fmt(sorted[2][1])} = ${cm(s)}.<br>${fmt(big[1])} ${cmp} ${fmt(s)}, ${concl}`, { col: true }),
+  ['Repère le plus grand des trois côtés.', `Le plus grand côté est ${big[0]}. Additionne les deux autres longueurs.`, 'Compare : plus petit que la somme → il existe ; égal → aplati ; plus grand → il n\'existe pas.']);
 }
 
 function genAngles() {
@@ -1351,6 +1408,7 @@ function genAngles() {
     let x, y; do { x = rand(15, 120); y = rand(15, 120); } while (x + y > 165);
     const z = 180 - x - y;
     return {
+      hints: ['Dans un triangle, la somme des trois angles vaut 180°.', `${x}° + ${y}° = ${x + y}°. Combien manque-t-il pour arriver à 180° ?`],
       q: `<p class="statement">Dans le triangle ${set.join('')}, ${angHTML(B, A, C)} = ${x}° et ${angHTML(A, B, C)} = ${y}°.</p><p class="big">${angHTML(A, C, B)} = ${inp('num', 'Mesure de l\'angle')} °</p>`,
       check(r) {
         const v = val(r); if (!v) return null;
@@ -1362,9 +1420,10 @@ function genAngles() {
   const possible = Math.random() < 0.5;
   let x, y, z;
   do { x = rand(3, 24) * 5; y = rand(3, 24) * 5; z = possible ? 180 - x - y : 180 - x - y + pick([-20, -10, 10, 20]); } while (z < 10 || z > 150);
-  return mcq(`<p class="statement">Un triangle peut-il avoir des angles qui mesurent ${x}°, ${y}° et ${z}° ?</p>`,
+  return withHints(mcq(`<p class="statement">Un triangle peut-il avoir des angles qui mesurent ${x}°, ${y}° et ${z}° ?</p>`,
     ['Oui', 'Non'], possible ? 0 : 1,
-    `${x} + ${y} + ${z} = ${x + y + z}°. ${possible ? 'La somme fait bien 180°, donc c\'est possible.' : 'La somme ne fait pas 180°, donc ce triangle n\'existe pas.'}`);
+    `${x} + ${y} + ${z} = ${x + y + z}°. ${possible ? 'La somme fait bien 180°, donc c\'est possible.' : 'La somme ne fait pas 180°, donc ce triangle n\'existe pas.'}`),
+  ['Additionne les trois angles.', 'Pour qu\'un triangle existe, la somme de ses angles doit faire exactement 180°.']);
 }
 
 function remarkableFig(kind, withAll = false) {
@@ -1404,20 +1463,23 @@ function genDroites() {
   if (t === 0) {
     const k = rand(0, 2);
     const def = ['une droite perpendiculaire à un côté qui passe par son milieu', 'une droite qui passe par un sommet et qui est perpendiculaire au côté opposé', 'une droite qui passe par un sommet et par le milieu du côté opposé'];
-    return mcq(`<p>Quelle est la droite rouge ?</p>${remarkableFig(kinds[k])}`,
+    return withHints(mcq(`<p>Quelle est la droite rouge ?</p>${remarkableFig(kinds[k])}`,
       ['Une médiatrice', 'Une hauteur', 'Une médiane'], k,
-      `C'est ${['une médiatrice', 'une hauteur', 'une médiane'][k]} : ${def[k]}. Regarde le codage : ${['angle droit et milieu', 'angle droit, et la droite passe par un sommet', 'milieu, et la droite passe par un sommet'][k]}.`);
+      `C'est ${['une médiatrice', 'une hauteur', 'une médiane'][k]} : ${def[k]}. Regarde le codage : ${['angle droit et milieu', 'angle droit, et la droite passe par un sommet', 'milieu, et la droite passe par un sommet'][k]}.`),
+      ['Regarde le codage : y a-t-il un angle droit ? Des traits qui montrent un milieu ?', 'La droite rouge passe-t-elle par un sommet du triangle ?']);
   }
   if (t === 1) {
     const k = rand(0, 2);
     const nm = ['médiatrices', 'hauteurs', 'médianes'][k];
-    return mcq(`<p class="statement">Le point de concours des trois <b>${nm}</b> d'un triangle s'appelle …</p>`,
+    return withHints(mcq(`<p class="statement">Le point de concours des trois <b>${nm}</b> d'un triangle s'appelle …</p>`,
       ['le centre du cercle circonscrit', 'l\'orthocentre', 'le centre de gravité'], k,
-      `Médiatrices → centre du cercle circonscrit (O) ; hauteurs → orthocentre (H) ; médianes → centre de gravité (G).`, { col: true });
+      `Médiatrices → centre du cercle circonscrit (O) ; hauteurs → orthocentre (H) ; médianes → centre de gravité (G).`, { col: true }),
+      ['« Ortho » veut dire « droit » : pense aux angles droits des hauteurs.', 'Un point à égale distance des 3 sommets est le centre d\'un cercle qui passe par les 3 sommets.']);
   }
   const k = rand(0, 2);
   const defs = ['Droite perpendiculaire à un côté et qui passe par son milieu.', 'Droite qui passe par un sommet et qui est perpendiculaire au côté opposé.', 'Droite qui passe par un sommet et par le milieu du côté opposé.'];
-  return mcq(`<p class="statement">« ${defs[k]} » C'est la définition d'…</p>`, ['une médiatrice', 'une hauteur', 'une médiane'], k, `${defs[k]} C'est ${['une médiatrice', 'une hauteur', 'une médiane'][k]}.`);
+  return withHints(mcq(`<p class="statement">« ${defs[k]} » C'est la définition d'…</p>`, ['une médiatrice', 'une hauteur', 'une médiane'], k, `${defs[k]} C'est ${['une médiatrice', 'une hauteur', 'une médiane'][k]}.`),
+    ['Médiatrice : perpendiculaire + milieu. Hauteur : sommet + perpendiculaire. Médiane : sommet + milieu.']);
 }
 
 function genPropMediatrice() {
@@ -1426,6 +1488,7 @@ function genPropMediatrice() {
   const x = rand(15, 95) / 10;
   if (Math.random() < 0.6) {
     return {
+      hints: [`Propriété : tout point de la médiatrice de [${A}${B}] est à égale distance de ${A} et de ${B}.`],
       q: `<p class="statement">Le point ${M} est sur la médiatrice du segment [${A}${B}] et ${M}${A} = ${cm(x)}.</p><p class="big">${M}${B} = ${inp('num', 'Longueur')} cm</p>`,
       check(r) {
         const v = val(r); if (!v) return null;
@@ -1436,6 +1499,7 @@ function genPropMediatrice() {
   }
   const O = 'O';
   return {
+    hints: ['O est sur les trois médiatrices du triangle.', `Sur la médiatrice de [${A}C], O est à égale distance de ${A} et de C.`],
     q: `<p class="statement">O est le point de concours des médiatrices du triangle ${A}${B}C et O${A} = ${cm(x)}. Combien mesure OC ?</p><p class="big">OC = ${inp('num', 'Longueur')} cm</p>`,
     check(r) {
       const v = val(r); if (!v) return null;
@@ -1448,13 +1512,9 @@ function genPropMediatrice() {
 /** Figures de la fiche « Triangles » */
 function renderTriangleFiche() {
   const box = (id) => document.querySelector(`[data-fig="${id}"]`);
-  const ctr = (T) => centroid(...T);
-  let T = tri3c(6, 4, 5);
-  if (box('ex-3c')) box('ex-3c').innerHTML = figure({ A: T[0], B: T[1], C: T[2] }, [F2.arcAround(T[0], 4, T[2]), F2.arcAround(T[1], 6, T[2]), F2.seg(T[0], T[1]), F2.seg(T[0], T[2]), F2.seg(T[1], T[2]), F2.len(T[0], T[1], '5 cm', ctr(T)), F2.len(T[0], T[2], '4 cm', ctr(T)), F2.len(T[1], T[2], '6 cm', ctr(T))]);
-  T = tri2c1a(6, 4, 70);
-  if (box('ex-2c1a')) box('ex-2c1a').innerHTML = figure({ R: T[0], T: T[1], S: T[2] }, [F2.seg(T[0], T[1]), F2.seg(T[1], T[2]), F2.seg(T[0], T[2]), F2.angle(T[1], T[0], T[2], '70°'), F2.len(T[1], T[0], '6 cm', ctr(T)), F2.len(T[1], T[2], '4 cm', ctr(T))]);
-  T = tri1c2a(7, 110, 40);
-  if (box('ex-1c2a')) box('ex-1c2a').innerHTML = figure({ E: T[0], F: T[1], G: T[2] }, [F2.seg(T[0], T[1]), F2.seg(T[0], T[2]), F2.seg(T[1], T[2]), F2.angle(T[0], T[1], T[2], '110°'), F2.angle(T[1], T[0], T[2], '40°'), F2.len(T[0], T[1], '7 cm', ctr(T))]);
+  if (box('ex-3c')) makePlayer(box('ex-3c'), scene3c(['A', 'B', 'C'], tri3c(6, 4, 5), { a: 6, b: 4, c: 5 }), { atEnd: true });
+  if (box('ex-2c1a')) makePlayer(box('ex-2c1a'), scene2c1a(['R', 'T', 'S'], tri2c1a(6, 4, 70), { l1: 6, l2: 4, th: 70 }), { atEnd: true });
+  if (box('ex-1c2a')) makePlayer(box('ex-1c2a'), scene1c2a(['E', 'F', 'G'], tri1c2a(7, 110, 40), { L: 7, al: 110, be: 40 }), { atEnd: true });
   const A = { x: 1.2, y: 4.2 }, B = { x: 6.2, y: 4.4 }, C = { x: 2.9, y: 0.6 };
   // figures fixes et nettes pour la fiche
   const fig = (kind) => {
@@ -1466,6 +1526,333 @@ function renderTriangleFiche() {
   if (box('rem-medianes')) box('rem-medianes').innerHTML = fig('médiane');
 }
 let placedTriangleOverride = null;
+
+/* =========================================================
+   ANIMATIONS DES CONSTRUCTIONS
+   ========================================================= */
+const ln = (a, b, cls) => `<line x1="${a.x.toFixed(3)}" y1="${a.y.toFixed(3)}" x2="${b.x.toFixed(3)}" y2="${b.y.toFixed(3)}" class="${cls}"/>`;
+const lerp = (a, b, t) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+const ang2 = (v) => Math.atan2(v.y, v.x);
+function arcPath(c, r, a0, a1) {
+  const p0 = { x: c.x + r * Math.cos(a0), y: c.y + r * Math.sin(a0) };
+  const p1 = { x: c.x + r * Math.cos(a1), y: c.y + r * Math.sin(a1) };
+  return `M${p0.x.toFixed(3)} ${p0.y.toFixed(3)} A ${r} ${r} 0 ${Math.abs(a1 - a0) > Math.PI ? 1 : 0} ${a1 > a0 ? 1 : 0} ${p1.x.toFixed(3)} ${p1.y.toFixed(3)}`;
+}
+function ptSVG(name, p, center, alpha = 1) {
+  const u = G.len(G.sub(p, center)) < 0.2 ? { x: 0, y: -1 } : G.norm(G.sub(p, center));
+  const q = G.add(p, G.mul(u, 0.42));
+  return `<g style="opacity:${alpha.toFixed(2)}"><circle cx="${p.x}" cy="${p.y}" r="${(0.06 + 0.1 * (1 - alpha)).toFixed(3)}" class="f-pt"/><text x="${q.x}" y="${q.y}" class="f-lbl">${name}</text></g>`;
+}
+
+/** Les instruments dessinés */
+const INSTR = {
+  pencil(p) {
+    const q = { x: p.x + 0.45, y: p.y - 1.05 };
+    return ln(p, q, 'a-pencil') + `<circle cx="${p.x}" cy="${p.y}" r="0.07" class="a-tip"/>`;
+  },
+  ruler(A, B, side) {
+    const u = G.norm(G.sub(B, A)), L = G.dist(A, B);
+    const a = G.sub(A, G.mul(u, 0.4)), b = G.add(B, G.mul(u, 0.7)), w = 0.85;
+    const poly = [a, b, G.add(b, G.mul(side, w)), G.add(a, G.mul(side, w))];
+    let s = `<polygon points="${poly.map((p) => `${p.x.toFixed(3)},${p.y.toFixed(3)}`).join(' ')}" class="a-ruler"/>`;
+    const n = Math.floor((L + 0.6) * 2);
+    for (let k = 0; k <= n; k++) {
+      const p = G.add(A, G.mul(u, k * 0.5));
+      s += ln(p, G.add(p, G.mul(side, k % 2 ? 0.16 : 0.3)), 'a-tick');
+      if (k % 2 === 0) { const q = G.add(p, G.mul(side, 0.52)); s += `<text x="${q.x}" y="${q.y}" class="a-txt">${k / 2}</text>`; }
+    }
+    return s;
+  },
+  compass(C, P) {
+    const r = G.dist(C, P), m = G.mid(C, P);
+    let n = G.norm(G.perp(G.sub(P, C)));
+    if (n.y > 0) n = G.mul(n, -1);
+    const H = G.add(m, G.mul(n, Math.max(0.8, r * 0.4)));
+    return ln(C, H, 'a-leg') + ln(P, H, 'a-leg') + ln(H, G.add(H, G.mul(n, 0.45)), 'a-leg')
+      + `<circle cx="${H.x}" cy="${H.y}" r="0.13" class="a-hinge"/><circle cx="${P.x}" cy="${P.y}" r="0.07" class="a-tip"/>`;
+  },
+  protractor(V, u, sign, R = 1.8) {
+    const a0 = G.add(V, G.mul(u, R)), a1 = G.sub(V, G.mul(u, R));
+    let s = `<path d="M${a0.x} ${a0.y} A ${R} ${R} 0 0 ${sign > 0 ? 1 : 0} ${a1.x} ${a1.y} Z" class="a-prot"/>`;
+    for (let k = 0; k <= 180; k += 10) {
+      const d = G.rot(u, sign * k);
+      s += ln(G.add(V, G.mul(d, k % 30 ? R * 0.9 : R * 0.82)), G.add(V, G.mul(d, R)), 'a-prot-tk');
+      if (k % 30 === 0) { const q = G.add(V, G.mul(d, R * 0.68)); s += `<text x="${q.x}" y="${q.y}" class="a-txt a-prot-txt">${k}</text>`; }
+    }
+    return s;
+  },
+  square(F, u, v) {
+    const p = [F, G.add(F, G.mul(u, 1.7)), G.add(F, G.mul(v, 2.6))];
+    return `<polygon points="${p.map((q) => `${q.x.toFixed(3)},${q.y.toFixed(3)}`).join(' ')}" class="a-square"/>` + F2.right(F, u, v, 0.3);
+  },
+};
+
+/** Fabriques d'étapes : draw(t, final) renvoie le dessin à l'avancement t (0 → 1) */
+const STEP = {
+  seg(A, B, text, { side, ends = [], center }) {
+    return {
+      text,
+      draw(t, final) {
+        const E = lerp(A, B, final ? 1 : t);
+        let s = F2.seg(A, E);
+        ends.forEach(([n, p], i) => { if (i === 0 || final || t >= 1) s += ptSVG(n, p, center); });
+        if (!final) s += INSTR.ruler(A, B, G.mul(side, -1)) + INSTR.pencil(E);
+        return s;
+      },
+    };
+  },
+  arc(C, r, a0, a1, text) {
+    return {
+      text,
+      draw(t, final) {
+        const a = a0 + (a1 - a0) * (final ? 1 : t);
+        let s = t > 0.01 || final ? `<path d="${arcPath(C, r, a0, a)}" class="f-arc"/>` : '';
+        if (!final) s += INSTR.compass(C, { x: C.x + r * Math.cos(a), y: C.y + r * Math.sin(a) });
+        return s;
+      },
+    };
+  },
+  point(name, p, center, text, extra = '') {
+    return { text, dur: 900, draw: (t, final) => (final ? extra : '') + ptSVG(name, p, center, final ? 1 : Math.min(1, t * 1.6)) };
+  },
+  ray(V, u, sign, dir, len, label, text) {
+    return {
+      text,
+      dur: 2400,
+      draw(t, final) {
+        const tt = final ? 1 : clamp((t - 0.35) / 0.65, 0, 1);
+        let s = '';
+        if (tt > 0) s += F2.seg(V, G.add(V, G.mul(dir, len * tt)), 'f-thin');
+        if (tt >= 1) s += F2.angle(V, G.add(V, u), G.add(V, dir), label, 0.75);
+        if (!final) s += INSTR.protractor(V, u, sign);
+        return s;
+      },
+    };
+  },
+  measure(B, C, M, text, side) {
+    return { text, draw: (t, final) => (final ? '' : INSTR.ruler(B, C, G.mul(side, -1)) + INSTR.pencil(lerp(B, M, t))) };
+  },
+  xline(P, Q, text, side) {
+    return {
+      text,
+      draw(t, final) {
+        const u = G.norm(G.sub(Q, P)), a = G.sub(P, G.mul(u, 1)), b = G.add(Q, G.mul(u, 1));
+        const E = lerp(a, b, final ? 1 : t);
+        return F2.seg(a, E, 'f-red') + (final ? '' : INSTR.ruler(a, b, side) + INSTR.pencil(E));
+      },
+    };
+  },
+  slide(start, F, u, v, text) {
+    return { text, draw: (t, final) => (final ? '' : INSTR.square(lerp(start, F, t), u, v)) };
+  },
+  marks(svg, text) { return { text, dur: 900, draw: () => svg }; },
+};
+const awayFrom = (A, B, other) => { let n = G.norm(G.perp(G.sub(B, A))); if (G.dot(n, G.sub(other, A)) > 0) n = G.mul(n, -1); return n; };
+
+/* ---------- Scènes ---------- */
+function scene3c([P, Q, R], T, { a, b, c }) {
+  const [p, q, r] = T, ctr = centroid(...T);
+  const tP = ang2(G.sub(r, p)), tQ = ang2(G.sub(r, q)), sp = 0.4;
+  return {
+    pts: T, center: ctr,
+    steps: [
+      STEP.seg(p, q, `Trace le segment [${P}${Q}] de ${cm(c)}.`, { side: awayFrom(p, q, r), ends: [[P, p], [Q, q]], center: ctr }),
+      STEP.arc(p, b, tP - sp, tP + sp, `Compas : pointe sur ${P}, écartement ${cm(b)}. Trace un arc.`),
+      STEP.arc(q, a, tQ - sp, tQ + sp, `Compas : pointe sur ${Q}, écartement ${cm(a)}. Trace un arc.`),
+      STEP.point(R, r, ctr, `Les deux arcs se coupent : c'est le point ${R}.`),
+      STEP.seg(p, r, `Trace le segment [${P}${R}].`, { side: awayFrom(p, r, q), center: ctr }),
+      STEP.seg(q, r, `Trace le segment [${Q}${R}]. Le triangle est terminé !`, { side: awayFrom(q, r, p), center: ctr }),
+    ],
+  };
+}
+function scene2c1a([X, V, Y], T, { l1, l2, th }) {
+  const [x, v, y] = T, ctr = centroid(...T);
+  const u = G.norm(G.sub(x, v)), dir = G.norm(G.sub(y, v)), sign = G.cross(u, dir) >= 0 ? 1 : -1;
+  return {
+    pts: [...T, G.add(v, G.mul(dir, l2 + 1.4))], center: ctr,
+    steps: [
+      STEP.seg(v, x, `Trace le segment [${X}${V}] de ${cm(l1)}.`, { side: awayFrom(v, x, y), ends: [[V, v], [X, x]], center: ctr }),
+      STEP.ray(v, u, sign, dir, l2 + 1.4, `${th}°`, `Rapporteur : centre sur ${V}, 0° sur [${V}${X}]. Repère ${th}° et trace la demi-droite.`),
+      STEP.seg(v, y, `Sur la demi-droite, place ${Y} à ${cm(l2)} de ${V}.`, { side: G.mul(awayFrom(v, y, x), 1), ends: [[V, v], [Y, y]], center: ctr }),
+      STEP.seg(x, y, `Trace le segment [${X}${Y}]. Le triangle est terminé !`, { side: awayFrom(x, y, v), center: ctr }),
+    ],
+  };
+}
+function scene1c2a([E, F, Gn], T, { L, al, be }) {
+  const [e, f, g] = T, ctr = centroid(...T);
+  const ue = G.norm(G.sub(f, e)), de = G.norm(G.sub(g, e)), uf = G.norm(G.sub(e, f)), df = G.norm(G.sub(g, f));
+  return {
+    pts: [...T, G.add(e, G.mul(de, G.dist(e, g) + 1.2)), G.add(f, G.mul(df, G.dist(f, g) + 1.2))], center: ctr,
+    steps: [
+      STEP.seg(e, f, `Trace le segment [${E}${F}] de ${cm(L)}.`, { side: awayFrom(e, f, g), ends: [[E, e], [F, f]], center: ctr }),
+      STEP.ray(e, ue, G.cross(ue, de) >= 0 ? 1 : -1, de, G.dist(e, g) + 1.2, `${al}°`, `Rapporteur : centre sur ${E}, 0° sur [${E}${F}]. Trace la demi-droite à ${al}°.`),
+      STEP.ray(f, uf, G.cross(uf, df) >= 0 ? 1 : -1, df, G.dist(f, g) + 1.2, `${be}°`, `Rapporteur : centre sur ${F}, 0° sur [${F}${E}]. Trace la demi-droite à ${be}°, du même côté.`),
+      STEP.point(Gn, g, ctr, `Les deux demi-droites se coupent : c'est le point ${Gn}.`),
+      STEP.seg(e, g, `Trace le segment [${E}${Gn}].`, { side: awayFrom(e, g, f), center: ctr }),
+      STEP.seg(f, g, `Trace le segment [${F}${Gn}]. Le triangle est terminé !`, { side: awayFrom(f, g, e), center: ctr }),
+    ],
+  };
+}
+function sceneMediatrice([nA, nB], A, B, [nM, nN]) {
+  const L = G.dist(A, B), r = round1(L * 0.75), ctr = G.mid(A, B);
+  const al = Math.acos(L / 2 / r), t0 = ang2(G.sub(B, A)), t1 = ang2(G.sub(A, B)), e = 0.28;
+  const u = G.norm(G.sub(B, A)), n = G.perp(u), h = Math.sqrt(r * r - (L / 2) ** 2);
+  const M = G.add(ctr, G.mul(n, -h)), N = G.add(ctr, G.mul(n, h));
+  return {
+    pts: [A, B, M, N], center: ctr,
+    base: [F2.seg(A, B), ptSVG(nA, A, ctr), ptSVG(nB, B, ctr)],
+    steps: [
+      STEP.arc(A, r, t0 - al - e, t0 + al + e, `Compas : pointe sur ${nA}, écartement plus grand que la moitié de ${nA}${nB} (ici ${cm(r)}). Trace un grand arc.`),
+      STEP.arc(B, r, t1 - al - e, t1 + al + e, `Sans changer l'écartement, pointe sur ${nB} : trace un deuxième arc.`),
+      STEP.point(nM, M, ctr, `Les arcs se coupent en deux points : ${nM}…`),
+      STEP.point(nN, N, ctr, `… et ${nN}.`),
+      STEP.xline(M, N, `Trace la droite (${nM}${nN}) : c'est la médiatrice de [${nA}${nB}].`, G.mul(u, -1)),
+      STEP.marks(F2.right(ctr, u, n) + F2.ticks(A, ctr) + F2.ticks(ctr, B), `Elle est perpendiculaire à [${nA}${nB}] et passe par son milieu.`),
+    ],
+  };
+}
+function sceneHauteur([nA, nB, nC], A, B, C, nH) {
+  const u = G.norm(G.sub(C, B)), H = G.add(B, G.mul(u, G.dot(G.sub(A, B), u))), v = G.norm(G.sub(A, H));
+  const ctr = centroid(A, B, C);
+  return {
+    pts: [A, B, C], center: ctr,
+    base: [F2.seg(A, B), F2.seg(B, C), F2.seg(A, C), ptSVG(nA, A, ctr), ptSVG(nB, B, ctr), ptSVG(nC, C, ctr)],
+    steps: [
+      STEP.slide(G.add(B, G.mul(u, 0.2)), H, u, v, `Pose un côté de l'équerre le long de [${nB}${nC}] et fais-la glisser jusqu'à ${nA}.`),
+      STEP.xline(H, A, `Trace la droite le long de l'autre côté de l'équerre : elle passe par ${nA}.`, G.mul(u, -1)),
+      STEP.point(nH, H, ctr, `C'est la hauteur issue de ${nA} : elle est perpendiculaire à [${nB}${nC}].`, F2.right(H, u, v)),
+    ],
+  };
+}
+function sceneMediane([nA, nB, nC], A, B, C, L, nI) {
+  const M = G.mid(B, C), ctr = centroid(A, B, C);
+  return {
+    pts: [A, B, C], center: ctr,
+    base: [F2.seg(A, B), F2.seg(B, C), F2.seg(A, C), ptSVG(nA, A, ctr), ptSVG(nB, B, ctr), ptSVG(nC, C, ctr)],
+    steps: [
+      STEP.measure(B, C, M, `${nB}${nC} = ${cm(L)}. Avec la règle, mesure ${cm(L / 2)} à partir de ${nB}.`, awayFrom(B, C, A)),
+      STEP.point(nI, M, ctr, `${nI} est le milieu de [${nB}${nC}].`, F2.ticks(B, M) + F2.ticks(M, C)),
+      STEP.seg(A, M, `Trace le segment [${nA}${nI}] : c'est la médiane issue de ${nA}.`, { side: awayFrom(A, M, B), center: ctr }),
+    ],
+  };
+}
+
+/* ---------- Lecteur ---------- */
+function makePlayer(host, scene, { atEnd = false } = {}) {
+  const P = scene.pts, pad = 1.4;
+  const minx = Math.min(...P.map((p) => p.x)) - pad, maxx = Math.max(...P.map((p) => p.x)) + pad;
+  const miny = Math.min(...P.map((p) => p.y)) - pad - 0.8, maxy = Math.max(...P.map((p) => p.y)) + pad;
+  const k = Math.max(1, (maxx - minx) / 8.5).toFixed(2);
+  host.innerHTML = `<div class="player">
+    <svg class="fig anim-svg" style="--k:${k}" viewBox="${minx.toFixed(2)} ${miny.toFixed(2)} ${(maxx - minx).toFixed(2)} ${(maxy - miny).toFixed(2)}" role="img" aria-label="Animation de la construction"></svg>
+    <p class="pl-text" aria-live="polite"></p>
+    <div class="pl-bar">
+      <button type="button" data-a="restart" title="Recommencer" aria-label="Recommencer">⏮</button>
+      <button type="button" data-a="prev" title="Étape précédente" aria-label="Étape précédente">◀</button>
+      <button type="button" data-a="play" class="pl-play" aria-label="Lecture">▶ Lecture</button>
+      <button type="button" data-a="next" title="Étape suivante" aria-label="Étape suivante">▶|</button>
+    </div></div>`;
+  const svg = host.querySelector('svg'), txt = host.querySelector('.pl-text'), bPlay = host.querySelector('.pl-play');
+  const n = scene.steps.length;
+  let cur = atEnd ? n : 0, t = 0, playing = false, last = 0, pause = 0;
+  function draw() {
+    let s = (scene.base || []).join('');
+    for (let i = 0; i < Math.min(cur, n); i++) s += scene.steps[i].draw(1, true);
+    if (cur < n) s += scene.steps[cur].draw(t, false);
+    svg.innerHTML = s;
+    txt.innerHTML = cur < n ? `<b>Étape ${cur + 1} / ${n} :</b> ${scene.steps[cur].text}` : '<b>Construction terminée.</b> Clique sur ▶ pour la revoir.';
+    bPlay.textContent = playing ? '⏸ Pause' : '▶ Lecture';
+  }
+  function frame(ts) {
+    if (!playing || !svg.isConnected) { playing = false; return; }
+    const dt = last ? ts - last : 16; last = ts;
+    if (pause > 0) {
+      pause -= dt;
+      if (pause <= 0) { cur++; t = 0; if (cur >= n) { playing = false; draw(); return; } }
+    } else {
+      t = Math.min(1, t + dt / (scene.steps[cur].dur || 1800));
+      if (t >= 1) pause = 700;
+    }
+    draw();
+    requestAnimationFrame(frame);
+  }
+  function play() { if (cur >= n) { cur = 0; t = 0; } playing = true; last = 0; pause = 0; requestAnimationFrame(frame); draw(); }
+  host.querySelector('.pl-bar').addEventListener('click', (e) => {
+    const a = e.target.closest('button')?.dataset.a; if (!a) return;
+    if (a === 'play') { if (playing) { playing = false; draw(); } else play(); return; }
+    playing = false;
+    if (a === 'restart') { cur = 0; t = 0; play(); return; }
+    if (a === 'prev') { if (cur >= n) { cur = n - 1; t = 1; } else if (cur > 0) { cur--; t = 1; } else t = 0; }
+    if (a === 'next') { if (cur < n && t < 1) t = 1; else if (cur < n) { cur++; t = cur < n ? 1 : 0; } }
+    draw();
+  });
+  draw();
+  return { play };
+}
+
+/* =========================================================
+   LECTURE À VOIX HAUTE
+   ========================================================= */
+const CAN_SPEAK = typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
+const FRAC_NAMES = { 2: ['demi', 'demis'], 3: ['tiers', 'tiers'], 4: ['quart', 'quarts'] };
+function fracWords(a, b) {
+  if (/^\d+$/.test(a) && /^\d+$/.test(b)) {
+    const N = Number(a), D = Number(b);
+    if (FRAC_NAMES[D]) return `${N === 1 ? 'un' : N} ${FRAC_NAMES[D][N > 1 ? 1 : 0]}`;
+    return `${N} sur ${D}`;
+  }
+  return `${a} , sur , ${b}`;
+}
+function mathWords(s) {
+  s = s
+    .replace(/\[([A-Z])([A-Z])\]/g, ' le segment $1 $2 ')
+    .replace(/\(([A-Z])([A-Z])\)/g, ' la droite $1 $2 ')
+    .replace(/\b([A-Z])([A-Z])([A-Z])\b/g, '$1 $2 $3')
+    .replace(/\b([A-Z])([A-Z])\b/g, '$1 $2')
+    .replace(/(\d)\s*cm\b/g, '$1 centimètres')
+    .replace(/°/g, ' degrés')
+    .replace(/×/g, ' fois ').replace(/÷/g, ' divisé par ')
+    .replace(/(\d|\))\s*:\s*(?=[\d(])/g, '$1 divisé par ')
+    .replace(/(\d)\s*\/\s*(\d)/g, '$1 sur $2')
+    .replace(/\(\s*(?=[\d(])/g, ' ouvrez la parenthèse, ');
+  for (let i = 0; i < 3; i++) s = s.replace(/(\d|parenthèse)\s*\)/g, '$1, fermez la parenthèse ');
+  return s
+    .replace(/−/g, ' moins ').replace(/\+/g, ' plus ').replace(/=/g, ' égale ')
+    .replace(/</g, ' est plus petit que ').replace(/>/g, ' est plus grand que ')
+    .replace(/[✔✘←→✨💡🎬🔊▶⏮◀⏸↶✕✋📏◯◠●⟷⊥…]/g, ' ')
+    .replace(/\s+([.,;:!?])/g, '$1').replace(/\s+/g, ' ').trim();
+}
+function speechText(node) {
+  const c = node.cloneNode(true);
+  c.querySelectorAll('svg, .ex-bar, .geo-tools, .geo-names, .geo-status, .geo-wrap, .pl-bar, .cl-r, button, .ex-actions').forEach((e) => e.remove());
+  c.querySelectorAll('.frac').forEach((f) => { const [a, b] = f.children; f.replaceWith(` ${fracWords(a.textContent.trim(), b.textContent.trim())} `); });
+  c.querySelectorAll('.ang').forEach((a) => a.replaceWith(` l'angle ${a.textContent.trim().split('').join(' ')} `));
+  c.querySelectorAll('input.ans').forEach((i) => i.replaceWith(' combien ? '));
+  c.querySelectorAll('input').forEach((i) => i.remove());
+  c.querySelectorAll('.choice').forEach((ch, i) => { ch.prepend(` Réponse ${i + 1} : `); ch.append('. '); });
+  c.querySelectorAll('p, li, h1, h2, h3, .statement, .rule, .example, .tip, .warnbox, .hint, .cl-e, td, th, .memo > div').forEach((e) => e.append('. '));
+  c.querySelectorAll('br').forEach((e) => e.replaceWith('. '));
+  return mathWords(c.textContent.replace(/\.\s*\./g, '.'));
+}
+let speakingBtn = null;
+function stopSpeaking() {
+  if (!CAN_SPEAK) return;
+  window.speechSynthesis.cancel();
+  if (speakingBtn) { speakingBtn.classList.remove('on'); speakingBtn = null; }
+}
+function speak(text, btn) {
+  if (!CAN_SPEAK) return;
+  const wasSame = speakingBtn === btn;
+  stopSpeaking();
+  if (wasSame) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'fr-FR'; u.rate = 0.92;
+  const v = window.speechSynthesis.getVoices().find((x) => x.lang && x.lang.toLowerCase().startsWith('fr'));
+  if (v) u.voice = v;
+  u.onend = u.onerror = () => { if (speakingBtn === btn) { btn.classList.remove('on'); speakingBtn = null; } };
+  speakingBtn = btn; btn.classList.add('on');
+  window.speechSynthesis.speak(u);
+}
 
 /* =========================================================
    Registre des exercices
@@ -1507,77 +1894,142 @@ const CHAPTERS = [
 ];
 
 /* =========================================================
-   Progression (enregistrée dans le navigateur)
+   Progression et points faibles (enregistrés dans le navigateur)
    ========================================================= */
 const STORE = 'revisions5e-v2';
 let stats = {};
 try { stats = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { stats = {}; }
 function persist() { try { localStorage.setItem(STORE, JSON.stringify(stats)); } catch (e) { /* stockage indisponible */ } }
-function saveStat(key, good) {
-  const s = stats[key] || (stats[key] = { ok: 0, total: 0 });
-  s.total++; if (good) s.ok++;
+function saveStat(key, good, helped) {
+  const s = stats[key] || (stats[key] = { ok: 0, total: 0, hint: 0 });
+  s.total++;
+  if (good) { s.ok++; if (helped) s.hint = (s.hint || 0) + 1; }
   persist();
 }
+/** Points faibles : un type raté y entre ; il en sort après 2 réussites d'affilée sans aide */
+const NEED = 2;
+function updateWeak(key, good, helped) {
+  const w = stats._weak || (stats._weak = {});
+  let out = null;
+  if (!good) { out = key in w ? 'still' : 'added'; w[key] = 0; }
+  else if (key in w) {
+    if (helped) out = 'helped';
+    else { w[key]++; if (w[key] >= NEED) { delete w[key]; out = 'fixed'; } else out = 'progress'; }
+  }
+  persist();
+  return out;
+}
+function refreshWeakBadge(ch) {
+  const a = document.querySelector(`#nav a[href="#/${ch}/erreurs"]`);
+  if (!a) return;
+  const n = weakKeys(ch).length;
+  a.innerHTML = 'Mes erreurs' + (n ? ` <span class="count">${n}</span>` : '');
+  const sum = document.querySelector(`.page[data-ch="${ch}"][data-p="erreurs"] .weak-summary`);
+  if (sum) sum.innerHTML = n ? `<p><b>Tes points faibles :</b></p>${weakListHTML(ch)}` : '';
+}
+const weakKeys = (ch) => Object.keys(stats._weak || {}).filter((k) => GENS[k] && GENS[k].ch === ch);
+const weakNote = {
+  added: (l) => `<p class="weak-note">📌 « ${l} » est ajouté à <b>Mes erreurs</b> pour le retravailler.</p>`,
+  still: (l) => `<p class="weak-note">📌 « ${l} » reste dans <b>Mes erreurs</b>.</p>`,
+  helped: () => `<p class="weak-note">Réussi avec de l'aide : réessaie sans indice pour corriger ce point faible.</p>`,
+  progress: () => `<p class="weak-note">Encore ${NEED - 1} réussite sans indice pour corriger ce point faible.</p>`,
+  fixed: (l) => `<p class="weak-note fixed">✨ Point faible corrigé : « ${l} » sort de <b>Mes erreurs</b> !</p>`,
+};
 
 /* =========================================================
    Moteur d'exercice
    ========================================================= */
 function makeExercise(root, gen, opts = {}) {
   const limit = opts.limit || 0;
-  const key = opts.key || '';
-  let cur = null, answered = false, count = 0, good = 0, history = [];
+  let cur = null, answered = false, count = 0, good = 0, history = [], used = 0, animSeen = false;
   if (opts.makeGen) gen = opts.makeGen();
 
   root.innerHTML = `
-    <div class="ex-bar"><span class="ex-count"></span><span class="ex-score"></span></div>
+    <div class="ex-bar"><span class="ex-count"></span>${CAN_SPEAK ? '<button type="button" class="mini ex-say" title="Écouter l\'énoncé">🔊 Écouter</button>' : ''}<span class="ex-score"></span></div>
     <div class="ex-q"></div>
+    <div class="ex-hints" aria-live="polite"></div>
+    <div class="ex-anim"></div>
     <div class="ex-fb" aria-live="polite"></div>
     <div class="ex-actions">
       <button type="button" class="btn primary ex-check">Vérifier</button>
+      <button type="button" class="btn ex-hint">💡 Un indice</button>
+      <button type="button" class="btn ex-film">🎬 Voir la construction</button>
       <button type="button" class="btn ex-next">Question suivante →</button>
     </div>`;
-  const qEl = root.querySelector('.ex-q');
-  const fb = root.querySelector('.ex-fb');
-  const bCheck = root.querySelector('.ex-check');
-  const bNext = root.querySelector('.ex-next');
-  const cEl = root.querySelector('.ex-count');
-  const sEl = root.querySelector('.ex-score');
+  const $ = (s) => root.querySelector(s);
+  const qEl = $('.ex-q'), fb = $('.ex-fb'), hEl = $('.ex-hints'), aEl = $('.ex-anim');
+  const bCheck = $('.ex-check'), bNext = $('.ex-next'), bHint = $('.ex-hint'), bFilm = $('.ex-film'), bSay = $('.ex-say');
+  const cEl = $('.ex-count'), sEl = $('.ex-score');
   let restart = null;
+  const label = () => cur.label || GENS[cur.key || opts.key]?.label || '';
+  const helped = () => used > 0 || animSeen;
 
   function bar() {
-    sEl.textContent = count ? `Score : ${good} / ${count}` : '';
+    sEl.textContent = count && !opts.weakCh ? `Score : ${good} / ${count}` : count ? `Réussies : ${good} / ${count}` : '';
     cEl.textContent = limit ? `Question ${Math.min(answered ? count : count + 1, limit)} / ${limit}` : '';
+  }
+  function hintButton() {
+    const n = cur.hints ? cur.hints.length : 0;
+    bHint.hidden = !!limit || !n || answered || !!cur.empty;
+    bHint.disabled = used >= n;
+    bHint.textContent = used === 0 ? `💡 Un indice (${n})` : used < n ? `💡 Indice suivant (${used + 1}/${n})` : '💡 Plus d\'indice';
   }
 
   function render(focus) {
+    stopSpeaking();
     cur = gen();
-    answered = false;
+    answered = false; used = 0; animSeen = false;
     root.classList.remove('done');
     delete qEl.dataset.sel;
     qEl.innerHTML = cur.q;
+    hEl.innerHTML = ''; aEl.innerHTML = '';
     fb.className = 'ex-fb'; fb.innerHTML = '';
-    bCheck.hidden = false; bCheck.disabled = false;
-    bNext.textContent = limit ? 'Passer cette question →' : 'Question suivante →';
+    bCheck.hidden = !!cur.empty; bCheck.disabled = false;
+    bFilm.hidden = !cur.anim || !!limit;
+    bNext.textContent = cur.empty ? 'Actualiser' : limit ? 'Passer cette question →' : 'Question suivante →';
     bNext.disabled = false;
+    if (bSay) bSay.hidden = !!cur.empty;
+    hintButton();
     if (cur.mount) cur.mount(qEl);
     bar();
     if (focus) qEl.querySelector('input.ans')?.focus({ preventScroll: true });
   }
 
+  function showHint() {
+    if (!cur.hints || used >= cur.hints.length) return;
+    hEl.insertAdjacentHTML('beforeend', `<div class="hint-box"><b>Indice ${used + 1} :</b> ${cur.hints[used]}</div>`);
+    used++;
+    hintButton();
+  }
+  function showFilm() {
+    if (!cur.anim) return;
+    if (!answered) animSeen = true;
+    const p = makePlayer(aEl, cur.anim());
+    p.play();
+    aEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
   function check() {
-    if (answered) return;
+    if (answered || cur.empty) return;
     const res = cur.check(qEl);
     if (!res) { fb.className = 'ex-fb warn'; fb.innerHTML = 'Complète ta réponse avant de vérifier.'; return; }
     if (res.retry) { fb.className = 'ex-fb warn'; fb.innerHTML = res.msg; return; }
     answered = true; count++;
     if (res.ok) good++;
-    if (key && !limit) saveStat(key, res.ok);
-    if (limit) history.push({ label: cur.label, ok: res.ok });
+    const k = cur.key || opts.key;
+    const h = helped();
+    if (k && !limit) saveStat(k, res.ok, h);
+    const w = k ? updateWeak(k, res.ok, h) : null;
+    if (w && GENS[k]) refreshWeakBadge(GENS[k].ch);
+    if (limit) history.push({ label: label(), ok: res.ok });
     root.classList.add('done');
     qEl.querySelectorAll('input').forEach((i) => { i.disabled = true; });
     fb.className = 'ex-fb ' + (res.ok ? 'ok' : 'ko');
-    fb.innerHTML = (res.ok ? '<strong>✔ Bravo !</strong> ' : '<strong>✘ Pas tout à fait.</strong> ') + res.msg;
+    const head = res.ok ? (h ? '<strong>✔ Bravo, avec un peu d\'aide !</strong> ' : '<strong>✔ Bravo !</strong> ') : '<strong>✘ Pas tout à fait.</strong> ';
+    fb.innerHTML = head + res.msg + (w && !limit ? weakNote[w](label()) : '');
     bCheck.disabled = true;
+    bFilm.hidden = !cur.anim;
+    hintButton();
     bNext.disabled = false;
     bNext.textContent = limit && count >= limit ? 'Voir ma note' : 'Question suivante →';
     bar();
@@ -1589,15 +2041,17 @@ function makeExercise(root, gen, opts = {}) {
     const k = opts.examKey;
     stats[k] = { last: note, best: Math.max(note, stats[k]?.best ?? 0), n: (stats[k]?.n ?? 0) + 1 };
     persist();
+    const weak = history.filter((x) => !x.ok).length;
     const advice = note >= 16 ? 'Excellent, tu es prêt(e) pour le devoir !'
       : note >= 12 ? 'Bon travail ! Revois les points en rouge.'
-      : 'Reprends la fiche puis entraîne-toi sur les points en rouge.';
+        : 'Reprends la fiche puis entraîne-toi sur les points en rouge.';
     qEl.innerHTML = `<div class="result">
       <p class="note">${fmt(note)} / 20</p>
       <p>${good} bonne${good > 1 ? 's' : ''} réponse${good > 1 ? 's' : ''} sur ${limit}. ${advice}</p>
-      <ul>${history.map((h) => `<li class="${h.ok ? 'ok' : 'ko'}">${h.label}</li>`).join('')}</ul></div>`;
-    fb.className = 'ex-fb'; fb.innerHTML = '';
-    bCheck.hidden = true;
+      <ul>${history.map((x) => `<li class="${x.ok ? 'ok' : 'ko'}">${x.label}</li>`).join('')}</ul>
+      ${weak ? `<p><a class="btn primary" href="#/${opts.ch}/erreurs">Retravailler mes erreurs →</a></p>` : ''}</div>`;
+    fb.className = 'ex-fb'; fb.innerHTML = ''; hEl.innerHTML = ''; aEl.innerHTML = '';
+    bCheck.hidden = true; bHint.hidden = true; bFilm.hidden = true;
     bNext.textContent = 'Recommencer un contrôle';
     sEl.textContent = ''; cEl.textContent = '';
     restart = () => {
@@ -1609,13 +2063,22 @@ function makeExercise(root, gen, opts = {}) {
 
   function next() {
     if (restart) { restart(); return; }
-    if (limit && !answered) { count++; history.push({ label: cur.label + ' (passée)', ok: false }); }
+    if (limit && !answered) {
+      count++; history.push({ label: label() + ' (passée)', ok: false });
+      if (cur.key) updateWeak(cur.key, false, false);
+    }
     if (limit && count >= limit) { summary(); return; }
     render(true);
   }
 
   bCheck.addEventListener('click', check);
   bNext.addEventListener('click', next);
+  bHint.addEventListener('click', showHint);
+  bFilm.addEventListener('click', showFilm);
+  if (bSay) bSay.addEventListener('click', () => {
+    const parts = [qEl, hEl, fb].filter((x) => x.textContent.trim());
+    speak(parts.map((x) => speechText(x)).join('. '), bSay);
+  });
   root.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.tagName === 'INPUT' && !answered) { e.preventDefault(); check(); }
   });
@@ -1629,21 +2092,29 @@ function makeExercise(root, gen, opts = {}) {
 function chapterStats(ch) {
   let ok = 0, total = 0;
   Object.entries(GENS).forEach(([k, g]) => { if (g.ch === ch) { ok += stats[k]?.ok || 0; total += stats[k]?.total || 0; } });
-  return { ok, total, exam: stats[ch + ':controle'] };
+  return { ok, total, exam: stats[ch + ':controle'], weak: weakKeys(ch).length };
 }
 function renderChapters() {
   document.getElementById('chapters').innerHTML = CHAPTERS.map((c) => {
     const s = chapterStats(c.id);
     const pct = s.total ? Math.round((s.ok / s.total) * 100) : 0;
-    const line = s.total ? `${s.ok} / ${s.total} exercices réussis${s.exam ? ` · contrôle : ${fmt(s.exam.best)}/20` : ''}` : 'Pas encore commencé';
+    const parts = [];
+    if (s.total) parts.push(`${s.ok} / ${s.total} exercices réussis`);
+    if (s.exam) parts.push(`contrôle : ${fmt(s.exam.best)}/20`);
+    if (s.weak) parts.push(`📌 ${s.weak} point${s.weak > 1 ? 's' : ''} à retravailler`);
     return `<a class="chapter-card" data-ch="${c.id}" href="#/${c.id}">
       <span class="symbol">${c.symbol}</span>
       <span class="num">Chapitre ${c.num}</span>
       <h2>${c.title}</h2>
       <p>${c.desc}</p>
       <div class="bar"><span style="width:${pct}%"></span></div>
-      <span class="stat">${line}</span></a>`;
+      <span class="stat">${parts.length ? parts.join(' · ') : 'Pas encore commencé'}</span></a>`;
   }).join('');
+}
+function weakListHTML(ch) {
+  const ks = weakKeys(ch);
+  if (!ks.length) return '';
+  return `<ul class="weak-list">${ks.map((k) => `<li>${GENS[k].label}${stats._weak[k] ? ` <span class="small muted">(${stats._weak[k]}/${NEED})</span>` : ''}</li>`).join('')}</ul>`;
 }
 function renderChapterHome(ch) {
   const host = document.querySelector(`.page[data-ch="${ch}"][data-p="accueil"] .ch-cards`);
@@ -1651,17 +2122,22 @@ function renderChapterHome(ch) {
   host.innerHTML = pages.map((p) => {
     const keys = [...p.querySelectorAll('.exercise[data-gen]')].map((e) => e.dataset.gen);
     const desc = p.querySelector('.lead')?.textContent.trim().split('. ')[0] || '';
-    let bar = '<div class="stat">À relire avant chaque séance →</div>';
-    if (p.dataset.exam) {
+    let body = '<div class="stat">À relire avant chaque séance →</div>';
+    let cls = 'tile';
+    if (p.dataset.p === 'erreurs') {
+      const n = weakKeys(ch).length;
+      cls += n ? ' tile-weak' : '';
+      body = n ? `<div class="stat"><b>📌 ${n} point${n > 1 ? 's' : ''} à retravailler</b></div>${weakListHTML(ch)}` : '<div class="stat">Aucun point faible pour l\'instant 🎉</div>';
+    } else if (p.dataset.exam) {
       const c = stats[ch + ':controle'];
-      bar = `<div class="bar"><span style="width:${c ? Math.round((c.best / 20) * 100) : 0}%"></span></div><div class="stat">${c ? `Meilleure note : ${fmt(c.best)} / 20` : 'Pas encore fait'}</div>`;
+      body = `<div class="bar"><span style="width:${c ? Math.round((c.best / 20) * 100) : 0}%"></span></div><div class="stat">${c ? `Meilleure note : ${fmt(c.best)} / 20` : 'Pas encore fait'}</div>`;
     } else if (keys.length) {
-      let ok = 0, total = 0;
-      keys.forEach((k) => { ok += stats[k]?.ok || 0; total += stats[k]?.total || 0; });
+      let ok = 0, total = 0, hint = 0;
+      keys.forEach((k) => { ok += stats[k]?.ok || 0; total += stats[k]?.total || 0; hint += stats[k]?.hint || 0; });
       const pct = total ? Math.round((ok / total) * 100) : 0;
-      bar = `<div class="bar"><span style="width:${pct}%"></span></div><div class="stat">${total ? `${ok} / ${total} réussies (${pct} %)` : 'Pas encore commencé'}</div>`;
+      body = `<div class="bar"><span style="width:${pct}%"></span></div><div class="stat">${total ? `${ok} / ${total} réussies${hint ? ` (dont ${hint} avec indice)` : ''}` : 'Pas encore commencé'}</div>`;
     }
-    return `<a class="tile" href="#/${ch}/${p.dataset.p}"><h3>${p.dataset.title}</h3><p>${desc.length > 90 ? desc.slice(0, 88) + '…' : desc}${desc.endsWith('.') ? '' : '.'}</p>${bar}</a>`;
+    return `<a class="${cls}" href="#/${ch}/${p.dataset.p}"><h3>${p.dataset.title}</h3><p>${desc.length > 90 ? desc.slice(0, 88) + '…' : desc}${desc.endsWith('.') ? '' : '.'}</p>${body}</a>`;
   }).join('');
 }
 
@@ -1669,7 +2145,9 @@ function renderChapterHome(ch) {
    Navigation : #/chapitre/page
    ========================================================= */
 const OLD = { fiche: 1, automatismes: 1, quotient: 1, droite: 1, egales: 1, simplifier: 1, formes: 1, controle: 1 };
+const WEAK_CTL = {};
 function route() {
+  stopSpeaking();
   let h = location.hash.replace(/^#\/?/, '');
   if (OLD[h]) { location.replace('#/fractions/' + h); return; }
   if (h === 'accueil') h = '';
@@ -1685,9 +2163,10 @@ function route() {
   const nav = document.getElementById('nav');
   document.getElementById('logo-mark').innerHTML = chap ? chap.symbol : '5<sup>e</sup>';
   if (chap) {
+    const nWeak = weakKeys(ch).length;
     pill.hidden = false; pill.textContent = `Chapitre ${chap.num} · ${chap.title}`; pill.title = 'Changer de chapitre';
     nav.innerHTML = [...document.querySelectorAll(`.page[data-ch="${ch}"]`)].map((x) =>
-      `<a href="#/${ch}/${x.dataset.p}"${x === page ? ' aria-current="page"' : ''}${x.dataset.exam ? ' class="nav-exam"' : ''}>${x.dataset.title}</a>`).join('');
+      `<a href="#/${ch}/${x.dataset.p}"${x === page ? ' aria-current="page"' : ''}${x.dataset.exam ? ' class="nav-exam"' : ''}>${x.dataset.title}${x.dataset.p === 'erreurs' && nWeak ? ` <span class="count">${nWeak}</span>` : ''}</a>`).join('');
     nav.querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
     document.title = `${chap.title} — Révisions 5e`;
   } else {
@@ -1696,12 +2175,24 @@ function route() {
   }
   if (!ch) renderChapters();
   else if (p === 'accueil') renderChapterHome(ch);
+  else if (p === 'erreurs') WEAK_CTL[ch]?.renew();
   window.scrollTo(0, 0);
 }
 
 /* =========================================================
    Démarrage
    ========================================================= */
+/** Prépare une question « mélangée » (contrôle blanc, mes erreurs) */
+function wrapGen(k) {
+  const saved = CONSTRUCT_MODE; CONSTRUCT_MODE = '';
+  const o = GENS[k].f();
+  CONSTRUCT_MODE = saved;
+  o.key = k;
+  o.label = GENS[k].label;
+  o.q = `<p class="tag">${GENS[k].label}</p>` + o.q;
+  return o;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // [[a|b]] -> fractions (chapitre 3)
   document.querySelectorAll('.page[data-ch="fractions"]').forEach((el) => {
@@ -1719,6 +2210,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderCalcDemos();
   renderTriangleFiche();
+
+  // Lecture à voix haute des fiches
+  if (CAN_SPEAK) {
+    document.querySelectorAll('.page[data-p="fiche"] .card').forEach((card) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'mini say'; b.textContent = '🔊 Écouter';
+      b.title = 'Écouter cette partie de la fiche';
+      card.querySelector('h2').appendChild(b);
+      b.addEventListener('click', () => speak(speechText(card), b));
+    });
+  }
 
   // Exercices d'entraînement
   const ctl = {};
@@ -1738,24 +2240,33 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.exercise[data-exam]').forEach((el) => {
     const ch = el.dataset.exam;
     makeExercise(el, null, {
-      limit: 10,
+      limit: 10, ch,
       examKey: ch + ':controle',
       makeGen() {
         const keys = Object.keys(GENS).filter((k) => GENS[k].ch === ch);
         const queue = shuffle(keys).slice(0, 10);
         while (queue.length < 10) queue.push(pick(keys));
         shuffle(queue);
-        return () => {
-          const k = queue.shift() || pick(keys);
-          const saved = CONSTRUCT_MODE; CONSTRUCT_MODE = '';
-          const o = GENS[k].f();
-          CONSTRUCT_MODE = saved;
-          o.label = GENS[k].label;
-          o.q = `<p class="tag">${GENS[k].label}</p>` + o.q;
-          return o;
-        };
+        return () => wrapGen(queue.shift() || pick(keys));
       },
     });
+  });
+
+  // Mes erreurs : uniquement les types de questions ratés
+  document.querySelectorAll('.exercise[data-weak]').forEach((el) => {
+    const ch = el.dataset.weak;
+    let last = null;
+    WEAK_CTL[ch] = makeExercise(el, () => {
+      const ks = weakKeys(ch);
+      const sum = document.querySelector(`.page[data-ch="${ch}"][data-p="erreurs"] .weak-summary`);
+      if (sum) sum.innerHTML = ks.length ? `<p><b>Tes points faibles :</b></p>${weakListHTML(ch)}` : '';
+      if (!ks.length) {
+        return { empty: true, q: `<div class="empty-state"><p class="big-emoji">🎉</p><p><b>Aucun point faible pour l'instant.</b></p><p>Quand tu rates une question, son type arrive ici. Il disparaît après ${NEED} réussites d'affilée sans indice.</p><p><a class="btn" href="#/${ch}/controle">Faire le contrôle blanc</a></p></div>` };
+      }
+      const choices = ks.length > 1 ? ks.filter((k) => k !== last) : ks;
+      last = pick(choices);
+      return wrapGen(last);
+    }, { weakCh: ch });
   });
 
   document.getElementById('reset').addEventListener('click', () => {
