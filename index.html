@@ -1,105 +1,191 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
-<title>Fiche de révision : Fractions</title>
-<style>
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:#eef2f6;color:#1f2d3a;font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;print-color-adjust:exact;-webkit-print-color-adjust:exact}
-.page{max-width:780px;margin:0 auto;padding:16px 14px 40px}
-.hero{background:linear-gradient(135deg,#2980b9,#1c4e78);color:#fff;border-radius:14px;padding:22px 24px;box-shadow:0 4px 14px rgba(28,78,120,.25)}
-.hero h1{margin:0;font-size:clamp(1.35rem,4.6vw,1.9rem);line-height:1.2}
-.hero p{margin:6px 0 0;font-style:italic;opacity:.92}
-.obj{background:#f5f7fa;border:1.5px solid #2980b9;border-radius:12px;padding:12px 16px;margin:16px 0 4px}
-.obj b{color:#1c4e78}
-h2{display:flex;align-items:center;gap:.6em;color:#1c4e78;font-size:1.3rem;margin:28px 0 12px;padding-bottom:6px;border-bottom:2px solid #2980b9}
-h2 .n{background:#2980b9;color:#fff;border-radius:8px;min-width:1.7em;height:1.7em;display:inline-flex;align-items:center;justify-content:center;font-size:1rem}
-ul.pts{list-style:none;margin:0;padding:0;display:grid;gap:14px}
-ul.pts>li{background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08);break-inside:avoid}
-.pts p{margin:0 0 8px}
-.pts p b{color:#1c4e78}
-.ex{background:#ecf4fb;border-left:4px solid #e67e22;border-radius:0 8px 8px 0;padding:10px 14px}
-.ex .t{color:#e67e22}
-.ex ul{margin:8px 0 0;padding:0;list-style:none}
-.ex ul li{margin:8px 0;padding-left:1.6em;position:relative}
-.ex ul li::before{content:"\25B6";position:absolute;left:0;top:.2em;color:#e67e22;font-size:.75em}
-.m{white-space:nowrap}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;margin-top:10px;text-align:center}
-.grid .m{display:block;background:#fff;border-radius:8px;padding:8px 6px}
-.f{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .12em;line-height:1.25;font-size:.95em}
-.f>span:first-child{border-bottom:1.5px solid currentColor;padding:0 .3em}
-.f>span:last-child{padding:0 .3em}
-@media(max-width:420px){body{font-size:16px}.hero{padding:18px}.grid{gap:8px 6px}.grid .m{padding:8px 2px}}
-@media print{body{background:#fff;font-size:11pt}.hero,ul.pts>li{box-shadow:none}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Révisions 5e — Fractions</title>
+  <meta name="description" content="Site de révision tout-en-un pour les élèves de 5e : fiche de cours et exercices corrigés sur les fractions.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main class="page">
-<header class="hero">
-<h1>Ce qu'il faut savoir pour le devoir&nbsp;: Fractions</h1>
-<p>Fiche de révision détaillée — Critères et attendus</p>
+
+<header class="top">
+  <a href="#accueil" class="logo"><span class="logo-mark">½</span><span>Révisions 5<sup>e</sup></span></a>
+  <nav id="nav" aria-label="Sections">
+    <a href="#accueil">Accueil</a>
+    <a href="#fiche">Fiche</a>
+    <a href="#automatismes">Automatismes</a>
+    <a href="#quotient">Nombre quotient</a>
+    <a href="#droite">Droite graduée</a>
+    <a href="#egales">Fractions égales</a>
+    <a href="#simplifier">Simplifier</a>
+    <a href="#formes">Formes multiples</a>
+    <a href="#controle" class="nav-exam">Contrôle blanc</a>
+  </nav>
 </header>
 
-<aside class="obj"><b>Objectifs de l'évaluation&nbsp;:</b> Cette fiche regroupe tous les savoir-faire indispensables à maîtriser pour réussir l'évaluation sur les fractions. Chaque point est détaillé avec ses exemples.</aside>
+<main>
 
-<section>
-<h2><span class="n">1</span>Automatismes et tables</h2>
-<ul class="pts">
-<li>
-<p><b>Tables de multiplication&nbsp;:</b> Connaître ses tables par cœur pour simplifier ou trouver des fractions égales.</p>
-<div class="ex"><b class="t">Exemple détaillé&nbsp;:</b> <span class="m">7 × 8 = 56</span>, donc si l'on divise <span class="m">56</span> par <span class="m">7</span>, on obtient directement <span class="m">8</span> (<span class="m"><span class="f" role="img" aria-label="56 sur 7"><span>56</span><span>7</span></span> = 8</span>).</div>
-</li>
-<li>
-<p><b>Écriture décimale des fractions simples&nbsp;:</b> Savoir associer immédiatement une fraction usuelle à son écriture décimale.</p>
-<div class="ex"><b class="t">Exemples à connaître par cœur&nbsp;:</b>
-<div class="grid">
-<span class="m"><span class="f" role="img" aria-label="1 sur 2"><span>1</span><span>2</span></span> = 0,5</span><span class="m"><span class="f" role="img" aria-label="1 sur 4"><span>1</span><span>4</span></span> = 0,25</span><span class="m"><span class="f" role="img" aria-label="3 sur 4"><span>3</span><span>4</span></span> = 0,75</span>
-<span class="m"><span class="f" role="img" aria-label="3 sur 2"><span>3</span><span>2</span></span> = 1,5</span><span class="m"><span class="f" role="img" aria-label="4 sur 2"><span>4</span><span>2</span></span> = 2</span><span class="m"><span class="f" role="img" aria-label="5 sur 2"><span>5</span><span>2</span></span> = 2,5</span>
-<span class="m"><span class="f" role="img" aria-label="1 sur 10"><span>1</span><span>10</span></span> = 0,1</span><span class="m"><span class="f" role="img" aria-label="100 sur 100"><span>100</span><span>100</span></span> = 1</span><span class="m"><span class="f" role="img" aria-label="7 sur 1"><span>7</span><span>1</span></span> = 7</span>
-</div></div>
-</li>
-</ul>
-</section>
+  <!-- ===================== ACCUEIL ===================== -->
+  <section id="accueil" class="page">
+    <div class="hero">
+      <p class="kicker">Chapitre : Fractions</p>
+      <h1>Prépare ton devoir pas à pas</h1>
+      <p class="lead">Relis la fiche, entraîne-toi sur chaque savoir-faire avec des exercices qui changent à chaque fois, puis teste-toi avec le contrôle blanc.</p>
+      <div class="hero-actions">
+        <a class="btn primary" href="#fiche">Lire la fiche</a>
+        <a class="btn" href="#controle">Faire le contrôle blanc</a>
+      </div>
+    </div>
+    <h2 class="section-title">Ta progression</h2>
+    <div id="cards" class="cards"></div>
+    <p class="small muted">Ta progression est enregistrée uniquement sur cet appareil.
+      <button type="button" id="reset" class="linkbtn">Remettre à zéro</button></p>
+  </section>
 
-<section>
-<h2><span class="n">2</span>Sens des fractions et opérations</h2>
-<ul class="pts">
-<li>
-<p><b>Multiplications à trou (Nombre quotient)&nbsp;:</b> Comprendre qu'une fraction est le nombre qui, multiplié par un entier, donne un autre entier.</p>
-<div class="ex"><b class="t">Exemple détaillé&nbsp;:</b> <span class="m">3 × … = 7</span> se résout en écrivant la fraction <span class="m"><span class="f" role="img" aria-label="7 sur 3"><span>7</span><span>3</span></span></span>. On vérifie le résultat avec l'opération inverse&nbsp;: <span class="m">3 × <span class="f" role="img" aria-label="7 sur 3"><span>7</span><span>3</span></span> = 7</span>.</div>
-</li>
-<li>
-<p><b>Lecture et placement sur une droite graduée&nbsp;:</b> Savoir repérer l'unité et subdiviser selon le dénominateur (demis, quarts, dixièmes).</p>
-<div class="ex"><b class="t">Exemple d'exercice type&nbsp;:</b> Savoir placer précisément sur une même droite graduée les nombres&nbsp;: <span class="m"><span class="f" role="img" aria-label="9 sur 4"><span>9</span><span>4</span></span></span>&nbsp;; <span class="m">0,25</span>&nbsp;; <span class="m">−0,75</span>&nbsp;; <span class="m"><span class="f" role="img" aria-label="5 sur 4"><span>5</span><span>4</span></span></span>&nbsp;; <span class="m">2,75</span>&nbsp;; <span class="m"><span class="f" role="img" aria-label="5 sur 2"><span>5</span><span>2</span></span></span>&nbsp;; <span class="m">−1,25</span>.</div>
-</li>
-</ul>
-</section>
+  <!-- ===================== FICHE ===================== -->
+  <section id="fiche" class="page">
+    <h1>Fiche de révision — Fractions</h1>
+    <p class="lead">Tous les savoir-faire à maîtriser pour réussir l'évaluation, avec leurs exemples.</p>
 
-<section>
-<h2><span class="n">3</span>Fractions égales et simplifications</h2>
-<ul class="pts">
-<li>
-<p><b>Reconnaître des fractions égales dans une liste&nbsp;:</b> Savoir identifier les fractions équivalentes en multipliant ou divisant le numérateur et le dénominateur par un même nombre non nul.</p>
-<div class="ex"><b class="t">Exemple détaillé&nbsp;:</b> Dans la liste <span class="m"><span class="f" role="img" aria-label="28 sur 6"><span>28</span><span>6</span></span></span>&nbsp;; <span class="m"><span class="f" role="img" aria-label="7 sur 3"><span>7</span><span>3</span></span></span>&nbsp;; <span class="m"><span class="f" role="img" aria-label="140 sur 60"><span>140</span><span>60</span></span></span>&nbsp;; <span class="m"><span class="f" role="img" aria-label="15 sur 7"><span>15</span><span>7</span></span></span>&nbsp;; <span class="m"><span class="f" role="img" aria-label="56 sur 24"><span>56</span><span>24</span></span></span>, pour savoir lesquelles sont égales à <span class="m"><span class="f" role="img" aria-label="14 sur 6"><span>14</span><span>6</span></span></span>&nbsp;:
-<ul>
-<li><span class="m"><span class="f" role="img" aria-label="7 sur 3"><span>7</span><span>3</span></span></span> car on simplifie <span class="m"><span class="f" role="img" aria-label="14 sur 6"><span>14</span><span>6</span></span></span> par 2 (<span class="m"><span class="f" role="img" aria-label="14 ÷ 2 sur 6 ÷ 2"><span>14 ÷ 2</span><span>6 ÷ 2</span></span> = <span class="f" role="img" aria-label="7 sur 3"><span>7</span><span>3</span></span></span>)&nbsp;;</li>
-<li><span class="m"><span class="f" role="img" aria-label="140 sur 60"><span>140</span><span>60</span></span></span> car on amplifie <span class="m"><span class="f" role="img" aria-label="14 sur 6"><span>14</span><span>6</span></span></span> par 10 (<span class="m"><span class="f" role="img" aria-label="14 × 10 sur 6 × 10"><span>14 × 10</span><span>6 × 10</span></span> = <span class="f" role="img" aria-label="140 sur 60"><span>140</span><span>60</span></span></span>)&nbsp;;</li>
-<li><span class="m"><span class="f" role="img" aria-label="56 sur 24"><span>56</span><span>24</span></span></span> car on amplifie <span class="m"><span class="f" role="img" aria-label="14 sur 6"><span>14</span><span>6</span></span></span> par 4 (<span class="m"><span class="f" role="img" aria-label="14 × 4 sur 6 × 4"><span>14 × 4</span><span>6 × 4</span></span> = <span class="f" role="img" aria-label="56 sur 24"><span>56</span><span>24</span></span></span>).</li>
-</ul></div>
-</li>
-<li>
-<p><b>Simplifier une fraction&nbsp;:</b> Réduire une fraction au maximum.</p>
-<div class="ex"><b class="t">Exemple détaillé&nbsp;:</b> Simplifier <span class="m"><span class="f" role="img" aria-label="39 sur 12"><span>39</span><span>12</span></span></span> en divisant par 3 en haut et en bas → <span class="m"><span class="f" role="img" aria-label="39 ÷ 3 sur 12 ÷ 3"><span>39 ÷ 3</span><span>12 ÷ 3</span></span> = <span class="f" role="img" aria-label="13 sur 4"><span>13</span><span>4</span></span></span>.</div>
-</li>
-<li>
-<p><b>Formes multiples d'un même nombre&nbsp;:</b> Savoir exprimer un nombre sous différentes écritures (fractionnaire, décimale ou sous forme de somme d'un entier et d'une fraction).</p>
-<div class="ex"><b class="t">Exemple détaillé&nbsp;:</b> Écrire le nombre <span class="m">1,2</span> sous de multiples formes&nbsp;: <span class="m">1,2 = <span class="f" role="img" aria-label="12 sur 10"><span>12</span><span>10</span></span> = <span class="f" role="img" aria-label="6 sur 5"><span>6</span><span>5</span></span> = 1 + <span class="f" role="img" aria-label="1 sur 5"><span>1</span><span>5</span></span> = <span class="f" role="img" aria-label="120 sur 100"><span>120</span><span>100</span></span></span>.</div>
-</li>
-</ul>
-</section>
+    <article class="card">
+      <h2><span class="badge">1</span> Automatismes et tables</h2>
+
+      <h3>Tables de multiplication</h3>
+      <p>Connaître ses tables par cœur sert à simplifier ou à trouver des fractions égales.</p>
+      <p class="example">7 × 8 = 56, donc si l'on divise 56 par 7, on obtient directement 8 : [[56|7]] = 8.</p>
+
+      <h3>Écritures décimales à connaître par cœur</h3>
+      <div class="memo">
+        <div>[[1|2]] = 0,5</div><div>[[1|4]] = 0,25</div><div>[[3|4]] = 0,75</div>
+        <div>[[3|2]] = 1,5</div><div>[[4|2]] = 2</div><div>[[5|2]] = 2,5</div>
+        <div>[[1|10]] = 0,1</div><div>[[100|100]] = 1</div><div>[[7|1]] = 7</div>
+      </div>
+      <a class="btn small-btn" href="#automatismes">S'entraîner →</a>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">2</span> Sens des fractions et opérations</h2>
+
+      <h3>Multiplications à trou (nombre quotient)</h3>
+      <p>[[7|3]] est le nombre qui, multiplié par 3, donne 7.</p>
+      <p class="example">3 × … = 7 se résout en écrivant la fraction [[7|3]].<br>
+        On vérifie avec l'opération inverse : 3 × [[7|3]] = 7.</p>
+      <p class="tip"><b>Méthode :</b> a × … = b &nbsp;→&nbsp; la réponse est [[b|a]].</p>
+      <a class="btn small-btn" href="#quotient">S'entraîner →</a>
+
+      <h3>Lire et placer sur une droite graduée</h3>
+      <ol>
+        <li>Repère l'unité : l'écart entre 0 et 1.</li>
+        <li>Compte en combien de parts égales l'unité est partagée : c'est le dénominateur (2 → demis, 4 → quarts, 10 → dixièmes).</li>
+        <li>Compte les graduations à partir de 0 : vers la droite pour les nombres positifs, vers la gauche pour les négatifs.</li>
+      </ol>
+      <p class="example">Exercice type : placer sur une même droite les nombres [[9|4]] ; 0,25 ; −0,75 ; [[5|4]] ; 2,75 ; [[5|2]] ; −1,25.</p>
+      <div id="fiche-droite" class="nl"></div>
+      <div id="fiche-legende" class="legend"></div>
+      <a class="btn small-btn" href="#droite">S'entraîner →</a>
+    </article>
+
+    <article class="card">
+      <h2><span class="badge">3</span> Fractions égales et simplifications</h2>
+
+      <h3>Reconnaître des fractions égales</h3>
+      <p>On obtient une fraction égale en <b>multipliant</b> ou en <b>divisant</b> le numérateur <b>et</b> le dénominateur par un même nombre non nul.</p>
+      <p class="example">Dans la liste [[28|6]] ; [[7|3]] ; [[140|60]] ; [[15|7]] ; [[56|24]], les fractions égales à [[14|6]] sont :</p>
+      <ul class="checklist">
+        <li>[[7|3]] car on simplifie [[14|6]] par 2 : [[14 ÷ 2|6 ÷ 2]] = [[7|3]]</li>
+        <li>[[140|60]] car on multiplie en haut et en bas par 10 : [[14 × 10|6 × 10]] = [[140|60]]</li>
+        <li>[[56|24]] car on multiplie en haut et en bas par 4 : [[14 × 4|6 × 4]] = [[56|24]]</li>
+      </ul>
+      <p class="warnbox"><b>Pièges :</b> [[28|6]] n'est pas égale (on a multiplié seulement le numérateur) ;
+        [[15|7]] non plus (ajouter 1 en haut et en bas ne donne pas une fraction égale).</p>
+      <a class="btn small-btn" href="#egales">S'entraîner →</a>
+
+      <h3>Simplifier une fraction</h3>
+      <p>Simplifier, c'est diviser le numérateur et le dénominateur par un même nombre. On simplifie <b>au maximum</b>, jusqu'à ne plus pouvoir.</p>
+      <p class="example">[[39|12]] : on divise par 3 en haut et en bas → [[39 ÷ 3|12 ÷ 3]] = [[13|4]].</p>
+      <p class="tip"><b>Aide :</b> un nombre est divisible par 2 s'il est pair, par 5 s'il finit par 0 ou 5,
+        par 3 si la somme de ses chiffres est dans la table de 3 (39 : 3 + 9 = 12 ✔).</p>
+      <a class="btn small-btn" href="#simplifier">S'entraîner →</a>
+
+      <h3>Formes multiples d'un même nombre</h3>
+      <p>Un même nombre peut s'écrire en écriture décimale, en fraction, ou comme somme d'un entier et d'une fraction.</p>
+      <p class="example">1,2 = [[12|10]] = [[6|5]] = 1 + [[1|5]] = [[120|100]]</p>
+      <a class="btn small-btn" href="#formes">S'entraîner →</a>
+    </article>
+  </section>
+
+  <!-- ===================== AUTOMATISMES ===================== -->
+  <section id="automatismes" class="page">
+    <h1>Automatismes</h1>
+    <p class="lead">Réponds vite et juste : ces réflexes font gagner du temps pendant le devoir.</p>
+    <div class="grid2">
+      <div>
+        <h2 class="ex-title">Tables de multiplication</h2>
+        <div class="exercise" data-gen="tables" data-key="tables"></div>
+      </div>
+      <div>
+        <h2 class="ex-title">Fractions usuelles ↔ décimaux</h2>
+        <div class="exercise" data-gen="decimal" data-key="decimal"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== QUOTIENT ===================== -->
+  <section id="quotient" class="page">
+    <h1>Multiplications à trou</h1>
+    <p class="lead">Trouve le nombre manquant sous forme de fraction. Rappel : a × … = b → la réponse est la fraction <i>b</i> sur <i>a</i>.
+      Tape ta fraction avec une barre : <code>7/3</code>.</p>
+    <div class="exercise" data-gen="quotient" data-key="quotient"></div>
+  </section>
+
+  <!-- ===================== DROITE ===================== -->
+  <section id="droite" class="page">
+    <h1>Droite graduée</h1>
+    <p class="lead">Repère l'unité, compte les parts, puis lis ou place le nombre.</p>
+    <h2 class="ex-title">Lire une abscisse</h2>
+    <div class="exercise" data-gen="lire" data-key="lire"></div>
+    <h2 class="ex-title">Placer un nombre</h2>
+    <div class="exercise" data-gen="placer" data-key="placer"></div>
+  </section>
+
+  <!-- ===================== EGALES ===================== -->
+  <section id="egales" class="page">
+    <h1>Fractions égales</h1>
+    <p class="lead">Coche toutes les fractions égales à celle de l'énoncé. Cherche par quel nombre on a multiplié ou divisé le numérateur <b>et</b> le dénominateur.</p>
+    <div class="exercise" data-gen="egales" data-key="egales"></div>
+  </section>
+
+  <!-- ===================== SIMPLIFIER ===================== -->
+  <section id="simplifier" class="page">
+    <h1>Simplifier une fraction</h1>
+    <p class="lead">Simplifie au maximum. Tu peux le faire en plusieurs étapes au brouillon, mais écris seulement le résultat final.</p>
+    <div class="exercise" data-gen="simplifier" data-key="simplifier"></div>
+  </section>
+
+  <!-- ===================== FORMES ===================== -->
+  <section id="formes" class="page">
+    <h1>Formes multiples d'un nombre</h1>
+    <p class="lead">Écris le même nombre de trois façons différentes, comme 1,2 = [[12|10]] = [[6|5]] = 1 + [[1|5]].</p>
+    <div class="exercise" data-gen="formes" data-key="formes"></div>
+  </section>
+
+  <!-- ===================== CONTROLE ===================== -->
+  <section id="controle" class="page">
+    <h1>Contrôle blanc</h1>
+    <p class="lead">10 questions qui mélangent tous les savoir-faire. Une seule tentative par question, comme le jour du devoir !</p>
+    <div class="exercise exam" id="exam"></div>
+  </section>
+
 </main>
+
+<footer class="foot">
+  <p>Révisions 5<sup>e</sup> · Fractions — site libre, à modifier et partager.</p>
+</footer>
+
+<script src="script.js"></script>
 </body>
 </html>
