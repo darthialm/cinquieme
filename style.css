@@ -505,3 +505,13 @@ table.voc td:first-child { white-space: nowrap; font-weight: 700; }
 .fig .a-square { fill: rgba(14, 122, 107, .18); stroke: #0e7a6b; stroke-width: 1.4; }
 .fig-box .player { background: transparent; border: none; padding: 0; }
 [hidden] { display: none !important; }
+
+.ex-fb.remed { background: #fff4e0; border-left: 4px solid #e8590c; padding: 10px 14px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ex-fb.remed { background: #3a2a17; } }
+.ex-fb.remed p.small { margin: 6px 0 0; color: var(--muted); }
+.ex-anim > p.small { margin: 0 0 6px; }
+.hint-box .calc-steps { background: rgba(255,255,255,.6); border-radius: 8px; padding: 6px 8px; margin-top: 6px; }
+.hint-box ul { margin: 4px 0; padding-left: 20px; }
+.nl-svg .u-zone { fill: rgba(232, 89, 12, .12); }
+.nl-svg .u-num { font-size: 12px; fill: #e8590c; text-anchor: middle; font-weight: 700; font-family: inherit; }
+.nl-svg .u-arc { fill: none; stroke: #e8590c; stroke-width: 1.5; }

@@ -59,6 +59,17 @@ function inp(kind = 'frac', label = 'Réponse') {
 }
 const val = (root, i = 0) => parse(root.querySelectorAll('.ans')[i]?.value);
 const markInput = (root, i, ok) => root.querySelectorAll('.ans')[i]?.classList.add(ok ? 'right' : 'wrong');
+
+/* ---------- Aides didactiques communes ---------- */
+const ficheLink = (ch, t = 'la fiche') => `<a href="#/${ch}/fiche">${t}</a>`;
+/** Colore l'unité de la droite graduée et numérote ses parts (outil, sans donner la réponse) */
+function unitOverlay(r, L) {
+  const svg = r.querySelector('.nl-svg'); if (!svg) return;
+  const W = 720, m = 34, y = 58, sc = (W - 2 * m) / (L.max - L.min), X = (v) => m + (v - L.min) * sc;
+  let o = `<rect x="${X(0)}" y="${y - 24}" width="${X(1) - X(0)}" height="48" class="u-zone"/>`;
+  for (let k = 1; k <= L.den; k++) o += `<text x="${X((k - 0.5) / L.den)}" y="${y - 28}" class="u-num">${k}</text>`;
+  svg.insertAdjacentHTML('beforeend', o);
+}
 /* =========================================================
    Droite graduée (SVG)
    ========================================================= */
@@ -116,11 +127,22 @@ function genTables() {
   if (t === 0) { q = `${a} × ${b} = ${inp('num')}`; ans = a * b; }
   else if (t === 1) { q = `${a} × ${inp('num')} = ${a * b}`; ans = b; }
   else { q = `${a * b} ÷ ${a} = ${inp('num')}`; ans = b; }
-  const hints = t === 0 ? [`Récite la table de ${a}.`, `${a} × ${b - 1} = ${a * (b - 1)} : ajoute encore ${a}.`]
-    : t === 1 ? [`Cherche ${a * b} dans la table de ${a}.`, `${a} × ${b - 1} = ${a * (b - 1)} : il manque encore ${a}.`]
-      : [`${a * b} ÷ ${a} : combien de fois ${a} dans ${a * b} ?`, `Cherche dans la table de ${a} : ${a} × … = ${a * b}.`];
+  const ex = pick([[7, 8], [6, 7], [8, 9], [7, 9], [6, 8], [8, 7]].filter(([x, y]) => !(x === a && y === b) && !(x === b && y === a)));
+  const hints = [
+    t === 2 ? `Une division, c'est une multiplication à trou : ${a} × … = ${a * b}. Quelle table peux-tu réciter ?`
+      : t === 1 ? `Dans quelle table de multiplication peux-tu chercher ${a * b} ?`
+        : 'Pars d\'un résultat que tu connais par cœur (× 2, × 5 ou × 10), puis avance ou recule dans la table.',
+    `Exemple : pour ${ex[0]} × ${ex[1]}, je sais que ${ex[0]} × 10 = ${ex[0] * 10}. J'enlève ${10 - ex[1]} fois ${ex[0]} : ${ex[0] * 10} − ${ex[0] * (10 - ex[1])} = ${ex[0] * ex[1]}.`,
+  ];
   return {
     hints,
+    remediate(r) {
+      const x = val(r); if (!x || eq(x.value, ans)) return null;
+      if (t === 0 && eq(x.value, a + b)) return 'Tu as additionné les deux nombres. Regarde le signe : c\'est une multiplication.';
+      if (t > 0 && Number.isInteger(x.value) && x.value > 0) return `Vérifie ta réponse : ${a} × ${x.value} = ${a * x.value}. Est-ce bien ${a * b} ?`;
+      if (t === 0 && x.value % a === 0 && Math.abs(x.value - ans) === a) return `Tu n'es pas loin ! Récite la table de ${a} pour vérifier.`;
+      return null;
+    },
     q: `<p class="big">${q}</p>`,
     check(r) {
       const x = val(r); if (!x) return null;
@@ -140,7 +162,17 @@ function genDecimal() {
   const known = { 2: `${F(1, 2)} = 0,5 (un demi).`, 4: `${F(1, 4)} = 0,25 (un quart).`, 10: `${F(1, 10)} = 0,1 (un dixième).`, 5: `${F(1, 5)} = 0,2 (un cinquième).`, 100: `${F(1, 100)} = 0,01 (un centième).`, 1: 'Diviser par 1 ne change pas le nombre.', 3: 'Pense à la table de 3.' }[d];
   if (Math.random() < 0.6) {
     return {
-      hints: [`Une fraction, c'est une division : ${F(n, d)} = ${n} ÷ ${d}.`, known + (n > 1 && d > 1 ? ` Ici, il y en a ${n}.` : '')],
+      hints: [
+        `Que veut dire la barre de fraction ? Relis « Écritures décimales à connaître » dans ${ficheLink('fractions')}.`,
+        decExample(n, d),
+        `Outil — les fractions de référence : ${memoFractions(n, d)}`,
+      ],
+      remediate(r) {
+        const x = val(r); if (!x || x.isFrac || eq(x.value, v)) return null;
+        if (eq(x.value, Number(`${n}.${d}`))) return `Attention : ${F(n, d)} ne s'écrit pas ${n},${d} ! La barre de fraction ne se remplace pas par une virgule : elle veut dire « divisé par ».`;
+        if (n !== d && eq(x.value, d / n)) return `Tu as divisé ${d} par ${n}. Dans une fraction, c'est le numérateur (en haut) qui est divisé par le dénominateur (en bas).`;
+        return null;
+      },
       q: `<p class="big">${F(n, d)} = ${inp('num')}</p><p class="hint">Donne l'écriture décimale.</p>`,
       check(r) {
         const x = val(r); if (!x) return null;
@@ -151,7 +183,19 @@ function genDecimal() {
     };
   }
   return {
-    hints: [`Lis le nombre : combien de dixièmes ou de centièmes dans ${fmt(v)} ?`, `${fmt(v)} = ${F(Math.round(v * 100), 100)} : tu peux ensuite simplifier.`],
+    hints: [
+      `Comment se lit ${fmt(v)} ? Par exemple, ${eq(v, 0.7) ? '0,9 se lit « 9 dixièmes »' : '0,7 se lit « 7 dixièmes »'}.`,
+      eq(v, 1.5) ? `Exemple : 2,5 = 25 dixièmes = ${F(25, 10)}, que l'on peut simplifier en ${F(5, 2)}.` : `Exemple : 1,5 = 15 dixièmes = ${F(15, 10)}, que l'on peut simplifier en ${F(3, 2)}.`,
+      'Outil : place le nombre dans un tableau unités | dixièmes | centièmes. Le rang du dernier chiffre donne le dénominateur (10 ou 100).',
+    ],
+    remediate(r) {
+      const x = val(r); if (!x || !x.isFrac || eq(x.value, v)) return null;
+      const parts = fmt(v).split(',');
+      if (parts.length === 2 && x.n === Number(parts[0]) && x.d === Number(parts[1])) return `${fmt(v)} n'est pas ${F(x.n, x.d)} : la virgule n'est pas une barre de fraction ! Combien de dixièmes (ou de centièmes) y a-t-il dans ${fmt(v)} ?`;
+      if (eq(x.value, v / 10) || eq(x.value, v * 10)) return 'Attention au rang des chiffres : est-ce des dixièmes (dénominateur 10) ou des centièmes (dénominateur 100) ?';
+      if (eq(x.value, 1 / v)) return 'Ta fraction est à l\'envers : vérifie ce qui va au numérateur (en haut) et au dénominateur (en bas).';
+      return null;
+    },
     q: `<p class="big">${fmt(v)} = ${inp('frac')}</p><p class="hint">Écris ce nombre sous forme de fraction (exemple : 3/4).</p>`,
     check(r) {
       const x = val(r); if (!x) return null;
@@ -168,7 +212,19 @@ function genQuotient() {
   let b = rand(1, 60);
   if (b % a === 0 && Math.random() < 0.75) b++;
   return {
-    hints: [`Le nombre manquant, c'est ${b} ÷ ${a}.`, `En fraction : le résultat (${b}) en haut, le nombre connu (${a}) en bas.`],
+    hints: [
+      `Quel nombre faut-il multiplier par ${a} pour obtenir ${b} ? Relis « Multiplications à trou » dans ${ficheLink('fractions')} : ce nombre s'écrit avec une fraction.`,
+      (() => { let p, qq; do { p = rand(2, 9); qq = rand(2, 20); } while (p === a || qq === b || qq % p === 0); return `Exemple : ${p} × … = ${qq}. La réponse est ${F(qq, p)}, car ${p} × ${F(qq, p)} = ${qq}.`; })(),
+      'Pour contrôler ta réponse : multiplie-la par le premier nombre. Tu dois retrouver le résultat.',
+    ],
+    remediate(r) {
+      const x = val(r); if (!x || eq(x.value, b / a)) return null;
+      if (a !== b && eq(x.value, a / b)) return `Tu as écrit ${F(a, b)}. Vérifie : est-ce que ${a} × ${F(a, b)} donne ${b} ? Quel nombre va en haut, quel nombre va en bas ?`;
+      if (eq(x.value, b - a)) return 'Tu as fait une soustraction. Ici, on cherche le nombre qui, <b>multiplié</b> par le premier, donne le résultat.';
+      if (eq(x.value, a * b)) return `Tu as multiplié ${a} par ${b}. Relis la question : on cherche le nombre qui, multiplié par ${a}, donne ${b}.`;
+      if (Number.isInteger(x.value) && x.value === Math.floor(b / a)) return `${a} × ${x.value} = ${a * x.value}, et non ${b}. Le nombre cherché n'est pas un entier : écris-le avec une fraction.`;
+      return null;
+    },
     q: `<p class="big">${a} × ${inp('frac')} = ${b}</p><p class="hint">Écris le nombre manquant sous forme de fraction.</p>`,
     check(r) {
       const x = val(r); if (!x) return null;
@@ -185,7 +241,19 @@ function genQuotient() {
 function genLire() {
   const L = pickLine(), i = pickTick(L), v = i / L.den;
   return {
-    hints: ['Repère l\'unité : en combien de parts égales est partagé l\'écart entre 0 et 1 ?', `L'unité est partagée en ${L.den} : chaque graduation vaut ${F(1, L.den)}.`, `A est à ${Math.abs(i)} graduation${Math.abs(i) > 1 ? 's' : ''} ${i < 0 ? 'à gauche' : 'à droite'} de 0.`],
+    hints: [
+      'Repère l\'unité : entre 0 et 1, en combien de parts égales la droite est-elle partagée ? Combien vaut alors une seule part ?',
+      { html: 'Regarde la droite : l\'unité (de 0 à 1) est coloriée et ses parts sont numérotées.', act: (r) => unitOverlay(r, L) },
+      lineExample(L.den, i, 'lire'),
+    ],
+    remediate(r) {
+      const x = val(r); if (!x || eq(x.value, v)) return null;
+      if (Math.abs(i) > 1 && eq(Math.abs(x.value), Math.abs(i))) return 'Tu as compté les graduations, mais une graduation ne vaut pas 1. Combien vaut une seule graduation ?';
+      if (eq(x.value, -v)) return 'Regarde de quel côté de 0 se trouve le point A. À gauche de 0, les nombres sont négatifs.';
+      if (eq(x.value, i / (L.den + 1)) || (L.den > 2 && eq(x.value, i / (L.den - 1)))) return 'As-tu compté les <b>parts</b> (les intervalles) entre 0 et 1, et non les traits ?';
+      if (eq(Math.abs(x.value - v), 1 / L.den)) return 'Tu es à une graduation près : recompte bien à partir de 0.';
+      return null;
+    },
     q: `<p>Quelle est l'abscisse du point <b>A</b> ? <span class="hint">(fraction ou écriture décimale)</span></p>
         <div class="nl">${drawLine({ ...L, points: [{ v, label: 'A' }] })}</div>
         <p class="big">A ( ${inp('frac')} )</p>`,
@@ -203,7 +271,18 @@ function genPlacer() {
   const asFrac = i % L.den !== 0 && Math.random() < (L.den === 10 ? 0.3 : 0.55);
   const disp = asFrac ? Fs(i, L.den) : fmt(v);
   return {
-    hints: ['Compte en combien de parts égales l\'unité (de 0 à 1) est partagée.', `Chaque graduation vaut ${F(1, L.den)}.`, `${disp} = ${F(i, L.den)} : compte ${Math.abs(i)} graduation${Math.abs(i) > 1 ? 's' : ''} ${i < 0 ? 'vers la gauche' : 'vers la droite'} à partir de 0.`],
+    hints: [
+      'En combien de parts égales l\'unité (de 0 à 1) est-elle partagée ? Combien vaut une graduation ?',
+      { html: 'Regarde la droite : l\'unité est coloriée et ses parts sont numérotées. Sers-t\'en pour compter.', act: (r) => unitOverlay(r, L) },
+      lineExample(L.den, i, 'placer'),
+    ],
+    remediate(r) {
+      const nl = r.querySelector('.nl'); if (nl.dataset.sel === undefined) return null;
+      const sel = Number(nl.dataset.sel); if (sel === i) return null;
+      if (sel === -i) return 'Ton point est du mauvais côté de 0. Ce nombre est-il positif ou négatif ?';
+      if (Math.abs(sel - i) === 1) return 'Tu es à une graduation près : recompte bien à partir de 0.';
+      return null;
+    },
     q: `<p>Place le nombre <b class="big-inline">${disp}</b> : clique sur la bonne graduation.</p>
         <div class="nl">${drawLine({ ...L, clickable: true })}</div>`,
     mount(r) {
@@ -231,20 +310,20 @@ function genEgales() {
   const key = (a, b) => `${a}/${b}`;
   const good = new Map(), bad = new Map();
   const addG = (a, b) => { if (!(a === n && b === d)) good.set(key(a, b), [a, b]); };
-  const addB = (a, b) => {
-    if (a > 0 && b > 0 && !eq(a / b, p / q) && !(a === n && b === d)) bad.set(key(a, b), [a, b]);
+  const addB = (a, b, kind) => {
+    if (a > 0 && b > 0 && !eq(a / b, p / q) && !(a === n && b === d) && !bad.has(key(a, b))) bad.set(key(a, b), [a, b, kind]);
   };
   const ms = shuffle([2, 3, 5, 10]);
   addG(p, q);
   addG(n * ms[0], d * ms[0]);
   if (Math.random() < 0.5) addG(p * ms[1], q * ms[1]);
   const s = rand(1, 4);
-  addB(n + s, d + s);          // piège : ajouter le même nombre
-  addB(q, p);                  // fraction inverse
-  addB(n * 2, d);              // multiplier seulement en haut
-  addB(p + 1, q);
-  addB(n * ms[2], d + ms[2]);  // multiplier en haut, ajouter en bas
-  addB(n, d * ms[3]);          // multiplier seulement en bas
+  addB(n + s, d + s, 'plus');  // piège : ajouter le même nombre
+  addB(q, p, 'inv');           // fraction inverse
+  addB(n * 2, d, 'num');       // multiplier seulement en haut
+  addB(p + 1, q, 'autre');
+  addB(n * ms[2], d + ms[2], 'mix');  // multiplier en haut, ajouter en bas
+  addB(n, d * ms[3], 'den');   // multiplier seulement en bas
 
   const goodArr = [...good.values()];
   const badArr = shuffle([...bad.values()]).slice(0, Math.max(2, 5 - goodArr.length));
@@ -257,7 +336,30 @@ function genEgales() {
   };
 
   return {
-    hints: [`Simplifie d'abord ${F(n, d)} au maximum.`, `${F(n, d)} = ${F(p, q)}. Cherche les fractions qui se simplifient aussi en ${F(p, q)}.`, 'Attention : ajouter le même nombre en haut et en bas ne donne jamais une fraction égale.'],
+    hints: [
+      `Rappel : on obtient une fraction égale en multipliant (ou en divisant) le numérateur <b>et</b> le dénominateur par le <b>même</b> nombre. Pour chaque fraction proposée : par quoi a-t-on multiplié ${n} ? Et ${d} ?`,
+      (n === 10 && d === 4) || (p === 5 && q === 2)
+        ? `Exemple : ${F(14, 6)} et ${F(140, 60)} → 14 × 10 = 140 et 6 × 10 = 60 : même nombre, elles sont égales. ${F(14, 6)} et ${F(15, 7)} → on a ajouté 1 en haut et en bas : elles ne sont pas égales.`
+        : `Exemple : ${F(10, 4)} et ${F(30, 12)} → 10 × 3 = 30 et 4 × 3 = 12 : même nombre, elles sont égales. ${F(10, 4)} et ${F(11, 5)} → on a ajouté 1 en haut et en bas : elles ne sont pas égales.`,
+      'Outil : simplifie chaque fraction au maximum. Deux fractions égales ont la même forme simplifiée.',
+    ],
+    remediate(r) {
+      const cbs = [...r.querySelectorAll('.cb')];
+      if (!cbs.some((c) => c.checked)) return null;
+      const wrongIt = items.find((it, j) => !it.ok && cbs[j].checked);
+      if (wrongIt) {
+        const [a, b, kind] = wrongIt.f, fr = F(a, b);
+        if (kind === 'plus') return `Regarde ${fr} : on a <b>ajouté</b> le même nombre en haut et en bas. Est-ce que cela donne une fraction égale ?`;
+        if (kind === 'inv') return `Dans ${fr}, le numérateur et le dénominateur ont été échangés. Est-ce la même fraction ?`;
+        if (kind === 'num') return `Dans ${fr}, seul le numérateur a été multiplié. Et le dénominateur ?`;
+        if (kind === 'den') return `Dans ${fr}, seul le dénominateur a été multiplié. Et le numérateur ?`;
+        if (kind === 'mix') return `Dans ${fr}, on a multiplié en haut mais ajouté en bas : ce n'est pas la même opération.`;
+        return `Regarde bien ${fr} : le numérateur et le dénominateur ont-ils été multipliés (ou divisés) par le même nombre ?`;
+      }
+      const missing = items.filter((it, j) => it.ok && !cbs[j].checked).length;
+      if (missing) return `Les fractions que tu as cochées sont justes, mais il en manque ${missing > 1 ? 'plusieurs' : 'une'}. Regarde à nouveau chaque fraction.`;
+      return null;
+    },
     q: `<p>Coche <b>toutes</b> les fractions égales à ${F(n, d)} :</p>
         <div class="choices">${items.map((it, j) => `<label class="choice"><input type="checkbox" class="cb" data-j="${j}"> ${F(it.f[0], it.f[1])}</label>`).join('')}</div>`,
     check(r) {
@@ -289,7 +391,22 @@ function genSimplifier() {
   const n = p * k, d = q * k;
   const spf = [2, 3, 5, 7].find((x) => k % x === 0) || k;
   return {
-    hints: [`Cherche un nombre qui divise à la fois ${n} et ${d} (essaie 2, 3, 5…).`, `${n} et ${d} sont tous les deux dans la table de ${spf}.`, `Tu peux diviser en haut et en bas par ${k} d'un seul coup.`],
+    hints: [
+      `Simplifier, c'est diviser le numérateur et le dénominateur par un même nombre. Quel nombre divise à la fois ${n} et ${d} ?`,
+      n === 39 && d === 12
+        ? `Exemple : ${F(45, 30)} → 45 et 30 sont dans la table de 15 : ${F('45 ÷ 15', '30 ÷ 15')} = ${F(3, 2)}. 3 et 2 n'ont plus de diviseur commun (autre que 1) : c'est terminé.`
+        : `Exemple : ${F(39, 12)} → 39 et 12 sont dans la table de 3 : ${F('39 ÷ 3', '12 ÷ 3')} = ${F(13, 4)}. 13 et 4 n'ont plus de diviseur commun (autre que 1) : c'est terminé.`,
+      'Outil — les critères de divisibilité :<ul><li>par 2 : le nombre est pair ;</li><li>par 3 : la somme de ses chiffres est dans la table de 3 ;</li><li>par 5 : il se termine par 0 ou 5 ;</li><li>par 9 : la somme de ses chiffres est dans la table de 9 ;</li><li>par 10 : il se termine par 0.</li></ul>',
+    ],
+    remediate(r) {
+      const x = val(r); if (!x || !x.isFrac || eq(x.value, n / d)) return null;
+      if (Number.isInteger(x.n) && Number.isInteger(x.d) && x.n > 0 && x.d > 0) {
+        if (n % x.n === 0 && d % x.d === 0 && n / x.n !== d / x.d) return `Tu as divisé ${n} par ${n / x.n}, mais ${d} par ${d / x.d}. Il faut diviser le haut et le bas par le <b>même</b> nombre.`;
+        if (n - x.n === d - x.d && n > x.n) return 'Tu as soustrait le même nombre en haut et en bas. Pour simplifier, on <b>divise</b>.';
+        if (eq(x.value, d / n)) return 'Ta fraction est à l\'envers : le numérateur reste en haut.';
+      }
+      return null;
+    },
     q: `<p class="big">${F(n, d)} = ${inp('frac')}</p><p class="hint">Simplifie au maximum (exemple de saisie : 13/4).</p>`,
     check(r) {
       const x = val(r); if (!x) return null;
@@ -299,7 +416,7 @@ function genSimplifier() {
         return { ok: false, msg: `On divise numérateur et dénominateur par ${k} : ${F(`${n} ÷ ${k}`, `${d} ÷ ${k}`)} = ${F(p, q)}.` };
       }
       const g = Number.isInteger(x.n) && Number.isInteger(x.d) ? gcd(x.n, x.d) : 0;
-      if (g !== 1) return { retry: true, msg: `C'est bien égal, mais ce n'est pas simplifié au maximum : ${F(x.n, x.d)} peut encore se diviser par ${g || '…'}. Continue !` };
+      if (g !== 1) return { retry: true, msg: `Ta fraction ${F(x.n, x.d)} est bien égale, mais elle peut encore se simplifier : cherche un diviseur commun à ${x.n} et ${x.d}.` };
       markInput(r, 0, true);
       return { ok: true, msg: `${F(`${n} ÷ ${k}`, `${d} ÷ ${k}`)} = ${F(p, q)}, et ${F(p, q)} ne se simplifie plus.` };
     },
@@ -315,7 +432,30 @@ function genFormes() {
   const g = gcd(n, den), irrN = n / g, irrD = den / g;
   const rg = gcd(rest, den), rN = rest / rg, rD = den / rg;
   return {
-    hints: [`La partie entière, c'est le nombre avant la virgule : ${E}.`, `${fmt(v)} = ${E} + ${fmt(v - E)}.`, `${fmt(v)} = ${F(decN, D)} : simplifie cette fraction pour obtenir la fraction irréductible.`],
+    hints: [
+      `Comment se lit ${fmt(v)} ? Combien d'unités, et combien de dixièmes (ou de centièmes) ?`,
+      eq(v, 1.2) ? `Exemple : 2,5 = ${F(25, 10)} = ${F(5, 2)} = 2 + ${F(1, 2)}.` : `Exemple (fiche) : 1,2 = ${F(12, 10)} = ${F(6, 5)} = 1 + ${F(1, 5)}.`,
+      'Outil : pour « entier + fraction », la fraction doit être plus petite que 1. C\'est ce qui reste quand on a enlevé la partie entière.',
+    ],
+    remediate(r) {
+      const a = val(r, 0), b = val(r, 1), e = val(r, 2), f = val(r, 3);
+      if (!a || !b || !e || !f) return null;
+      const msgs = [];
+      if (!(a.isFrac && (a.d === 10 || a.d === 100) && eq(a.value, v))) {
+        markInput(r, 0, false);
+        msgs.push(a.isFrac && a.d !== 10 && a.d !== 100 ? 'Ligne 1 : le dénominateur doit être 10 ou 100.' : `Ligne 1 : combien de chiffres après la virgule dans ${fmt(v)} ? Des dixièmes ou des centièmes ?`);
+      }
+      if (!(b.isFrac && eq(b.value, v) && Number.isInteger(b.n) && Number.isInteger(b.d) && gcd(b.n, b.d) === 1)) {
+        markInput(r, 1, false);
+        msgs.push(b.isFrac && eq(b.value, v) ? 'Ligne 2 : ta fraction est égale, mais elle peut encore se simplifier.' : 'Ligne 2 : ta fraction n\'est pas égale au nombre. Pars de la ligne 1 et simplifie.');
+      }
+      if (!eq(e.value, E)) { markInput(r, 2, false); msgs.push('Ligne 3 : la partie entière, c\'est le nombre avant la virgule.'); }
+      if (!(f.isFrac && eq(f.value, rest / den))) {
+        markInput(r, 3, false);
+        msgs.push(f.value >= 1 ? 'Ligne 3 : la fraction doit être plus petite que 1.' : 'Ligne 3 : la fraction doit valoir ce qui reste après la partie entière.');
+      }
+      return msgs.length ? `<ul>${msgs.map((x) => `<li>${x}</li>`).join('')}</ul>` : null;
+    },
     q: `<p>Écris le nombre <b>${fmt(v)}</b> sous trois formes :</p>
       <div class="form-lines">
         <div class="form-line">${fmt(v)} = ${inp('frac', 'Fraction décimale')}<small>fraction de dénominateur 10 ou 100</small></div>
@@ -333,6 +473,24 @@ function genFormes() {
       return { ok, msg: `${fmt(v)} = ${F(decN, D)} = ${F(irrN, irrD)} = ${E} + ${F(rN, rD)}${ok ? '' : `<br>Astuce : ${fmt(v)}, c'est ${E} unité${E > 1 ? 's' : ''} et ${fmt(v - E)}.`}` };
     },
   };
+}
+
+/* ---------- Exemples et aide-mémoire ---------- */
+function decExample(n, d) {
+  const same = USUELLES.filter(([a, b]) => b === d && a !== n && b !== 1);
+  const pool = same.length ? same : USUELLES.filter(([a, b]) => !(a === n && b === d) && b !== 1 && a !== b);
+  const [a, b] = pick(pool);
+  return `Exemple : ${F(a, b)} = ${a} ÷ ${b} = ${fmt(a / b)}, car ${b} × ${fmt(a / b)} = ${a}.`;
+}
+function memoFractions(n, d) {
+  return [[1, 2], [1, 4], [1, 10], [1, 5]].filter(([a, b]) => !eq(a / b, n / d))
+    .map(([a, b]) => `${F(a, b)} = ${fmt(a / b)}`).join(' ; ') + '. Si tu connais une part, combien valent plusieurs parts ?';
+}
+function lineExample(den, i, kind) {
+  let k; do { k = rand(-(den * 2), den * 2); } while (k === 0 || k === i || k === -i || k % den === 0);
+  const side = k < 0 ? 'à gauche' : 'à droite', g = Math.abs(k);
+  if (kind === 'lire') return `Exemple : sur une droite où l'unité est partagée en ${den}, un point situé ${g} graduations ${side} de 0 a pour abscisse ${F(k, den)}${gcd(k, den) > 1 ? ` = ${Fs(k, den)}` : ''} = ${fmt(k / den)}.`;
+  return `Exemple : pour placer ${fmt(k / den)} sur une droite graduée en ${den === 2 ? 'demis' : den === 4 ? 'quarts' : 'dixièmes'}, j'écris ${fmt(k / den)} = ${F(k, den)}, puis je compte ${g} graduations ${k < 0 ? 'vers la gauche' : 'vers la droite'} à partir de 0.`;
 }
 
 /* =========================================================
@@ -427,7 +585,8 @@ function stepsHTML(name, toks) {
 /** Fabrique un calcul à partir de modèles ("a + b × c") avec des résultats entiers positifs */
 function buildExpr(tpls) {
   for (let tries = 0; tries < 30000; tries++) {
-    const parts = pick(tpls).split(' ');
+    const tpl = pick(tpls);
+    const parts = tpl.split(' ');
     const toks = parts.map((p) => (/^[a-z]$/.test(p) ? { t: 'n', v: 0, ph: true } : p === '(' || p === ')' ? { t: p } : { t: 'op', v: p }));
     toks.forEach((k, i) => {
       if (!k.ph) return;
@@ -441,7 +600,7 @@ function buildExpr(tpls) {
     const clean = toks.map((k) => (k.ph ? { t: 'n', v: k.v } : k));
     const ev = evalSteps(clean, 400);
     if (!ev || ev.steps.some((st) => st.res === 0)) continue;
-    return { toks: clean, ...ev };
+    return { toks: clean, tpl, ...ev };
   }
   return null;
 }
@@ -458,13 +617,15 @@ function genCalcFrom(tpls) {
   return () => {
     const e = buildExpr(tpls);
     const name = pick(['A', 'B', 'C', 'D', 'E', 'F']);
-    const s0 = e.steps[0];
+    let exe = buildExpr([e.tpl]);
+    for (let i = 0; i < 20 && tokStr(exe.toks) === tokStr(e.toks); i++) exe = buildExpr([e.tpl]);
     return {
       hints: [
-        'Rappel de l\'ordre : 1. les parenthèses (les plus intérieures d\'abord) ; 2. × et : ; 3. + et −, de gauche à droite.',
-        `Commence par <b>${s0.a} ${s0.op} ${s0.b}</b> (${s0.rule}).`,
-        `Après la première étape : ${name} = ${tokStr(s0.toks)}`,
+        `Avant de calculer, observe : y a-t-il des parenthèses ? des multiplications ou des divisions ? Quelle règle de ${ficheLink('calculs')} s'applique en premier ?`,
+        `Exemple résolu, avec la même structure :${stepsHTML('X', exe.toks)}`,
+        'Méthode : souligne le calcul que tu fais en premier, recopie tout le reste en dessous, puis recommence ligne par ligne.',
       ],
+      remediate(r) { const x = val(r); return x ? calcRemed(e.toks, e.value, x.value) : null; },
       q: `<p>Calcule en respectant les règles :</p><p class="big">${name} = ${tokStr(e.toks)}</p><p class="big">${name} = ${inp('num', 'Résultat')}</p>`,
       check(r) {
         const x = val(r); if (!x) return null;
@@ -482,11 +643,23 @@ function genFirstOp() {
     ? `<button type="button" class="opbtn" data-i="${i}" aria-label="${OPNOM[k.v]}">${k.v}</button>`
     : `<span class="${k.t === 'n' ? 'tn' : 'tp'}">${tokTxt(k)}</span>`)).join('');
   const hasPar = e.toks.some((k) => k.t === '(');
+  let ex = buildExpr([e.tpl]);
+  for (let i = 0; i < 20 && tokStr(ex.toks) === tokStr(e.toks); i++) ex = buildExpr([e.tpl]);
+  const dFirst = depthAt(e.toks, first.opIndex);
   return {
     hints: [
-      hasPar ? 'Il y a des parenthèses : on commence par l\'intérieur, et par les plus intérieures s\'il y en a plusieurs.' : 'Il n\'y a pas de parenthèses : regarde s\'il y a des × ou des :.',
-      `Règle à utiliser : ${first.rule}.`,
+      hasPar ? 'Y a-t-il des parenthèses ? Si oui, lesquelles sont le plus à l\'intérieur ?' : 'Pas de parenthèses ici. Y a-t-il des multiplications ou des divisions ?',
+      'Outil — l\'ordre des priorités : 1. les parenthèses (les plus intérieures d\'abord) ; 2. × et : ; 3. + et −. Pour des opérations de même priorité : de gauche à droite.',
+      `Exemple : dans ${tokHTML(ex.toks, ex.steps[0].opIndex)}, on commence par le calcul surligné (${ex.steps[0].rule}).`,
     ],
+    remediate(r) {
+      if (r.dataset.sel === undefined) return null;
+      const sel = Number(r.dataset.sel); if (sel === first.opIndex) return null;
+      const dSel = depthAt(e.toks, sel), op = e.toks[sel].v;
+      if (dSel < dFirst) return dSel === 0 ? 'Il y a des parenthèses dans ce calcul : on commence toujours par le calcul entre parenthèses (règle 5).' : 'Il y a des parenthèses à l\'intérieur d\'autres parenthèses : on commence par les plus intérieures (règle 6).';
+      if (PRIO[op] === 1 && PRIO[first.op] === 2) return `Tu as choisi « ${op} ». Y a-t-il une multiplication ou une division au même niveau ? Elles passent avant (règles 3 et 4).`;
+      return 'Ces opérations ont la même priorité : dans ce cas, on calcule de gauche à droite.';
+    },
     q: `<p>Clique sur l'opération à effectuer <b>en premier</b> :</p><div class="expr">${html}</div>`,
     mount(r) {
       r.querySelectorAll('.opbtn').forEach((b) => b.addEventListener('click', () => {
@@ -536,6 +709,49 @@ function genTrees() {
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 const withHints = (o, h) => { o.hints = h; return o; };
+/** Remédiation d'un QCM : fn(indexChoisi, texteChoisi) renvoie un message (ou null) si la réponse est fausse */
+const withRemed = (o, fn) => {
+  o.remediate = (r) => {
+    const sel = r.querySelector('.rb:checked'); if (!sel) return null;
+    const i = Number(sel.dataset.o);
+    return i === o._correct ? null : fn(i, o._opts[i]);
+  };
+  return o;
+};
+/** Profondeur de parenthèses à la position i */
+function depthAt(toks, i) {
+  let d = 0;
+  for (let q = 0; q < i; q++) { if (toks[q].t === '(') d++; if (toks[q].t === ')') d--; }
+  return d;
+}
+/** Évalue avec d'autres priorités (pour reconnaître une erreur de méthode) */
+function evalWith(toks, P, ignorePar = false) {
+  const out = [], ops = [];
+  const apply = () => { const o = ops.pop(), b = out.pop(), a = out.pop(); out.push(OPF[o](a, b)); };
+  for (const k of toks) {
+    if (k.t === 'n') out.push(k.v);
+    else if (k.t === '(') { if (!ignorePar) ops.push('('); }
+    else if (k.t === ')') { if (!ignorePar) { while (ops.length && ops[ops.length - 1] !== '(') apply(); ops.pop(); } }
+    else { while (ops.length && ops[ops.length - 1] !== '(' && P[ops[ops.length - 1]] >= P[k.v]) apply(); ops.push(k.v); }
+  }
+  while (ops.length) apply();
+  return out[0];
+}
+/** Reconnaît les erreurs classiques sur les priorités */
+function calcRemed(toks, value, ans) {
+  if (eq(ans, value)) return null;
+  const tries = [
+    [{ '+': 1, '−': 1, '×': 1, ':': 1 }, false, 'Tu as calculé dans l\'ordre de lecture. Mais la multiplication et la division sont <b>prioritaires</b> sur l\'addition et la soustraction (règles 3 et 4).'],
+    [PRIO, true, 'As-tu commencé par le calcul <b>entre parenthèses</b> ? C\'est toujours la première chose à faire (règle 5).'],
+    [{ '+': 2, '−': 1, '×': 3, ':': 3 }, false, 'Quand il n\'y a que des + et des −, on ne fait pas les additions d\'abord : on calcule <b>de gauche à droite</b> (règle 1).'],
+    [{ '+': 0, '−': 0, '×': 2, ':': 1 }, false, 'Quand il n\'y a que des × et des :, on ne fait pas les multiplications d\'abord : on calcule <b>de gauche à droite</b> (règle 2).'],
+  ];
+  for (const [P, ign, msg] of tries) {
+    const v = evalWith(toks, P, ign);
+    if (Number.isFinite(v) && !eq(v, value) && eq(v, ans)) return msg;
+  }
+  return null;
+}
 
 /** QCM générique (boutons radio) */
 function mcq(prompt, options, correct, explain, { col = false, label } = {}) {
@@ -543,6 +759,8 @@ function mcq(prompt, options, correct, explain, { col = false, label } = {}) {
   const name = 'q' + Math.random().toString(36).slice(2);
   return {
     label,
+    _correct: correct,
+    _opts: options,
     q: `${prompt}<div class="choices${col ? ' col' : ''}">${order.map((oi) => `<label class="choice${col ? ' text' : ''}"><input type="radio" name="${name}" class="rb" data-o="${oi}"> <span>${options[oi]}</span></label>`).join('')}</div>`,
     check(r) {
       const sel = r.querySelector('.rb:checked');
@@ -580,7 +798,14 @@ function genMot() {
         `L'opération est une ${OPNOM[op]}, donc ${ex} est ${opts[['+', '−', '×', ':'].indexOf(op)]}.`, { col: true });
     },
   ];
-  return withHints(pick(qs)(), ['Somme et différence : les nombres s\'appellent des termes. Produit : des facteurs.', 'Quotient : le premier nombre est le dividende, le second est le diviseur.']);
+  return withRemed(withHints(pick(qs)(), [`Quel est le signe de l'opération ? Relis le tableau « Vocabulaire » dans ${ficheLink('calculs')}.`]), (i, txt) => {
+    if (/^termes/.test(txt)) return 'Les termes, ce sont les nombres d\'une somme ou d\'une différence. Quel est le signe ici ?';
+    if (/^facteurs/.test(txt)) return 'Les facteurs, ce sont les nombres d\'un produit (une multiplication). Quel est le signe ici ?';
+    if (/^dividende/.test(txt)) return 'Le dividende, c\'est le nombre que l\'on divise : il est écrit en premier dans la division.';
+    if (/^diviseur/.test(txt)) return 'Le diviseur, c\'est le nombre par lequel on divise : il est écrit en second.';
+    if (/^(quotients|produits)/.test(txt)) return 'Relis la question : on parle des nombres qui sont dans le calcul, pas du résultat.';
+    return 'Regarde bien le signe de l\'opération, puis relis la première colonne du tableau de vocabulaire.';
+  });
 }
 
 function genDerniere() {
@@ -588,30 +813,55 @@ function genDerniere() {
   const toks = treeToks(tree);
   const name = pick(['A', 'B', 'C', 'D', 'E']);
   const ops = ['+', '−', '×', ':'];
-  return withHints(mcq(`<p class="big">${name} = ${tokStr(toks)}</p><p>${name} est …</p>`,
+  const inner = typeof tree.l === 'object' ? tree.l.op : tree.r.op;
+  const EXD = { '+': 'A = 25 + 4 × 3 : on calcule d\'abord 4 × 3, puis on ajoute 25. La dernière opération est une addition : A est une somme.',
+    '×': 'B = (5 + 3) × 4 : on calcule d\'abord 5 + 3, puis on multiplie par 4. La dernière opération est une multiplication : B est un produit.',
+    ':': 'C = 18 : (7 − 1) : on calcule d\'abord 7 − 1, puis on divise. La dernière opération est une division : C est un quotient.',
+    '−': 'D = 40 − (5 + 8) : on calcule d\'abord 5 + 8, puis on soustrait. La dernière opération est une soustraction : D est une différence.' };
+  const exK = pick(Object.keys(EXD).filter((o) => o !== tree.op));
+  return withRemed(withHints(mcq(`<p class="big">${name} = ${tokStr(toks)}</p><p>${name} est …</p>`,
     ops.map((o) => TYPE[o]), ops.indexOf(tree.op),
     `Pour calculer ${name}, la dernière opération effectuée est une <b>${OPNOM[tree.op]}</b>.<br>${name} est ${phrase(tree)}.${stepsHTML(name, toks)}`),
-    ['Fais le calcul dans l\'ordre des priorités. Quelle opération fais-tu en <b>dernier</b> ?', 'Addition → somme ; soustraction → différence ; multiplication → produit ; division → quotient.']);
+    ['Fais le calcul au brouillon, dans l\'ordre des priorités. Quelle est la <b>toute dernière</b> opération que tu effectues ?', `Exemple (fiche) : ${EXD[exK]}`]),
+    (i) => {
+      const o = ['+', '−', '×', ':'][i];
+      if (o === inner) return 'Tu as choisi l\'opération qui se fait en <b>premier</b>. On cherche celle qui se fait en <b>dernier</b>.';
+      if (o !== tree.op) return `Il n'y a pas de ${OPNOM[o]} dans ce calcul ! Regarde bien les signes.`;
+      return null;
+    });
 }
 
 function genPhraseVersCalcul() {
   const { all, tree } = genTrees();
   const name = pick(['A', 'B', 'C', 'D', 'E']);
   const opts = all.map((t) => `${name} = ${tokStr(treeToks(t))}`);
-  return withHints(mcq(`<p class="statement">Quel calcul correspond à la phrase :<br><b>« ${name} est ${phrase(tree)} »</b> ?</p>`,
+  return withRemed(withHints(mcq(`<p class="statement">Quel calcul correspond à la phrase :<br><b>« ${name} est ${phrase(tree)} »</b> ?</p>`,
     opts, all.indexOf(tree),
     `« ${cap(phrase(tree))} » : on commence par le premier mot. C'est ${TYPE[tree.op]}, donc la <b>dernière</b> opération est une ${OPNOM[tree.op]}.<br>${name} = ${tokStr(treeToks(tree))}`, { col: true }),
-    ['Le premier mot de la phrase (somme, différence, produit, quotient) donne la <b>dernière</b> opération.', `Ici, c'est ${TYPE[tree.op]} : la dernière opération est une ${OPNOM[tree.op]}.`, 'Ce qui doit être calculé avant doit être entre parenthèses (sauf si × ou : est déjà prioritaire).']);
+    ['Lis le début de la phrase : « la somme », « la différence », « le produit » ou « le quotient » ? Ce mot indique la <b>dernière</b> opération du calcul.',
+      'Exemple (fiche) : « D est la différence de 40 et de la somme de 5 et de 8 ». C\'est une différence entre deux nombres : 40, et la somme 5 + 8. Donc D = 40 − (5 + 8).',
+      'Outil : coupe la phrase en deux morceaux autour du « et » (ou du « par ») principal. Chaque morceau est un nombre ou un petit calcul.']),
+    (i) => {
+      const t = all[i];
+      if (t.op !== tree.op) return `Dans le calcul que tu as choisi, la dernière opération est une ${OPNOM[t.op]} : ce serait ${TYPE[t.op]}. Or la phrase commence par « ${NOM[tree.op][0]} ».`;
+      return 'Le début est bon ! Regarde maintenant ce qui doit être calculé en premier : où faut-il des parenthèses ?';
+    });
 }
 
 function genCalculVersPhrase() {
   const { all, tree } = genTrees();
   const name = pick(['A', 'B', 'C', 'D', 'E']);
   const opts = all.map((t) => `${name} est ${phrase(t)}.`);
-  return withHints(mcq(`<p>Quelle phrase traduit le calcul :</p><p class="big">${name} = ${tokStr(treeToks(tree))}</p>`,
+  return withRemed(withHints(mcq(`<p>Quelle phrase traduit le calcul :</p><p class="big">${name} = ${tokStr(treeToks(tree))}</p>`,
     opts, all.indexOf(tree),
     `La dernière opération effectuée est une <b>${OPNOM[tree.op]}</b>, donc ${name} est ${TYPE[tree.op]} :<br>${name} est ${phrase(tree)}.`, { col: true }),
-    ['Cherche la dernière opération effectuée dans le calcul.', `La dernière opération est une ${OPNOM[tree.op]} : la phrase commence par « ${cap(NOM[tree.op][0])} ».`]);
+    ['Quelle est la dernière opération effectuée dans ce calcul ? C\'est elle qui donne le premier mot de la phrase.',
+      'Exemple (fiche) : B = (5 + 3) × 4. On calcule 5 + 3, puis on multiplie : la dernière opération est une multiplication. B est le produit de la somme de 5 et de 3 par 4.']),
+    (i) => {
+      const t = all[i];
+      if (t.op !== tree.op) return `La phrase choisie commence par « ${NOM[t.op][0]} » : elle décrit ${TYPE[t.op]}. Quelle est la dernière opération de ton calcul ?`;
+      return 'Le premier mot est bon. Vérifie maintenant ce qui est calculé en premier, et l\'ordre des nombres.';
+    });
 }
 
 /** Démonstrations de la fiche */
@@ -1250,7 +1500,7 @@ function makeConstruction(mode) {
   };
 }
 
-function checkTriangle(board, spec) {
+function checkTriangle(board, spec, brief = false) {
   const pts = spec.names.map((n) => board.byName(n));
   if (!board.drawnCount()) return null;
   const miss = spec.names.filter((n, i) => !pts[i]);
@@ -1275,6 +1525,7 @@ function checkTriangle(board, spec) {
   if (!spec.angles.length || spec.sides.length < 3) {
     // contrôle supplémentaire : le dernier côté doit être cohérent (évite les triangles « au hasard »)
   }
+  if (brief) return { ok: allOk, partial: `Voici ce que mesure ta figure :<ul class="fb-list">${items.map((i) => `<li>${i}</li>`).join('')}</ul>Utilise <b>↶ Annuler</b> pour reprendre ce qui ne va pas.` };
   let msg = `<ul class="fb-list">${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
   if (!allOk) msg += `<b>Méthode :</b><ol class="method">${spec.method.map((m) => `<li>${m}</li>`).join('')}</ol>${spec.fig()}`;
   else msg += 'Ta construction est juste !';
@@ -1286,8 +1537,10 @@ let CONSTRUCT_MODE = '';
 function genConstruire() {
   const spec = makeConstruction(CONSTRUCT_MODE);
   return {
-    hints: spec.method.slice(0, 3).map((m, i) => `Étape ${i + 1} : ${m}`),
+    hints: constructHints(spec.type),
     anim: spec.scene,
+    example: () => makeConstruction(spec.type).scene(),
+    remediate(r) { const res = checkTriangle(r._board, spec, true); return res && res.partial && !res.ok ? res.partial : null; },
     q: `<p class="statement">${spec.text}</p><div class="board"></div>`,
     mount(r) { r._board = createBoard(r.querySelector('.board'), { names: spec.names }); },
     check(r) { return checkTriangle(r._board, spec); },
@@ -1317,10 +1570,22 @@ function genTraceMediatrice() {
   const [nA, nB] = set;
   const names = ['I', 'J', 'K'].filter((n) => !set.includes(n));
   return {
-    hints: [`La médiatrice de [${nA}${nB}] est perpendiculaire à [${nA}${nB}] et passe par son milieu.`,
-      `Compas : trace un cercle de centre ${nA} puis un cercle de centre ${nB}, avec le même rayon, plus grand que ${cm(L / 2)}.`,
-      'Place les deux points où les cercles se coupent, puis trace la droite qui passe par ces deux points (outil Droite).'],
+    hints: [
+      `Relis la définition de la médiatrice d'un segment dans ${ficheLink('triangles')}. Quelles sont ses deux caractéristiques ?`,
+      'Outil : tous les points de la médiatrice sont à égale distance des deux extrémités du segment. Quel instrument permet de trouver des points situés à la même distance de deux points ?',
+      'Clique sur « 🎬 Voir un exemple » pour voir la méthode sur un autre segment.',
+    ],
     anim: () => sceneMediatrice([nA, nB], A, B, names),
+    example: () => { const v = G.rot({ x: 1, y: 0 }, rand(-30, 30)), c = { x: 0, y: 0 }, l = rand(4, 7); return sceneMediatrice(['E', 'F'], G.sub(c, G.mul(v, l / 2)), G.add(c, G.mul(v, l / 2)), ['K', 'L']); },
+    remediate(r) {
+      const lins = r._board.linears(); if (!lins.length) return null;
+      const M = G.mid(A, B);
+      const thr = (Lx) => distToLine(Lx, M) <= 0.15, per = (Lx) => Math.abs(angDeg(Lx.d, G.sub(B, A)) - 90) <= 2;
+      if (lins.some((Lx) => thr(Lx) && per(Lx))) return null;
+      if (lins.some((Lx) => thr(Lx))) return `Ta droite passe bien par le milieu de [${nA}${nB}], mais elle n'est pas perpendiculaire à [${nA}${nB}].`;
+      if (lins.some((Lx) => per(Lx))) return `Ta droite est bien perpendiculaire à [${nA}${nB}], mais passe-t-elle par son milieu ?`;
+      return null;
+    },
     q: `<p class="statement">Trace la <b>médiatrice</b> du segment [${nA}${nB}] (${nA}${nB} = ${cm(L)}).</p><div class="board"></div>`,
     mount(r) { r._board = createBoard(r.querySelector('.board'), { names, tool: 'circle', given: { points: [{ name: nA, ...A }, { name: nB, ...B }], segs: [[nA, nB]] } }); },
     check(r) {
@@ -1347,8 +1612,25 @@ function genTraceDroite() {
   const foot = G.add(B, G.mul(G.norm(BC), G.dot(G.sub(A, B), G.norm(BC))));
   return {
     hints: kind === 'médiane'
-      ? [`La médiane issue de ${nA} passe par ${nA} et par le milieu de [${nB}${nC}].`, `${nB}${nC} = ${cm(L)}, donc le milieu est à ${cm(L / 2)} de ${nB}.`, `Règle : pars de ${nB} en glissant sur [${nB}${nC}], arrête-toi à ${cm(L / 2)}, puis relie ${nA} à ce point.`]
-      : [`La hauteur issue de ${nA} passe par ${nA} et est perpendiculaire au côté opposé [${nB}${nC}].`, `Prends l'Équerre et clique d'abord sur le côté [${nB}${nC}]…`, `… puis clique sur ${nA}.`],
+      ? [`Relis la définition d'une médiane dans ${ficheLink('triangles')} : par quels deux points passe-t-elle ?`, 'Outil : pour trouver le milieu d\'un segment, on mesure sa longueur et on la divise par 2.', 'Clique sur « 🎬 Voir un exemple » pour voir la méthode dans un autre triangle.']
+      : [`Relis la définition d'une hauteur dans ${ficheLink('triangles')} : par quel point passe-t-elle, et quelle est sa position par rapport au côté opposé ?`, 'Outil : l\'Équerre trace une perpendiculaire. On choisit d\'abord la droite de référence, puis le point par lequel elle doit passer.', 'Clique sur « 🎬 Voir un exemple » pour voir la méthode dans un autre triangle.'],
+    example: () => { const t = placedTriangle(); return kind === 'médiane' ? sceneMediane(['D', 'E', 'F'], t.A, t.B, t.C, t.L, 'K') : sceneHauteur(['D', 'E', 'F'], t.A, t.B, t.C, 'K'); },
+    remediate(r) {
+      const lins = r._board.linears(); if (!lins.length) return null;
+      const viaA = (Lx) => distToLine(Lx, A) <= 0.12;
+      if (kind === 'médiane') {
+        const viaM = (Lx) => distToLine(Lx, M) <= 0.15;
+        if (lins.some((Lx) => viaA(Lx) && viaM(Lx))) return null;
+        if (lins.some(viaA)) return `Ta droite passe bien par ${nA}. Mais passe-t-elle par le milieu de [${nB}${nC}] ? Vérifie avec la règle.`;
+        if (lins.some(viaM)) return `Ta droite passe par le milieu de [${nB}${nC}]. Mais une médiane passe aussi par un sommet : lequel ?`;
+        return null;
+      }
+      const per = (Lx) => Math.abs(angDeg(Lx.d, BC) - 90) <= 2;
+      if (lins.some((Lx) => viaA(Lx) && per(Lx))) return null;
+      if (lins.some(viaA)) return `Ta droite passe bien par ${nA}, mais elle n'est pas perpendiculaire à (${nB}${nC}). Quel instrument trace une perpendiculaire ?`;
+      if (lins.some(per)) return `Ta droite est bien perpendiculaire à (${nB}${nC}), mais elle ne passe pas par le sommet ${nA}.`;
+      return null;
+    },
     anim: () => (kind === 'médiane' ? sceneMediane([nA, nB, nC], A, B, C, L, names[0]) : sceneHauteur([nA, nB, nC], A, B, C, names[0])),
     q: `<p class="statement">Dans le triangle ${tri}, trace la <b>${kind}</b> issue de ${nA}${kind === 'médiane' ? ` (${nB}${nC} = ${cm(L)})` : ''}.</p><div class="board"></div>`,
     mount(r) {
@@ -1396,10 +1678,14 @@ function genInegalite() {
   const correct = eq(big[1], s) ? 2 : big[1] > s ? 1 : 0;
   const cmp = correct === 2 ? '=' : correct === 1 ? '>' : '<';
   const concl = ['donc le triangle existe : on peut le construire.', 'donc le triangle n\'existe pas : on ne peut pas le construire.', 'donc le triangle est aplati : les trois points sont alignés.'][correct];
-  return withHints(mcq(`<p class="statement">Peut-on construire un triangle ${set.join('')} tel que ${sides.map(([n, v]) => `${n} = ${cm(v)}`).join(', ')} ?</p>`,
+  return withRemed(withHints(mcq(`<p class="statement">Peut-on construire un triangle ${set.join('')} tel que ${sides.map(([n, v]) => `${n} = ${cm(v)}`).join(', ')} ?</p>`,
     ['Oui, on peut le construire', 'Non, il n\'existe pas', 'Oui, mais il est aplati (points alignés)'], correct,
     `Le plus grand côté est ${big[0]} = ${cm(big[1])}. La somme des deux autres vaut ${fmt(sorted[1][1])} + ${fmt(sorted[2][1])} = ${cm(s)}.<br>${fmt(big[1])} ${cmp} ${fmt(s)}, ${concl}`, { col: true }),
-  ['Repère le plus grand des trois côtés.', `Le plus grand côté est ${big[0]}. Additionne les deux autres longueurs.`, 'Compare : plus petit que la somme → il existe ; égal → aplati ; plus grand → il n\'existe pas.']);
+  [`Relis l'inégalité triangulaire dans ${ficheLink('triangles')}. Quelle longueur faut-il comparer, et à quoi ?`,
+    'Exemple (fiche) : avec 4 cm, 5 cm et 8 cm : 4 + 5 = 9 et 8 &lt; 9, donc le triangle existe.',
+    'Outil — les 3 cas : la plus grande longueur est plus petite que la somme des deux autres → il existe ; égale → il est aplati ; plus grande → il n\'existe pas.']),
+  (i) => (i === 2 ? 'Un triangle est aplati seulement si la plus grande longueur est <b>exactement égale</b> à la somme des deux autres. Est-ce le cas ici ?'
+    : 'As-tu bien comparé la <b>plus grande</b> longueur à la somme des <b>deux autres</b> ? Refais l\'addition.'));
 }
 
 function genAngles() {
@@ -1408,7 +1694,17 @@ function genAngles() {
     let x, y; do { x = rand(15, 120); y = rand(15, 120); } while (x + y > 165);
     const z = 180 - x - y;
     return {
-      hints: ['Dans un triangle, la somme des trois angles vaut 180°.', `${x}° + ${y}° = ${x + y}°. Combien manque-t-il pour arriver à 180° ?`],
+      hints: [
+        `Que sais-tu de la somme des trois angles d'un triangle ? (${ficheLink('triangles')}, partie 2)`,
+        (x === 50 && y === 70) || (x === 70 && y === 50) ? 'Exemple : si deux angles mesurent 40° et 65°, le troisième mesure 180° − 40° − 65° = 75°.' : 'Exemple (fiche) : si deux angles mesurent 50° et 70°, le troisième mesure 180° − 50° − 70° = 60°.',
+      ],
+      remediate(r) {
+        const v = val(r); if (!v || eq(v.value, z)) return null;
+        if (eq(v.value, x + y)) return 'Tu as additionné les deux angles connus. Que vaut la somme des <b>trois</b> angles d\'un triangle ?';
+        if (eq(v.value, 180 - x) || eq(v.value, 180 - y)) return 'Tu n\'as enlevé qu\'un seul angle à 180°. Combien d\'angles connais-tu ?';
+        if (eq(v.value, 360 - x - y)) return 'La somme des angles d\'un triangle vaut 180°, pas 360°.';
+        return null;
+      },
       q: `<p class="statement">Dans le triangle ${set.join('')}, ${angHTML(B, A, C)} = ${x}° et ${angHTML(A, B, C)} = ${y}°.</p><p class="big">${angHTML(A, C, B)} = ${inp('num', 'Mesure de l\'angle')} °</p>`,
       check(r) {
         const v = val(r); if (!v) return null;
@@ -1420,10 +1716,11 @@ function genAngles() {
   const possible = Math.random() < 0.5;
   let x, y, z;
   do { x = rand(3, 24) * 5; y = rand(3, 24) * 5; z = possible ? 180 - x - y : 180 - x - y + pick([-20, -10, 10, 20]); } while (z < 10 || z > 150);
-  return withHints(mcq(`<p class="statement">Un triangle peut-il avoir des angles qui mesurent ${x}°, ${y}° et ${z}° ?</p>`,
+  return withRemed(withHints(mcq(`<p class="statement">Un triangle peut-il avoir des angles qui mesurent ${x}°, ${y}° et ${z}° ?</p>`,
     ['Oui', 'Non'], possible ? 0 : 1,
     `${x} + ${y} + ${z} = ${x + y + z}°. ${possible ? 'La somme fait bien 180°, donc c\'est possible.' : 'La somme ne fait pas 180°, donc ce triangle n\'existe pas.'}`),
-  ['Additionne les trois angles.', 'Pour qu\'un triangle existe, la somme de ses angles doit faire exactement 180°.']);
+  ['Que sais-tu de la somme des angles d\'un triangle ?', 'Outil : additionne les trois mesures et compare le total à 180°.']),
+  () => 'As-tu additionné les <b>trois</b> mesures ? Compare le total à 180°.');
 }
 
 function remarkableFig(kind, withAll = false) {
@@ -1463,23 +1760,30 @@ function genDroites() {
   if (t === 0) {
     const k = rand(0, 2);
     const def = ['une droite perpendiculaire à un côté qui passe par son milieu', 'une droite qui passe par un sommet et qui est perpendiculaire au côté opposé', 'une droite qui passe par un sommet et par le milieu du côté opposé'];
-    return withHints(mcq(`<p>Quelle est la droite rouge ?</p>${remarkableFig(kinds[k])}`,
+    return withRemed(withHints(mcq(`<p>Quelle est la droite rouge ?</p>${remarkableFig(kinds[k])}`,
       ['Une médiatrice', 'Une hauteur', 'Une médiane'], k,
       `C'est ${['une médiatrice', 'une hauteur', 'une médiane'][k]} : ${def[k]}. Regarde le codage : ${['angle droit et milieu', 'angle droit, et la droite passe par un sommet', 'milieu, et la droite passe par un sommet'][k]}.`),
-      ['Regarde le codage : y a-t-il un angle droit ? Des traits qui montrent un milieu ?', 'La droite rouge passe-t-elle par un sommet du triangle ?']);
+      [`Relis les définitions des trois droites remarquables (${ficheLink('triangles')}, partie 3).`,
+        'Outil : observe le codage. Un petit carré = un angle droit. De petits traits identiques = des longueurs égales (donc un milieu). Et la droite passe-t-elle par un sommet ?']),
+      (i) => ['Une médiatrice coupe un côté en son <b>milieu</b> et lui est <b>perpendiculaire</b>. Vois-tu ces deux codages ici ?',
+        'Une hauteur passe par un <b>sommet</b> et forme un <b>angle droit</b> avec le côté opposé. Est-ce le cas ici ?',
+        'Une médiane relie un <b>sommet</b> au <b>milieu</b> du côté opposé. Est-ce le cas ici ?'][i]);
   }
   if (t === 1) {
     const k = rand(0, 2);
     const nm = ['médiatrices', 'hauteurs', 'médianes'][k];
-    return withHints(mcq(`<p class="statement">Le point de concours des trois <b>${nm}</b> d'un triangle s'appelle …</p>`,
+    return withRemed(withHints(mcq(`<p class="statement">Le point de concours des trois <b>${nm}</b> d'un triangle s'appelle …</p>`,
       ['le centre du cercle circonscrit', 'l\'orthocentre', 'le centre de gravité'], k,
       `Médiatrices → centre du cercle circonscrit (O) ; hauteurs → orthocentre (H) ; médianes → centre de gravité (G).`, { col: true }),
-      ['« Ortho » veut dire « droit » : pense aux angles droits des hauteurs.', 'Un point à égale distance des 3 sommets est le centre d\'un cercle qui passe par les 3 sommets.']);
+      [`Relis le tableau des droites remarquables (${ficheLink('triangles')}, partie 3) : sa dernière ligne parle des points de concours.`,
+        'Outil : « ortho » veut dire « droit » ; le cercle circonscrit passe par les trois sommets ; le centre de gravité est le point d\'équilibre du triangle.']),
+      () => 'Relie bien chaque type de droite à son point de concours : relis la dernière ligne du tableau de la fiche.');
   }
   const k = rand(0, 2);
   const defs = ['Droite perpendiculaire à un côté et qui passe par son milieu.', 'Droite qui passe par un sommet et qui est perpendiculaire au côté opposé.', 'Droite qui passe par un sommet et par le milieu du côté opposé.'];
-  return withHints(mcq(`<p class="statement">« ${defs[k]} » C'est la définition d'…</p>`, ['une médiatrice', 'une hauteur', 'une médiane'], k, `${defs[k]} C'est ${['une médiatrice', 'une hauteur', 'une médiane'][k]}.`),
-    ['Médiatrice : perpendiculaire + milieu. Hauteur : sommet + perpendiculaire. Médiane : sommet + milieu.']);
+  return withRemed(withHints(mcq(`<p class="statement">« ${defs[k]} » C'est la définition d'…</p>`, ['une médiatrice', 'une hauteur', 'une médiane'], k, `${defs[k]} C'est ${['une médiatrice', 'une hauteur', 'une médiane'][k]}.`),
+    ['Repère les mots-clés de la définition : « milieu » ? « sommet » ? « perpendiculaire » ?']),
+    (i) => ['Une médiatrice passe-t-elle par un sommet ? Relis sa définition.', 'Une hauteur passe-t-elle par le milieu d\'un côté ? Relis sa définition.', 'Une médiane est-elle perpendiculaire au côté ? Relis sa définition.'][i]);
 }
 
 function genPropMediatrice() {
@@ -1488,7 +1792,15 @@ function genPropMediatrice() {
   const x = rand(15, 95) / 10;
   if (Math.random() < 0.6) {
     return {
-      hints: [`Propriété : tout point de la médiatrice de [${A}${B}] est à égale distance de ${A} et de ${B}.`],
+      hints: [
+        `Relis la propriété de la médiatrice (${ficheLink('triangles')}, partie 3).`,
+        A === 'E' ? 'Exemple : P est sur la médiatrice de [RS] et PR = 3 cm. Alors PS = 3 cm, car P est à égale distance de R et de S.' : 'Exemple : P est sur la médiatrice de [EF] et PE = 3 cm. Alors PF = 3 cm, car P est à égale distance de E et de F.',
+      ],
+      remediate(r) {
+        const v = val(r); if (!v || eq(v.value, x)) return null;
+        if (eq(v.value, 2 * x) || eq(v.value, x / 2)) return `Que dit la propriété de la médiatrice : ${M}${A} et ${M}${B} sont-elles différentes ?`;
+        return null;
+      },
       q: `<p class="statement">Le point ${M} est sur la médiatrice du segment [${A}${B}] et ${M}${A} = ${cm(x)}.</p><p class="big">${M}${B} = ${inp('num', 'Longueur')} cm</p>`,
       check(r) {
         const v = val(r); if (!v) return null;
@@ -1499,7 +1811,7 @@ function genPropMediatrice() {
   }
   const O = 'O';
   return {
-    hints: ['O est sur les trois médiatrices du triangle.', `Sur la médiatrice de [${A}C], O est à égale distance de ${A} et de C.`],
+    hints: ['Où se trouve le point O par rapport aux trois médiatrices du triangle ?', 'Outil : un point situé sur la médiatrice d\'un segment est à égale distance des deux extrémités de ce segment.'],
     q: `<p class="statement">O est le point de concours des médiatrices du triangle ${A}${B}C et O${A} = ${cm(x)}. Combien mesure OC ?</p><p class="big">OC = ${inp('num', 'Longueur')} cm</p>`,
     check(r) {
       const v = val(r); if (!v) return null;
@@ -1526,6 +1838,17 @@ function renderTriangleFiche() {
   if (box('rem-medianes')) box('rem-medianes').innerHTML = fig('médiane');
 }
 let placedTriangleOverride = null;
+
+/** Indices pour les constructions (sans donner la construction de l'élève) */
+function constructHints(type) {
+  const ex = 'Clique sur « 🎬 Voir un exemple » : tu verras la même méthode sur un autre triangle.';
+  if (type === '3c') return ['Tu connais les longueurs des trois côtés. Lequel peux-tu tracer tout de suite à la règle ?',
+    'Le troisième sommet est à une distance connue de chacun des deux premiers. Quel instrument trace tous les points situés à une même distance d\'un point ?', ex];
+  if (type === '2c1a') return ['Tu connais deux côtés et l\'angle entre eux. Quel est le sommet de cet angle ? Commence par tracer un côté qui part de ce sommet.',
+    'Outil : le rapporteur. Son centre se place sur le sommet de l\'angle, et le 0° sur le côté déjà tracé.', ex];
+  return ['Tu connais un côté et les deux angles à ses extrémités. Commence par tracer ce côté.',
+    'Outil : à chaque extrémité, le rapporteur permet de tracer une demi-droite. Attention : les deux demi-droites doivent être du même côté du segment.', ex];
+}
 
 /* =========================================================
    ANIMATIONS DES CONSTRUCTIONS
@@ -1941,7 +2264,7 @@ const weakNote = {
    ========================================================= */
 function makeExercise(root, gen, opts = {}) {
   const limit = opts.limit || 0;
-  let cur = null, answered = false, count = 0, good = 0, history = [], used = 0, animSeen = false;
+  let cur = null, answered = false, count = 0, good = 0, history = [], used = 0, animSeen = false, tries = 0;
   if (opts.makeGen) gen = opts.makeGen();
 
   root.innerHTML = `
@@ -1962,7 +2285,7 @@ function makeExercise(root, gen, opts = {}) {
   const cEl = $('.ex-count'), sEl = $('.ex-score');
   let restart = null;
   const label = () => cur.label || GENS[cur.key || opts.key]?.label || '';
-  const helped = () => used > 0 || animSeen;
+  const helped = () => used > 0 || animSeen || tries > 0;
 
   function bar() {
     sEl.textContent = count && !opts.weakCh ? `Score : ${good} / ${count}` : count ? `Réussies : ${good} / ${count}` : '';
@@ -1978,14 +2301,14 @@ function makeExercise(root, gen, opts = {}) {
   function render(focus) {
     stopSpeaking();
     cur = gen();
-    answered = false; used = 0; animSeen = false;
+    answered = false; used = 0; animSeen = false; tries = 0;
     root.classList.remove('done');
     delete qEl.dataset.sel;
     qEl.innerHTML = cur.q;
     hEl.innerHTML = ''; aEl.innerHTML = '';
     fb.className = 'ex-fb'; fb.innerHTML = '';
     bCheck.hidden = !!cur.empty; bCheck.disabled = false;
-    bFilm.hidden = !cur.anim || !!limit;
+    filmButton();
     bNext.textContent = cur.empty ? 'Actualiser' : limit ? 'Passer cette question →' : 'Question suivante →';
     bNext.disabled = false;
     if (bSay) bSay.hidden = !!cur.empty;
@@ -1995,22 +2318,43 @@ function makeExercise(root, gen, opts = {}) {
     if (focus) qEl.querySelector('input.ans')?.focus({ preventScroll: true });
   }
 
+  function filmButton() {
+    // avant la réponse : un exemple (autres données) ; après : la correction animée
+    const can = answered ? !!cur.anim : !!cur.example && !limit;
+    bFilm.hidden = !can;
+    bFilm.textContent = answered ? '🎬 Voir la construction' : '🎬 Voir un exemple';
+  }
   function showHint() {
     if (!cur.hints || used >= cur.hints.length) return;
-    hEl.insertAdjacentHTML('beforeend', `<div class="hint-box"><b>Indice ${used + 1} :</b> ${cur.hints[used]}</div>`);
+    const h = cur.hints[used];
+    const html = typeof h === 'string' ? h : h.html;
+    hEl.insertAdjacentHTML('beforeend', `<div class="hint-box"><b>Indice ${used + 1} :</b> ${html}</div>`);
+    if (h && h.act) h.act(qEl);
     used++;
     hintButton();
   }
   function showFilm() {
     if (!cur.anim) return;
     if (!answered) animSeen = true;
-    const p = makePlayer(aEl, cur.anim());
+    const sc = answered ? cur.anim() : cur.example();
+    const p = makePlayer(aEl, sc);
+    if (!answered) aEl.insertAdjacentHTML('afterbegin', '<p class="small muted">Exemple avec d\'autres données : à toi ensuite de faire la même chose avec les tiennes.</p>');
     p.play();
     aEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 
   function check() {
     if (answered || cur.empty) return;
+    // 1er essai : si l'erreur est une erreur classique, on la signale et on laisse un 2e essai
+    if (!limit && tries === 0 && cur.remediate) {
+      const m = cur.remediate(qEl);
+      if (m) {
+        tries = 1;
+        fb.className = 'ex-fb remed';
+        fb.innerHTML = `<strong>🤔 Regarde bien…</strong> ${m}<p class="small">Corrige ta réponse, puis clique à nouveau sur « Vérifier ». C'est ton deuxième essai.</p>`;
+        return;
+      }
+    }
     const res = cur.check(qEl);
     if (!res) { fb.className = 'ex-fb warn'; fb.innerHTML = 'Complète ta réponse avant de vérifier.'; return; }
     if (res.retry) { fb.className = 'ex-fb warn'; fb.innerHTML = res.msg; return; }
@@ -2028,7 +2372,7 @@ function makeExercise(root, gen, opts = {}) {
     const head = res.ok ? (h ? '<strong>✔ Bravo, avec un peu d\'aide !</strong> ' : '<strong>✔ Bravo !</strong> ') : '<strong>✘ Pas tout à fait.</strong> ';
     fb.innerHTML = head + res.msg + (w && !limit ? weakNote[w](label()) : '');
     bCheck.disabled = true;
-    bFilm.hidden = !cur.anim;
+    filmButton();
     hintButton();
     bNext.disabled = false;
     bNext.textContent = limit && count >= limit ? 'Voir ma note' : 'Question suivante →';
@@ -2074,6 +2418,7 @@ function makeExercise(root, gen, opts = {}) {
   bCheck.addEventListener('click', check);
   bNext.addEventListener('click', next);
   bHint.addEventListener('click', showHint);
+  qEl.addEventListener('input', (e) => { if (e.target.classList) e.target.classList.remove('wrong', 'right'); });
   bFilm.addEventListener('click', showFilm);
   if (bSay) bSay.addEventListener('click', () => {
     const parts = [qEl, hEl, fb].filter((x) => x.textContent.trim());

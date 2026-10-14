@@ -14,8 +14,9 @@ La progression est enregistrée dans le navigateur de l'élève (aucun compte, a
 
 ## Aides à la révision
 
-- **💡 Indices progressifs** : 1 à 3 indices par question (la règle, puis le début de la démarche, puis presque la réponse). Une réussite avec indice compte comme juste, mais la progression l'indique (« dont x avec indice »). Pas d'indice dans les contrôles blancs.
-- **🎬 Voir la construction** (chapitre 2) : animation pas à pas avec la règle, le compas, le rapporteur et l'équerre dessinés, pour les 3 constructions de triangles, la médiatrice, la hauteur et la médiane. Aussi sur la fiche. Lecture, pause, étape par étape. La regarder avant de répondre compte comme une aide.
+- **💡 Indices didactiques** (jamais la réponse) : 1. une question qui relance et renvoie à la fiche ; 2. un exemple résolu avec d'autres nombres ; 3. un outil (droite graduée coloriée, critères de divisibilité, ordre des priorités, exemple animé…). Une réussite avec indice compte comme juste, mais la progression l'indique. Pas d'indice dans les contrôles blancs.
+- **🤔 Remédiation selon l'erreur** : au premier essai, si la réponse correspond à une erreur classique (3/4 écrit 3,4 ; fraction inversée ; même nombre ajouté en haut et en bas ; calcul de gauche à droite sans les priorités ; parenthèses oubliées ; graduations comptées comme des unités ; angles additionnés…), un message ciblé l'explique et l'élève a un second essai. Pour les constructions, le site affiche d'abord ce que mesure la figure de l'élève, sans la correction.
+- **🎬 Animations des constructions** (chapitre 2) : règle, compas, rapporteur et équerre dessinés, étape par étape. Avant de répondre, « Voir un exemple » montre la méthode sur un **autre** triangle ; après la réponse, « Voir la construction » montre la correction. Aussi sur la fiche.
 - **📌 Mes erreurs** : chaque type de question raté (exercices et contrôle blanc) est ajouté à la page « Mes erreurs » du chapitre, qui ne propose que ces questions. Un point faible disparaît après 2 réussites d'affilée sans indice. Le nombre de points faibles s'affiche dans le menu et sur les accueils.
 - **🔊 Écouter** : lecture à voix haute des énoncés, des indices, des corrections et des fiches, avec la voix française de l'appareil (fractions lues « trois quarts », angles, segments, parenthèses…). La qualité de la voix dépend de l'appareil.
 
