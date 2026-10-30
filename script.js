@@ -2250,7 +2250,7 @@ function refreshWeakBadge(ch) {
   const sum = document.querySelector(`.page[data-ch="${ch}"][data-p="erreurs"] .weak-summary`);
   if (sum) sum.innerHTML = n ? `<p><b>Tes points faibles :</b></p>${weakListHTML(ch)}` : '';
 }
-const weakKeys = (ch) => Object.keys(stats._weak || {}).filter((k) => GENS[k] && GENS[k].ch === ch);
+const weakKeys = (ch) => Object.keys(stats._weak || {}).filter((k) => GENS[k] && GENS[k].ch === ch && !GENS[k].locked);
 const weakNote = {
   added: (l) => `<p class="weak-note">📌 « ${l} » est ajouté à <b>Mes erreurs</b> pour le retravailler.</p>`,
   still: (l) => `<p class="weak-note">📌 « ${l} » reste dans <b>Mes erreurs</b>.</p>`,
@@ -2327,7 +2327,7 @@ function makeExercise(root, gen, opts = {}) {
   function showHint() {
     if (!cur.hints || used >= cur.hints.length) return;
     const h = cur.hints[used];
-    const html = typeof h === 'string' ? h : h.html;
+    const html = (typeof h === 'string' ? h : h.html).replace(/\[\[(.+?)\|(.+?)\]\]/g, (m, a, b) => F(a, b));
     hEl.insertAdjacentHTML('beforeend', `<div class="hint-box"><b>Indice ${used + 1} :</b> ${html}</div>`);
     if (h && h.act) h.act(qEl);
     used++;
@@ -2447,6 +2447,8 @@ function renderChapters() {
     if (s.total) parts.push(`${s.ok} / ${s.total} exercices réussis`);
     if (s.exam) parts.push(`contrôle : ${fmt(s.exam.best)}/20`);
     if (s.weak) parts.push(`📌 ${s.weak} point${s.weak > 1 ? 's' : ''} à retravailler`);
+    if (c.locked) return `<div class="chapter-card locked" data-ch="${c.id}"><span class="symbol">${c.symbol}</span><span class="num">Chapitre ${c.num}</span><h2>${c.title}</h2><p>${c.desc}</p><span class="stat">🔒 Bientôt</span></div>`;
+    if (c.hiddenNote) parts.push(c.hiddenNote);
     return `<a class="chapter-card" data-ch="${c.id}" href="#/${c.id}">
       <span class="symbol">${c.symbol}</span>
       <span class="num">Chapitre ${c.num}</span>
@@ -2497,7 +2499,11 @@ function route() {
   if (OLD[h]) { location.replace('#/fractions/' + h); return; }
   if (h === 'accueil') h = '';
   let [ch, p] = h.split('/');
-  if (!CHAPTERS.some((c) => c.id === ch)) { ch = ''; p = ''; }
+  const retour = h.startsWith('r/');
+  const special = ch === 'prof' || retour;
+  if (retour) { ch = '_'; p = 'retour'; }
+  else if (special) { ch = '_'; p = 'prof'; }
+  else if (!CHAPTERS.some((c) => c.id === ch && !c.locked)) { ch = ''; p = ''; }
   p = p || 'accueil';
   let page = document.querySelector(`.page[data-ch="${ch}"][data-p="${p}"]`);
   if (!page) { p = 'accueil'; page = document.querySelector(`.page[data-ch="${ch}"][data-p="accueil"]`); }
@@ -2518,7 +2524,9 @@ function route() {
     pill.hidden = true; nav.innerHTML = '';
     document.title = 'Révisions 5e — Mathématiques';
   }
-  if (!ch) renderChapters();
+  if (retour) { document.title = 'Mon contrôle — Révisions 5e'; const rc = typeof routeRetour === 'function' ? routeRetour(h.slice(2)) : ''; if (rc) document.body.dataset.ch = rc; }
+  else if (special) { document.title = 'Espace professeur — Révisions 5e'; if (typeof renderProfLock === 'function') renderProfLock(); }
+  else if (!ch) renderChapters();
   else if (p === 'accueil') renderChapterHome(ch);
   else if (p === 'erreurs') WEAK_CTL[ch]?.renew();
   window.scrollTo(0, 0);
@@ -2540,8 +2548,8 @@ function wrapGen(k) {
 
 document.addEventListener('DOMContentLoaded', () => {
   // [[a|b]] -> fractions (chapitre 3)
-  document.querySelectorAll('.page[data-ch="fractions"]').forEach((el) => {
-    el.innerHTML = el.innerHTML.replace(/\[\[(.+?)\|(.+?)\]\]/g, (m, a, b) => F(a, b));
+  document.querySelectorAll('.page').forEach((el) => {
+    if (el.innerHTML.includes('[[')) el.innerHTML = el.innerHTML.replace(/\[\[(.+?)\|(.+?)\]\]/g, (m, a, b) => F(a, b));
   });
 
   // Droite graduée de la fiche Fractions
@@ -2588,7 +2596,7 @@ document.addEventListener('DOMContentLoaded', () => {
       limit: 10, ch,
       examKey: ch + ':controle',
       makeGen() {
-        const keys = Object.keys(GENS).filter((k) => GENS[k].ch === ch);
+        const keys = Object.keys(GENS).filter((k) => GENS[k].ch === ch && !GENS[k].locked);
         const queue = shuffle(keys).slice(0, 10);
         while (queue.length < 10) queue.push(pick(keys));
         shuffle(queue);
@@ -2615,7 +2623,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('reset').addEventListener('click', () => {
-    if (confirm('Effacer toute ta progression, dans les trois chapitres ?')) { stats = {}; persist(); route(); }
+    if (confirm('Effacer toute ta progression, dans tous les chapitres ?')) { stats = {}; persist(); route(); }
   });
 
   window.addEventListener('hashchange', route);

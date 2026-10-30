@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<style id="gate-hide">html{visibility:hidden}</style>
+<script src="reglages.js"></script>
+<script>(function(){var c=(window.REGLAGES&&window.REGLAGES.codeProf)||'prof5e',ok=false;try{ok=localStorage.getItem('revisions5e-prof')===String(c).trim().toLowerCase()+':ok';}catch(e){}
+if(!ok){location.replace('index.html#/prof');}else{var s=document.getElementById('gate-hide');if(s)s.remove();}})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Classeur du professeur — Révisions 5e</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap">
+<style>
+/* Classeur 5e : barre de classe + onglets (Par créneau, Par chapitre, Plickers, Devoirs, Vue d'ensemble). */
+:root{
+  --bg:#f4f6f9; --surface:#ffffff; --ink:#1b2430; --muted:#5b6676; --line:#d7dde6;
+  --accent:#0e6b5c; --accent-soft:#dff1ed;
+  --rep:#1e7f45; --rep-soft:#ddf1e4;
+  --ent:#0b4f8a; --ent-soft:#dde9f6;
+  --def:#6c3483; --def-soft:#efe2f5;
+  --ok:#a86b12; --danger:#b22222; --done:#1e7f45;
+  --f-display:"Fredoka","Atkinson Hyperlegible",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11161d; --surface:#19212b; --ink:#e8edf3; --muted:#9ba7b6; --line:#2c3846;
+  --accent:#5fd4c1; --accent-soft:#17352f;
+  --rep:#5fcf8c; --rep-soft:#173426; --ent:#7fb3e6; --ent-soft:#18304a; --def:#c895e0; --def-soft:#33213d;
+  --ok:#e3b45a; --danger:#ff7b72; --done:#5fcf8c; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+h1{font-size:1.55rem;font-weight:700}
+h2{font-size:1.1rem;font-weight:700}
+h3{font-size:1rem;font-weight:700}
+button,select,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+a{color:var(--accent)}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.status{font-size:.85rem;color:var(--muted)}
+.backlinks{font-size:.9rem;margin:0 0 4px}
+.bar,.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;min-height:44px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:700}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;min-height:44px;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:700}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.small{min-height:38px;padding:6px 10px;font-size:.92rem}
+.mini{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:2px 8px;font-size:.78rem;color:var(--muted);min-height:26px}
+.mini:hover{border-color:var(--accent);color:var(--accent)}
+.tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:10px 16px;min-height:44px;font-family:var(--f-display);font-weight:500;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:10px 14px;min-height:44px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);font-weight:700;color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.hint{font-size:.9rem;color:var(--muted);margin:0}
+.warn{font-size:.9rem;color:var(--danger);margin:0}
+label{font-weight:700;font-size:.95rem}
+input[type=text],input[type=url],textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}
+input[type=date]{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}
+select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--bg);min-height:38px}
+.confirm{border:1px solid var(--danger);border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.progress{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.meter{flex:1 1 200px;height:12px;border-radius:999px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--done)}
+.chap{display:flex;flex-direction:column;gap:8px}
+.chap>h2{padding-top:6px}
+details.seance{background:var(--surface);border:1px solid var(--line);border-radius:12px;min-width:0}
+details.seance[open]{border-color:var(--accent)}
+details.seance.done{opacity:.86}
+details.seance>summary{list-style:none;cursor:pointer;padding:12px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+details.seance>summary::-webkit-details-marker{display:none}
+.sid{font-family:var(--f-display);font-weight:700;font-variant-numeric:tabular-nums;min-width:4.6em;color:var(--accent)}
+.stitle{flex:1;min-width:200px}
+.stitle small{display:block;color:var(--muted);font-size:.85rem}
+.tag{font-size:.75rem;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;border:1px solid currentColor}
+.tag.fait{color:var(--done)} .tag.eval{color:var(--danger)} .tag.extra{color:var(--accent)} .tag.plk{color:var(--ent)} .tag.dev{color:var(--def)}
+.tag .x{border:0;background:transparent;font-size:1rem;line-height:1;padding:0 2px;color:var(--muted)}
+.sbody{padding:0 14px 14px;display:flex;flex-direction:column;gap:12px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.box h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.docs{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.docs .btn.mini,.row .btn.mini{text-decoration:none}
+.btn.mini.prof{border-style:dashed}
+.box.ed{background:#f6f9fd}
+.edgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.edgrid{grid-template-columns:1fr}}
+.edtxt{white-space:pre-wrap;font:inherit;font-size:.9rem;line-height:1.45;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0 8px;user-select:all}
+.devoir{background:var(--bg);border-radius:8px;padding:10px 12px;line-height:1.55}
+.devoir p{margin:0 0 6px}
+.act p{margin:0 0 6px} .act ul{margin:0 0 6px;padding-left:20px}
+.now{font-family:var(--f-display);font-size:1.05rem;margin:0;padding:10px 12px;border-radius:10px;background:var(--accent-soft);color:var(--ink)}
+.now b{color:var(--accent)}
+ol.deroule{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+ol.deroule li{display:flex;gap:10px;align-items:baseline;padding:4px 8px;border-radius:8px;border-left:4px solid var(--line);background:var(--bg)}
+ol.deroule .tps{font-variant-numeric:tabular-nums;color:var(--muted);min-width:4.6em;font-size:.9rem}
+ol.deroule .lib{font-weight:700;margin-right:4px}
+ol.deroule li.y-v{border-left-color:var(--danger)} ol.deroule li.y-q{border-left-color:var(--ent)} ol.deroule li.y-a{border-left-color:var(--def)} ol.deroule li.y-e{border-left-color:var(--rep)}
+.edt{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.edtrows{display:flex;flex-direction:column;gap:8px}
+.check{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+details.inner>summary{cursor:pointer;font-weight:700;color:var(--accent);padding:4px 0}
+.quiz{display:flex;flex-direction:column;gap:10px;padding-top:6px}
+.qz{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--bg)}
+.qline{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.qn{font-family:var(--f-display);font-weight:700;color:var(--accent)}
+.qt{flex:1;min-width:200px;font-weight:700}
+ul.qopts{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px 12px}
+ul.qopts li{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+ul.qopts li b{color:var(--ent)}
+ul.qopts li.good span:not(.chk){font-weight:700}
+.chk{color:var(--done);font-weight:700}
+ul.lignes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+ul.lignes li{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding:4px 8px;border-radius:8px;background:var(--bg)}
+.empty{text-align:center;padding:28px 16px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.empty p{max-width:56ch;margin:0}
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table.ov{border-collapse:collapse;width:100%;min-width:760px;font-size:.92rem}
+table.ov th,table.ov td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+table.ov thead th{background:var(--accent-soft)}
+table.ov tr.dn td{color:var(--muted)}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+@media (max-width:520px){h1{font-size:1.3rem}details.seance>summary{flex-wrap:wrap}}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .noprint,.tabs,.bar,.backlinks,#manage,.savebox,.status{display:none!important}
+  .panel,.scroll{border:0;padding:0}
+  table.ov{min-width:0;font-size:11pt}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <p class="backlinks"><a href="index.html#/prof">← Espace professeur</a> · <a href="index.html">Retour au site</a></p>
+      <h1>Classeur · 5e · du 4 novembre au 17 décembre</h1>
+    </div>
+    <div class="status" id="status" aria-live="polite">Chargement…</div>
+  </div>
+  <div class="bar" id="classBar"></div>
+  <div id="manage" class="panel" hidden></div>
+  <div class="tabs" role="tablist" id="tabs"></div>
+  <div id="main"></div>
+  <div class="panel savebox">
+    <h2>Sauvegarde</h2>
+    <p class="hint">Tes classes et ton suivi sont enregistrés dans ce navigateur, sur cet appareil. Pour les garder ailleurs ou les passer sur un autre appareil, fais une sauvegarde dans un fichier.</p>
+    <div class="row"><button class="btn" id="btnExport">💾 Sauvegarder dans un fichier</button>
+    <label class="btn filebtn">📂 Restaurer une sauvegarde<input type="file" id="fileImport" accept="application/json,.json"></label></div>
+  </div>
+</div>
+<script>
+/* =========================================================
+   CLASSEUR 5e — données de la période et moteur de planification
+   (15 séances de 1h25 : mer. 4 nov. → jeu. 17 déc. 2026)
+   Ordre : Proportionnalité → Angles → Fractions 2 → Divisibilité.
+   Le moteur est celui du classeur 6e : les séances forment un « flux » de blocs minutés
+   que les créneaux de la classe consomment dans l'ordre ; si un créneau est annulé ou
+   pas fini, la suite se décale, et les temps d'exercices (blocs souples) se raccourcissent.
+   ========================================================= */
+const B = (m, y, t, o) => Object.assign({ m, y, t }, o || {});
+// y : r = cours / oral · a = activité, jeu · e = exercices (souple) · v = évaluation · q = Plickers
+
+const CH = {
+  prop: { nom: 'Proportionnalité (partie 1)', n: 1, site: 'proportionnalite', poids: '2 semaines' },
+  ang: { nom: 'Angles', n: 2, site: 'angles', poids: '1 semaine' },
+  fr: { nom: 'Fractions (partie 2)', n: 3, site: 'fractions2', poids: '1,5 semaine' },
+  div: { nom: 'Divisibilité', n: 4, site: 'divisibilite', poids: '1,5 semaine' },
+};
+
+/* pages du site (index.html) : [chapitre, page, libellé] */
+const PAGES = {
+  proportionnalite: { tableaux: 'Tableaux de proportionnalité', problemes: 'Problèmes', pourcentages: 'Pourcentages', echelles: 'Échelles, durées et vitesses' },
+  angles: { triangles: 'Angles dans un triangle', parallelisme: 'Angles et parallèles' },
+  fractions2: { denominateur: 'Même dénominateur', comparer: 'Comparer et encadrer', addsub: 'Additionner et soustraire' },
+  divisibilite: { division: 'Division euclidienne', multiples: 'Multiples et diviseurs', criteres: 'Critères et nombres premiers' },
+};
+
+const SEANCES = [
+  /* ============ PROPORTIONNALITÉ (2 semaines) ============ */
+  { id: 'N1', ch: 'prop', k: 'Proportionnalité · séance 1', t: 'Évaluation Fractions (partie 1), puis reconnaître un tableau de proportionnalité',
+    cours: 'Partie 1, paragraphe 1', mat: 'calculatrice',
+    prep: 'Préparer et imprimer la petite évaluation de Fractions (partie 1) : Espace professeur → Contrôle sur papier, compétences du chapitre 3, durée ≈ 30 min. Imprimer pour chaque élève le cours « Proportionnalité » (élève) et la fiche d\'exercices, en recto-verso. Projeter la fiche à projeter, séance 1.',
+    act: 'Thalès et l\'arbre',
+    actD: '<p>Projeter « Thalès et la pyramide », puis l\'activité du cours : une perche de 1 m a une ombre de 0,8 m, l\'ombre d\'un arbre mesure 6 m ; quelle est sa hauteur ? Les élèves cherchent 3 minutes seuls, puis on construit le tableau ensemble : <b>la hauteur et l\'ombre sont proportionnelles</b>, l\'arbre mesure 6 : 0,8 = 7,5 m.</p>',
+    b: [
+      B(30, 'v', 'Évaluation Fractions (partie 1), 30 min, puis ramassage', { g: 'Évaluation Fractions (partie 1)', edch: 'Fractions (partie 1)', ed: 'Évaluation (30 min) sur le chapitre Fractions, partie 1.' }),
+      B(8, 'q', 'Plickers : prérequis, multiplier et diviser, proportionnalité de 6e', { ed: 'Questions de rappel : multiplier, diviser, situations de proportionnalité vues en 6e.' }),
+      B(10, 'a', 'Accroche « Thalès et la pyramide », activité « Mesurer un arbre avec son ombre »', { ed: 'Activité : mesurer la hauteur d\'un arbre grâce à son ombre (la méthode de Thalès).' }),
+      B(20, 'r', 'Cours partie 1.1 : tableau de proportionnalité, coefficient, méthode « Reconnaître »', { ed: 'Cours : reconnaître un tableau de proportionnalité ; le coefficient de proportionnalité.' }),
+      B(17, 'e', 'Exercices 1 à 3 (proportionnel ou pas, taxi)', { min: 8, ex: ['prop', 1, 3] }),
+    ] },
+  { id: 'N2', ch: 'prop', k: 'Proportionnalité · séance 2', t: 'Compléter un tableau, les quatre méthodes, problèmes',
+    cours: 'Partie 1, paragraphes 2 et 3', mat: 'calculatrice',
+    prep: 'Rien à imprimer. Quatre zones du tableau pour les groupes de l\'activité. Projeter la fiche à projeter, séance 2 (consignes des quatre groupes). Le devoir de cette séance est à donner en fin de journée.',
+    act: 'Violette va au cinéma',
+    actD: '<p>Situation projetée : « 4 places de cinéma coûtent 28 €. Combien coûtent 6 places ? » Quatre groupes, <b>une méthode imposée chacun</b> (consignes sur la fiche à projeter) : coefficient, multiplication (× 1,5), addition (4 + 2), passage à l\'unité. Chaque groupe présente au tableau ; la classe compare et dégage « Quelle méthode choisir ? ».</p>',
+    b: [
+      B(12, 'r', 'Cours partie 1.2 : compléter un tableau (× coefficient, : coefficient)', { ed: 'Cours : compléter un tableau de proportionnalité.' }),
+      B(10, 'e', 'Exercices 4 et 5 (compléter, recette de crêpes)', { min: 5, ex: ['prop', 4, 5] }),
+      B(15, 'a', 'Activité « Violette va au cinéma » : une méthode par groupe', { ed: 'Activité en groupes : quatre méthodes pour résoudre le même problème (« Violette va au cinéma »).' }),
+      B(20, 'r', 'Cours partie 1.3 : les quatre méthodes, quelle méthode choisir, problèmes (carrelage, location)', { ed: 'Cours : résoudre un problème de proportionnalité (coefficient, multiplication, addition, passage à l\'unité).' }),
+      B(20, 'e', 'Exercices 6 à 8, puis exercice 9 en groupes (« Le goûter de la classe »)', { min: 8, ex: ['prop', 6, 9], ed: 'Exercices 6 à 8 de la fiche d\'exercices, puis problème en groupes : le goûter de la classe (exercice 9).' }),
+      B(8, 'q', 'Plickers (fin) : compléter un tableau de proportionnalité', { ed: 'Questions-bilan sur les tableaux de proportionnalité.' }),
+    ] },
+  { id: 'N3', ch: 'prop', k: 'Proportionnalité · séance 3', t: 'Les pourcentages',
+    cours: 'Partie 2', mat: 'calculatrice',
+    prep: 'Projeter la fiche à projeter, séance 3 (tableau des soldes). Vérifier que chacun a ses mesures de chambre (devoir).',
+    act: 'Les soldes',
+    actD: '<p>Tableau projeté de six articles soldés (casque 80 € −25 %, jeu 45 € −20 %, sac 60 € −30 %, baskets 90 € −40 %, sweat 35 € −10 %, montre 120 € −50 %). Les élèves calculent le montant de chaque remise et le prix soldé, <b>sans calculatrice pour 10 %, 25 % et 50 %</b>, puis classent les articles selon l\'économie réalisée. Point clé à faire dire : le casque (−25 %) fait économiser plus que le sac (−30 %) — tout dépend du prix de départ.</p>',
+    b: [
+      B(5, 'r', 'Vérifier les mesures de la chambre (devoir) ; rappel de la séance précédente', { ed: 'Vérification du travail à la maison (mesures de la chambre).' }),
+      B(12, 'a', 'Activité « Les soldes » : remises et prix soldés', { ed: 'Activité : calculer des prix soldés.' }),
+      B(18, 'r', 'Cours partie 2.1 : appliquer un pourcentage (72 % de 9 000), pourcentages à connaître', { ed: 'Cours : appliquer un pourcentage ; les pourcentages à connaître (50 %, 25 %, 10 %…).' }),
+      B(15, 'r', 'Cours partie 2.2 : calculer un pourcentage (351 sur 650 = 54 %), calcul d\'une remise', { ed: 'Cours : calculer un pourcentage ; calculer un prix après une remise.' }),
+      B(27, 'e', 'Exercices 10 à 14 (le 15 pour aller plus loin)', { min: 10, ex: ['prop', 10, 15], ed: 'Exercices 10 à 14 de la fiche d\'exercices (15 pour aller plus loin).' }),
+      B(8, 'q', 'Plickers (fin) : pourcentages', { ed: 'Questions-bilan sur les pourcentages.' }),
+    ] },
+  { id: 'N4', ch: 'prop', k: 'Proportionnalité · séance 4', t: 'Les échelles : le plan de ma chambre',
+    cours: 'Partie 3, paragraphe 1', mat: 'règle graduée, crayon, gomme, crayons de couleur, calculatrice, mesures de la chambre',
+    prep: 'Papier quadrillé ou millimétré (une feuille par élève). Projeter la fiche à projeter, séance 4. Le devoir de cette séance (révision) est à donner en fin de journée.',
+    act: 'Le plan de ma chambre',
+    actD: '<p>Avec les mesures relevées à la maison, chaque élève utilise l\'échelle 1/50, calcule dans un tableau les dimensions du plan (on divise par 50), puis trace le plan à la règle sur papier quadrillé. Il indique l\'échelle et nomme les meubles. Ceux qui ont oublié leurs mesures prennent la chambre « type » de l\'exemple du cours.</p><p>Bilan : que se passe-t-il avec l\'échelle 1/10 ? avec 1/200 ?</p>',
+    b: [
+      B(6, 'r', 'Questions flash : 10 %, 25 %, 50 %, 75 % d\'un nombre', { ed: 'Calcul mental : pourcentages simples.' }),
+      B(18, 'r', 'Cours partie 3.1 : échelles (appliquer, calculer, échelle graphique)', { ed: 'Cours : les échelles (calculer une longueur réelle, calculer une échelle).' }),
+      B(30, 'a', 'Activité « Le plan de ma chambre » : calculs et tracé à l\'échelle 1/50', { min: 20, ed: 'Activité : tracer le plan de sa chambre à l\'échelle 1/50.' }),
+      B(23, 'e', 'Exercices 16 à 19 (randonnée, appartement, échelles, carte au trésor)', { min: 6, ex: ['prop', 16, 19] }),
+      B(8, 'q', 'Plickers (fin) : échelles', { ed: 'Questions-bilan sur les échelles.' }),
+    ] },
+  { id: 'N5', ch: 'prop', k: 'Proportionnalité · révisions et évaluation', t: 'Durées et distances, puis évaluation Proportionnalité',
+    cours: 'Partie 3, paragraphe 2', mat: 'calculatrice',
+    prep: 'Préparer l\'évaluation de Proportionnalité (Espace professeur → Contrôle sur papier, compétences du chapitre 4) et l\'imprimer.',
+    act: '',
+    b: [
+      B(8, 'q', 'Plickers (début) : échelles, pourcentages, durées', { ed: 'Questions de révision avant l\'évaluation.' }),
+      B(12, 'r', 'Cours partie 3.2 : durées et distances (12 km en trois quarts d\'heure, vitesse moyenne)', { ed: 'Cours : durées et distances, vitesse moyenne.' }),
+      B(24, 'e', 'Correction du devoir de révision, exercices 20 à 23', { min: 8, ex: ['prop', 20, 23], ed: 'Correction de la fiche de révision ; exercices 20 à 23 de la fiche d\'exercices.' }),
+      B(41, 'v', 'Évaluation Proportionnalité (40 min) et ramassage', { g: 'Proportionnalité · évaluation', ed: 'Évaluation : proportionnalité.' }),
+    ] },
+
+  /* ============ ANGLES (1 semaine) ============ */
+  { id: 'N6', ch: 'ang', k: 'Angles · séance 1', t: 'Somme des angles, triangles rectangle, équilatéral, isocèle',
+    cours: 'Parties 1 et 2', mat: 'ciseaux, crayons de couleur, rapporteur',
+    prep: 'Imprimer pour chaque élève le cours « Angles » (élève) et la fiche d\'exercices. Une feuille blanche par élève pour l\'activité. Projeter la fiche à projeter, séance 1. Le devoir de cette séance est à donner en fin de journée.',
+    act: 'Le triangle déchiré',
+    actD: '<p>Chaque élève trace un grand triangle, colorie ses trois angles, <b>déchire</b> les trois coins et les place côte à côte, sommets réunis : ils forment un angle plat. Comparer avec les voisins (triangles aigus, obtus) : c\'est toujours 180°.</p>',
+    b: [
+      B(10, 'a', 'Activité « Le triangle déchiré »', { ed: 'Activité : le triangle déchiré (les trois angles d\'un triangle forment un angle plat).' }),
+      B(14, 'r', 'Cours partie 1 : la somme des angles vaut 180°, méthode « troisième angle »', { ed: 'Cours : la somme des angles d\'un triangle est égale à 180°.' }),
+      B(8, 'e', 'Exercices 1 et 4', { min: 5, ex: ['ang', 1, 4], ed: 'Exercices 1 et 4 de la fiche d\'exercices.' }),
+      B(22, 'r', 'Cours partie 2 : triangles rectangle, équilatéral, isocèle ; méthodes isocèle et nature', { ed: 'Cours : les angles des triangles rectangles, équilatéraux et isocèles.' }),
+      B(23, 'e', 'Exercices 2, 3, 5, 6 (et 7 pour aller plus loin)', { min: 10, ex: ['ang', 2, 7], ed: 'Exercices 2, 3, 5 et 6 de la fiche d\'exercices (le 7 pour aller plus loin).' }),
+      B(8, 'q', 'Plickers (fin) : angles d\'un triangle', { ed: 'Questions-bilan sur les angles d\'un triangle.' }),
+    ] },
+  { id: 'N7', ch: 'ang', k: 'Angles · séance 2', t: 'Angles alternes-internes, correspondants et parallélisme',
+    cours: 'Parties 3 et 4', mat: 'règle, équerre, rapporteur',
+    prep: 'Projeter la fiche à projeter, séance 2 (figures des angles, modèle de rédaction).',
+    act: 'Les bandes parallèles',
+    actD: '<p>Chaque élève trace deux droites parallèles (règle et équerre) coupées par une sécante, numérote les 8 angles comme sur la figure projetée et les <b>mesure</b>. Conjecture de la classe : 1 = 3 = 5 = 7 et 2 = 4 = 6 = 8. On recommence avec deux droites non parallèles : ce n\'est plus vrai.</p>',
+    b: [
+      B(8, 'q', 'Plickers (début) : 180° et triangles particuliers', { ed: 'Questions de rappel sur les angles d\'un triangle.' }),
+      B(6, 'r', 'Correction du devoir « Angles et triangles »', { ed: 'Correction du travail à la maison.' }),
+      B(12, 'a', 'Activité « Les bandes parallèles » : mesurer 8 angles, conjecture', { ed: 'Activité : mesurer les angles formés par deux parallèles et une sécante.' }),
+      B(16, 'r', 'Cours partie 3 : vocabulaire, angles alternes-internes et correspondants', { ed: 'Cours : angles opposés par le sommet, angles alternes-internes et correspondants.' }),
+      B(18, 'r', 'Cours partie 4 : propriétés de parallélisme, rédiger une démonstration', { ed: 'Cours : angles et droites parallèles ; rédiger une démonstration (Je sais que… Or… Donc…).' }),
+      B(25, 'e', 'Exercices 8 à 13 (le 14 en défi)', { min: 12, ex: ['ang', 8, 14], ed: 'Exercices 8 à 13 de la fiche d\'exercices (14 : défi).' }),
+    ] },
+
+  /* ============ FRACTIONS 2 (1,5 semaine) ============ */
+  { id: 'N8', ch: 'fr', k: 'Fractions 2 · séance 1', t: 'Mettre au même dénominateur, comparer des fractions',
+    cours: 'Parties 1 et 2', mat: 'ciseaux, crayons de couleur',
+    prep: 'Imprimer pour chaque élève le cours « Fractions » (élève) et la fiche d\'exercices. Préparer des bandes de papier de 24 cm × 3 cm, 4 par élève. Projeter la fiche à projeter, séance 1. Le devoir de cette séance (révision Angles) est à donner en fin de journée.',
+    act: 'Qui a la plus grande part ?',
+    actD: '<p>Chaque élève reçoit 4 bandes identiques. Il les plie en 4, 8, 3 et 12 et colorie <b>3/4, 5/8, 2/3 et 7/12</b>. En superposant les bandes, il range les fractions. On justifie ensuite sans bande, avec le dénominateur 24 (figure de correction sur la fiche à projeter).</p>',
+    b: [
+      B(5, 'r', 'Questions flash : fractions égales, simplifier', { ed: 'Calcul mental : fractions égales, simplifier une fraction.' }),
+      B(15, 'r', 'Cours partie 1 : mettre au même dénominateur (multiplier, ou diviser)', { ed: 'Cours : mettre deux fractions au même dénominateur.' }),
+      B(14, 'e', 'Exercices 1 à 3', { min: 6, ex: ['fr', 1, 3] }),
+      B(18, 'a', 'Activité « Qui a la plus grande part ? » (bandes de papier)', { ed: 'Activité : comparer des fractions avec des bandes de papier.' }),
+      B(15, 'r', 'Cours partie 2 : comparer deux fractions, comparer à 1', { ed: 'Cours : comparer deux fractions.' }),
+      B(10, 'e', 'Exercices 4 à 6', { min: 5, ex: ['fr', 4, 6] }),
+      B(8, 'q', 'Plickers (fin) : même dénominateur, comparer', { ed: 'Questions-bilan : même dénominateur, comparer.' }),
+    ] },
+  { id: 'N9', ch: 'fr', k: 'Évaluation Angles · Fractions 2, séance 2', t: 'Évaluation Angles, puis encadrer une fraction',
+    cours: 'Fractions : encadrer une fraction', mat: 'règle, équerre, rapporteur',
+    prep: 'Préparer l\'évaluation d\'Angles (Espace professeur → Contrôle sur papier, compétences du chapitre 5) et l\'imprimer.',
+    act: '',
+    b: [
+      B(8, 'q', 'Plickers (début) : révision Angles avant l\'évaluation', { ch: 'ang', g: 'Angles · évaluation', ed: 'Questions de révision avant l\'évaluation d\'angles.' }),
+      B(5, 'r', 'Correction du devoir de révision « Angles : l\'essentiel »', { ch: 'ang', g: 'Angles · évaluation', ed: 'Correction de la fiche de révision.' }),
+      B(41, 'v', 'Évaluation Angles (40 min) et ramassage', { ch: 'ang', g: 'Angles · évaluation', ed: 'Évaluation : angles.' }),
+      B(11, 'r', 'Cours : encadrer une fraction par deux entiers consécutifs (18/5)', { g: 'Fractions 2 · séance 2', ed: 'Cours (fractions) : encadrer une fraction par deux nombres entiers consécutifs.' }),
+      B(20, 'e', 'Exercices 7 à 9 (encadrer, droite graduée, vrai ou faux)', { g: 'Fractions 2 · séance 2', min: 8, ex: ['fr', 7, 9] }),
+    ] },
+  { id: 'N10', ch: 'fr', k: 'Fractions 2 · séance 3', t: 'Additionner et soustraire des fractions',
+    cours: 'Partie 3', mat: 'cahier de brouillon',
+    prep: 'Projeter la fiche à projeter, séance 3 (bingo : 12 résultats, puis les calculs un par un).',
+    act: 'Bingo des fractions',
+    actD: '<p>Les 12 résultats sont projetés : <b>1/2 ; 3/4 ; 3/2 ; 5/6 ; 7/8 ; 1 ; 13/12 ; 5/4 ; 7/6 ; 2 ; 5/3 ; 1/4</b>. Chaque élève en choisit 9 et les place dans une grille 3 × 3. Les 12 calculs sont projetés un par un (une page chacun) ; on barre le résultat s\'il est dans sa grille. Une ligne complète gagne (vérification avec la dernière page, qui donne toutes les réponses).</p>',
+    b: [
+      B(6, 'r', 'Questions flash : comparer, encadrer', { ed: 'Calcul mental : comparer et encadrer des fractions.' }),
+      B(12, 'r', 'Cours partie 3.1 : même dénominateur (4/5 + 7/5, 9/4 − 3/4)', { ed: 'Cours : additionner et soustraire des fractions de même dénominateur.' }),
+      B(16, 'r', 'Cours partie 3.2 : une seule fraction à modifier, puis les deux (7/6 + 3/4)', { ed: 'Cours : additionner et soustraire des fractions de dénominateurs différents.' }),
+      B(8, 'r', 'Cours : résoudre un problème (la pizza)', { ed: 'Cours : problème avec des fractions (la pizza).' }),
+      B(23, 'e', 'Exercices 10 à 14 (15 et 16 pour aller plus loin)', { min: 8, ex: ['fr', 10, 16], ed: 'Exercices 10 à 14 de la fiche d\'exercices (15 et 16 pour aller plus loin).' }),
+      B(12, 'a', 'Jeu « Bingo des fractions »', { min: 0, ed: 'Jeu : le bingo des fractions.' }),
+      B(8, 'q', 'Plickers (fin) : additionner et soustraire', { ed: 'Questions-bilan : additionner et soustraire des fractions.' }),
+    ] },
+  { id: 'N11', ch: 'div', k: 'Révisions Fractions · Divisibilité, séance 1', t: 'Révisions Fractions, puis division euclidienne',
+    cours: 'Divisibilité, partie 1, paragraphe 1', mat: 'ardoise et feutre',
+    prep: 'Un jeu de cartes (as à 10) par binôme. Imprimer pour chaque élève le cours « Divisibilité » (élève) et la fiche d\'exercices. Projeter la fiche à projeter de Divisibilité, séance 1. Le devoir de cette séance (révision Fractions) est à donner en fin de journée.',
+    act: 'Bataille de fractions, puis « Combien de minibus ? »',
+    actD: '<p><b>1. Bataille de fractions</b> (règles projetées) : chaque joueur retourne deux cartes et forme une fraction ; la plus grande gagne, à condition de le justifier en mettant au même dénominateur.</p><p><b>2. « Combien de minibus ? »</b> 73 élèves, minibus de 8 places. Recherche seul sur l\'ardoise, puis en binôme. À faire ressortir : 73 = 8 × 9 + 1, il reste 1 élève, donc il faut <b>10</b> minibus. On introduit dividende, diviseur, quotient, reste.</p>',
+    b: [
+      B(15, 'a', 'Jeu « Bataille de fractions »', { ch: 'fr', g: 'Fractions 2 · révisions', min: 8, ed: 'Révisions de fractions : jeu de la bataille de fractions.' }),
+      B(13, 'e', 'Révisions : exercices 15 et 16 de la fiche Fractions, questions', { ch: 'fr', g: 'Fractions 2 · révisions', min: 0, ed: 'Révisions de fractions : problèmes (exercices 15 et 16 de la fiche Fractions).' }),
+      B(12, 'a', 'Problème d\'entrée « Combien de minibus ? » (ardoise, puis binômes)', { g: 'Divisibilité · séance 1', ed: 'Problème de recherche : combien de minibus ?' }),
+      B(17, 'r', 'Cours partie 1.1 : poser une division euclidienne, vocabulaire, égalité, interpréter le reste', { g: 'Divisibilité · séance 1', ed: 'Cours : la division euclidienne (poser, vocabulaire, égalité dividende = diviseur × quotient + reste).' }),
+      B(20, 'e', 'Exercices 1 à 4', { g: 'Divisibilité · séance 1', min: 8, ex: ['div', 1, 4] }),
+      B(8, 'q', 'Plickers (fin) : division euclidienne', { g: 'Divisibilité · séance 1', ed: 'Questions-bilan sur la division euclidienne.' }),
+    ] },
+  { id: 'N12', ch: 'div', k: 'Évaluation Fractions · Divisibilité, séance 2', t: 'Évaluation Fractions, puis diviser par un décimal',
+    cours: 'Divisibilité, partie 1, paragraphe 2', mat: 'calculatrice (pour vérifier)',
+    prep: 'Préparer l\'évaluation de Fractions (Espace professeur → Contrôle sur papier, compétences du chapitre 6) et l\'imprimer.',
+    act: '',
+    b: [
+      B(8, 'q', 'Plickers (début) : révision Fractions avant l\'évaluation', { ch: 'fr', g: 'Fractions 2 · évaluation', ed: 'Questions de révision avant l\'évaluation de fractions.' }),
+      B(5, 'r', 'Correction du devoir de révision « Fractions : l\'essentiel »', { ch: 'fr', g: 'Fractions 2 · évaluation', ed: 'Correction de la fiche de révision.' }),
+      B(41, 'v', 'Évaluation Fractions 2 (40 min) et ramassage', { ch: 'fr', g: 'Fractions 2 · évaluation', ed: 'Évaluation : fractions.' }),
+      B(15, 'r', 'Cours partie 1.2 : diviser par un nombre décimal (1,5 : 0,3)', { g: 'Divisibilité · séance 2', ed: 'Cours (divisibilité) : diviser par un nombre décimal.' }),
+      B(16, 'e', 'Exercices 5 et 6', { g: 'Divisibilité · séance 2', min: 6, ex: ['div', 5, 6] }),
+    ] },
+  { id: 'N13', ch: 'div', k: 'Divisibilité · séance 3', t: 'Multiples et diviseurs',
+    cours: 'Partie 2', mat: 'crayon, règle',
+    prep: 'Photocopier du papier quadrillé (une feuille par élève). Projeter la fiche à projeter, séance 3. Le devoir de cette séance est à donner en fin de journée.',
+    act: 'Les rectangles de 24 carreaux',
+    actD: '<p>Chaque élève dessine, sur papier quadrillé, <b>tous les rectangles</b> formés de 24 carreaux, puis de 36, puis de 13, et note leurs dimensions. Bilan (sur la fiche à projeter) : les dimensions sont les <b>diviseurs</b>, par couples. Pour 13, un seul rectangle : annonce des nombres premiers.</p>',
+    b: [
+      B(6, 'r', 'Questions flash : tables, multiples, restes', { ed: 'Calcul mental : tables de multiplication, multiples.' }),
+      B(14, 'a', 'Activité « Les rectangles de 24 carreaux »', { ed: 'Activité : les rectangles de 24 carreaux.' }),
+      B(18, 'r', 'Cours partie 2 : diviseur, multiple, divisible ; reconnaître un multiple', { ed: 'Cours : multiples et diviseurs ; reconnaître un multiple.' }),
+      B(14, 'r', 'Cours : trouver tous les diviseurs d\'un nombre (par couples)', { ed: 'Cours : trouver tous les diviseurs d\'un nombre.' }),
+      B(25, 'e', 'Exercices 7 à 10 (11 et 12 : problèmes)', { min: 10, ex: ['div', 7, 12], ed: 'Exercices 7 à 10 de la fiche d\'exercices (11 et 12 : problèmes).' }),
+      B(8, 'q', 'Plickers (fin) : multiples et diviseurs', { ed: 'Questions-bilan sur les multiples et les diviseurs.' }),
+    ] },
+  { id: 'N14', ch: 'div', k: 'Divisibilité · séance 4', t: 'Critères de divisibilité, nombres premiers, Juniper Green',
+    cours: 'Partie 3', mat: 'crayon',
+    prep: 'Projeter la fiche à projeter, séance 4 (régularité des multiples de 3, règles et grille de Juniper Green).',
+    act: 'Juniper Green',
+    actD: '<p><b>Juniper Green</b> en binôme, nombres de 1 à 20 puis de 1 à 40 (grille et règles projetées) : le premier joueur barre un nombre pair ; chacun à son tour barre un multiple ou un diviseur du nombre que l\'adversaire vient de jouer ; celui qui ne peut plus jouer a perdu. Deux parties, puis bilan : jouer 1 est-il une bonne idée ? pourquoi les grands nombres premiers sont-ils dangereux ?</p>',
+    b: [
+      B(8, 'q', 'Plickers (début) : multiples et diviseurs', { ed: 'Questions de rappel sur les multiples et les diviseurs.' }),
+      B(8, 'r', 'Correction du devoir « Division, multiples et diviseurs »', { ed: 'Correction du travail à la maison.' }),
+      B(12, 'a', 'Découverte : la somme des chiffres des multiples de 3 et de 9', { ed: 'Activité : une régularité dans les multiples de 3 et de 9.' }),
+      B(20, 'r', 'Cours partie 3 : critères par 2, 5, 10, 3, 9 ; méthode (456)', { ed: 'Cours : les critères de divisibilité par 2, 3, 5, 9 et 10.' }),
+      B(8, 'r', 'Cours : les nombres premiers, crible d\'Ératosthène', { ed: 'Cours : les nombres premiers (crible d\'Ératosthène).' }),
+      B(20, 'a', 'Jeu « Juniper Green » : deux parties en binôme, bilan', { min: 12, ed: 'Jeu : Juniper Green (multiples et diviseurs).' }),
+      B(9, 'e', 'Exercices 13 à 15 (16 à 18 pour aller plus loin)', { min: 5, ex: ['div', 13, 18], ed: 'Exercices 13 à 15 de la fiche d\'exercices (16 à 18 pour aller plus loin).' }),
+    ] },
+  { id: 'N15', ch: 'div', k: 'Bilan de la période', t: 'Évaluation Divisibilité, puis quiz par équipes',
+    cours: '—', mat: 'de quoi écrire',
+    prep: 'Préparer l\'évaluation de Divisibilité (Espace professeur → Contrôle sur papier, compétences du chapitre 7) et l\'imprimer. Projeter le quiz (fiche à projeter de Divisibilité, séance 5).',
+    act: 'Quiz par équipes',
+    actD: '<p>Quiz projeté de 10 questions sur les quatre chapitres (proportionnalité, angles, fractions, divisibilité) : 4 équipes, un point par bonne réponse, un point de plus pour une justification correcte.</p>',
+    b: [
+      B(41, 'v', 'Évaluation Divisibilité (40 min) et ramassage', { g: 'Divisibilité · évaluation', ed: 'Évaluation : divisibilité.' }),
+      B(28, 'a', 'Quiz par équipes sur les quatre chapitres', { min: 0, ed: 'Quiz par équipes sur les quatre chapitres de la période.' }),
+      B(8, 'r', 'Ce qu\'il faut retenir de la période', { min: 0, ed: 'Bilan de la période.' }),
+      B(8, 'q', 'Plickers (fin) : bilan de la période', { min: 0, ed: 'Questions-bilan de la période.' }),
+    ] },
+];
+
+/* ---------- Plickers : 5 questions par séance (4 choix maximum, texte seul) ---------- */
+const QUIZ = {
+  N1: { quand: 'début', titre: 'Prérequis : multiplier, diviser, vitesse', q: [
+    ['Que vaut 4 × 2,5 ?', ['6,5', '10', '8', '12'], 1],
+    ['Que vaut 18 ÷ 4 ?', ['4,5', '4', '3,5', '5'], 0],
+    ['3 stylos coûtent 6 €. Combien coûtent 6 stylos (prix proportionnel) ?', ['9 €', '12 €', '10 €', '18 €'], 1],
+    ['5 kg de pommes coûtent 10 €. Combien coûte 1 kg ?', ['2 €', '5 €', '50 €', '0,5 €'], 0],
+    ['Un coureur parcourt 2 km en 20 min. À la même vitesse, en 40 min il parcourt…', ['22 km', '4 km', '40 km', '2,5 km'], 1]] },
+  N2: { quand: 'fin', titre: 'Reconnaître et compléter un tableau de proportionnalité', q: [
+    ['Tableau : 2 → 6 ; 4 → 12 ; 5 → 15. Est-il proportionnel ?', ['Oui, coefficient 3', 'Oui, coefficient 4', 'Non', 'On ne peut pas savoir'], 0],
+    ['Tableau : 1 → 3 ; 2 → 5 ; 3 → 7. Est-il proportionnel ?', ['Oui', 'Non'], 1],
+    ['4 places coûtent 28 €. Combien coûtent 6 places (prix proportionnel) ?', ['32 €', '40 €', '42 €', '36 €'], 2],
+    ['Tableau : 3 → 4,5 ; 4 → ?', ['5', '6', '5,5', '7'], 1],
+    ['300 g de farine pour 4 personnes. Pour 6 personnes il faut…', ['350 g', '400 g', '450 g', '500 g'], 2]] },
+  N3: { quand: 'fin', titre: 'Les pourcentages', q: [
+    ['Que vaut 50 % de 80 ?', ['40', '50', '30', '160'], 0],
+    ['25 % correspond à la fraction…', ['1/4', '1/2', '1/5', '2/5'], 0],
+    ['Que vaut 20 % de 150 ?', ['20', '30', '15', '75'], 1],
+    ['Sur 50 élèves, 30 sont demi-pensionnaires. Quel pourcentage ?', ['30 %', '50 %', '60 %', '80 %'], 2],
+    ['Remise de 30 % sur un article à 80 €. Le prix après remise est…', ['50 €', '56 €', '24 €', '54 €'], 1]] },
+  N4: { quand: 'fin', titre: 'Les échelles', q: [
+    ['À l\'échelle 1/100, 1 cm sur le plan représente en réalité…', ['1 cm', '10 cm', '100 cm', '1 000 cm'], 2],
+    ['Carte à l\'échelle 1/1000 : 8 cm sur la carte représentent…', ['80 cm', '800 cm', '8 000 cm', '8 cm'], 2],
+    ['Plan à l\'échelle 1/50 : une table de 120 cm mesure sur le plan…', ['2,4 cm', '6 cm', '24 cm', '0,4 cm'], 0],
+    ['Un bateau de 25 m (2 500 cm) est représenté par 10 cm. L\'échelle est…', ['1/25', '1/250', '1/2 500', '1/10'], 1],
+    ['Sur une carte à l\'échelle 1/200 000, 3 cm représentent en réalité…', ['600 m', '6 km', '60 km', '600 km'], 1]] },
+  N5: { quand: 'début', titre: 'Révision avant l\'évaluation', q: [
+    ['Un athlète parcourt 12 km en 45 min. En 15 min il parcourt…', ['3 km', '4 km', '5 km', '6 km'], 1],
+    ['Combien de minutes dans trois quarts d\'heure ?', ['30', '40', '45', '75'], 2],
+    ['Un cycliste roule 15 km en 20 min à vitesse constante. En 1 h il parcourt…', ['30 km', '45 km', '60 km', '50 km'], 1],
+    ['45 élèves sur 150 sont absents. Quel pourcentage ?', ['15 %', '30 %', '45 %', '3 %'], 1],
+    ['Carte à l\'échelle 1/1000 : une longueur réelle de 80 m est représentée par…', ['8 cm', '80 cm', '0,8 cm', '800 cm'], 0]] },
+  N6: { quand: 'fin', titre: 'Angles d\'un triangle', q: [
+    ['Dans un triangle, deux angles mesurent 50° et 70°. Le troisième mesure…', ['60°', '70°', '120°', '40°'], 0],
+    ['Dans un triangle rectangle, la somme des deux angles aigus est…', ['180°', '90°', '60°', '100°'], 1],
+    ['Chaque angle d\'un triangle équilatéral mesure…', ['30°', '45°', '60°', '90°'], 2],
+    ['ABC est isocèle en A et l\'angle A mesure 40°. Chaque angle à la base mesure…', ['70°', '140°', '40°', '80°'], 0],
+    ['Un triangle a des angles de 90°, 45° et 45°. Sa nature :', ['rectangle seulement', 'isocèle seulement', 'rectangle et isocèle', 'équilatéral'], 2]] },
+  N7: { quand: 'début', titre: 'Retour sur les angles du triangle', q: [
+    ['Dans ABC, A = 35° et B = 65°. L\'angle C mesure…', ['80°', '100°', '90°', '70°'], 0],
+    ['Les angles d\'un triangle équilatéral mesurent…', ['60°', '45°', '90°', '30°'], 0],
+    ['Un triangle isocèle a des angles à la base de 55°. L\'angle au sommet vaut…', ['70°', '55°', '110°', '125°'], 0],
+    ['Un angle plat mesure…', ['90°', '180°', '360°', '120°'], 1],
+    ['Un angle de 112° : pour faire un angle plat, il manque…', ['68°', '78°', '248°', '112°'], 0]] },
+  N8: { quand: 'fin', titre: 'Même dénominateur et comparaison', q: [
+    ['3/4 = ?/12', ['3', '6', '9', '12'], 2],
+    ['Quelle fraction est égale à 2/5 ?', ['4/10', '4/5', '2/10', '3/6'], 0],
+    ['5/6 et 7/12 : quel dénominateur commun choisir ?', ['12', '18', '13', '11'], 0],
+    ['5/6 écrit avec le dénominateur 12 :', ['5/12', '10/12', '11/12', '7/12'], 1],
+    ['Quelle fraction est la plus grande ?', ['5/9', '7/9', '4/9', '2/9'], 1]] },
+  N9: { quand: 'début', titre: 'Révision Angles avant l\'évaluation', q: [
+    ['Dans un triangle, deux angles mesurent 50° et 70°. Le troisième mesure…', ['60°', '70°', '120°', '40°'], 0],
+    ['Deux droites parallèles et une sécante : les angles alternes-internes sont…', ['égaux', 'supplémentaires', 'toujours droits', 'complémentaires'], 0],
+    ['Deux angles correspondants sont égaux. On peut en déduire que…', ['les droites sont parallèles', 'les droites sont perpendiculaires', 'le triangle est isocèle', 'les droites sont sécantes'], 0],
+    ['ABC est isocèle en A et l\'angle A mesure 40°. Chaque angle à la base mesure…', ['70°', '140°', '40°', '80°'], 0],
+    ['Un triangle rectangle a un angle de 35°. Son troisième angle mesure…', ['55°', '45°', '65°', '145°'], 0]] },
+  N10: { quand: 'fin', titre: 'Additionner et soustraire des fractions', q: [
+    ['4/7 + 2/7 = ?', ['6/14', '6/7', '8/7', '2/7'], 1],
+    ['9/5 − 3/5 = ?', ['6/5', '6/0', '12/5', '6/10'], 0],
+    ['1/2 + 1/4 = ?', ['2/6', '2/4', '3/4', '1/6'], 2],
+    ['Pour 3/8 + 1/4, on écrit 1/4 avec le dénominateur 8 :', ['2/8', '1/8', '4/8', '3/8'], 0],
+    ['3/5 + 1 = ?', ['4/5', '8/5', '3/6', '4/6'], 1]] },
+  N11: { quand: 'fin', titre: 'Division euclidienne', q: [
+    ['Dans la division de 73 par 3, combien de fois 3 dans 7 ?', ['1', '2', '3', '4'], 1],
+    ['Quel est le reste de la division de 17 par 5 ?', ['2', '3', '4', '1'], 0],
+    ['Quelle égalité est la division euclidienne de 50 par 7 ?', ['50 = 7 × 6 + 8', '50 = 7 × 7 + 1', '50 = 7 × 8 − 6', '50 = 7 × 5 + 15'], 1],
+    ['Dans une division euclidienne, le reste est…', ['strictement inférieur au diviseur', 'égal au diviseur', 'supérieur au diviseur', 'toujours égal à 0'], 0],
+    ['Quelle égalité est vraie ?', ['56 = 8 × 7', '56 = 6 × 8', '56 = 9 × 6', '56 = 7 × 7'], 0]] },
+  N12: { quand: 'début', titre: 'Révision Fractions avant l\'évaluation', q: [
+    ['5/6 + 7/6 = ?', ['12/12', '12/6', '2/6', '35/6'], 1],
+    ['3/4 − 1/8 = ?', ['2/4', '5/8', '2/8', '3/8'], 1],
+    ['Quelle fraction est la plus petite ?', ['3/4', '2/3', '5/8', '7/12'], 3],
+    ['Encadrer 17/5 par deux entiers consécutifs :', ['2 < 17/5 < 3', '3 < 17/5 < 4', '4 < 17/5 < 5', '17 < 17/5 < 18'], 1],
+    ['7/6 + 3/4 = ?', ['10/10', '23/12', '10/24', '21/12'], 1]] },
+  N13: { quand: 'fin', titre: 'Multiples et diviseurs', q: [
+    ['Quel nombre est un multiple de 14 ?', ['141', '154', '160', '135'], 1],
+    ['Quels sont tous les diviseurs de 12 ?', ['1, 2, 3, 4, 6, 12', '2, 3, 4, 6', '1, 2, 4, 6, 12', '1, 3, 4, 12'], 0],
+    ['0 est un diviseur de 10.', ['Vrai', 'Faux'], 1],
+    ['Quel nombre est un diviseur de 45 ?', ['6', '9', '12', '8'], 1],
+    ['48 est un multiple de…', ['5', '7', '6', '9'], 2]] },
+  N14: { quand: 'début', titre: 'Retour sur multiples et diviseurs', q: [
+    ['Lequel de ces nombres est un multiple de 6 ?', ['16', '26', '36', '46'], 2],
+    ['Les diviseurs de 20 sont…', ['1, 2, 4, 5, 10, 20', '2, 4, 5, 10', '1, 2, 4, 10, 20', '1, 4, 5, 20'], 0],
+    ['Quel est le reste de la division euclidienne de 29 par 4 ?', ['1', '2', '3', '5'], 0],
+    ['15 est un diviseur de 45.', ['Vrai', 'Faux'], 0],
+    ['Combien de diviseurs possède 13 ?', ['1', '2', '3', '4'], 1]] },
+  N15: { quand: 'fin', titre: 'Bilan de la période', q: [
+    ['Tableau de proportionnalité : 4 → 28. À 6 correspond…', ['34', '42', '36', '40'], 1],
+    ['ABC est isocèle en A et l\'angle A mesure 100°. Chaque angle à la base mesure…', ['40°', '80°', '100°', '50°'], 0],
+    ['2/3 + 1/6 = ?', ['3/9', '5/6', '3/6', '2/9'], 1],
+    ['Quel nombre est divisible par 9 ?', ['252', '253', '250', '251'], 0],
+    ['Lequel de ces nombres est premier ?', ['21', '23', '25', '27'], 1]] },
+};
+const LET = ['A', 'B', 'C', 'D'];
+
+/* ---------- Devoirs : donnés le jeudi, à rendre à la première séance de la semaine suivante ---------- */
+const DEV = {
+  N2: { fiche: 'Le plan de ma chambre', n: 1, h: '<p>Coller dans le cahier la fiche « Le plan de ma chambre ».</p><p>Mesurer en centimètres la longueur et la largeur de sa chambre et de trois meubles (lit, bureau, armoire…), ainsi que la largeur de la porte et de la fenêtre. Compléter le tableau de la fiche et faire le croquis de la chambre vue du dessus.</p><p>Ces mesures servent en classe pour tracer le plan de la chambre à l\'échelle.</p>', site: [['proportionnalite', 'tableaux']] },
+  N4: { fiche: 'Proportionnalité : l\'essentiel', n: 2, revise: true, h: '<p>Coller dans le cahier la fiche « Proportionnalité : l\'essentiel » et l\'apprendre : l\'évaluation de proportionnalité a lieu à la prochaine séance.</p><p>Faire dans le cahier les exercices 1 à 4 de la fiche.</p>', site: [['proportionnalite', 'problemes'], ['proportionnalite', 'pourcentages'], ['proportionnalite', 'echelles']] },
+  N6: { fiche: 'Angles et triangles', n: 3, h: '<p>Coller dans le cahier la fiche « Angles et triangles » et apprendre les propriétés.</p><p>Faire dans le cahier les exercices 1 à 4 de la fiche, en écrivant chaque calcul.</p>', site: [['angles', 'triangles']] },
+  N8: { fiche: 'Angles : l\'essentiel', n: 4, revise: true, h: '<p>Coller dans le cahier la fiche « Angles : l\'essentiel » et l\'apprendre : l\'évaluation d\'angles a lieu à la prochaine séance.</p><p>Faire dans le cahier les exercices 1 à 3 de la fiche (rédiger avec « Je sais que… Or… Donc… »).</p>', site: [['angles', 'triangles'], ['angles', 'parallelisme']] },
+  N11: { fiche: 'Fractions : l\'essentiel', n: 5, revise: true, h: '<p>Coller dans le cahier la fiche « Fractions : l\'essentiel » et l\'apprendre : l\'évaluation de fractions a lieu à la prochaine séance.</p><p>Faire dans le cahier les exercices 1 à 4 de la fiche.</p>', site: [['fractions2', 'denominateur'], ['fractions2', 'comparer'], ['fractions2', 'addsub']] },
+  N13: { fiche: 'Division, multiples et diviseurs', n: 6, h: '<p>Coller dans le cahier la fiche « Division, multiples et diviseurs » et l\'apprendre.</p><p>Faire dans le cahier les exercices 1 à 4 de la fiche.</p>', site: [['divisibilite', 'division'], ['divisibilite', 'multiples']] },
+  N15: { fiche: '', h: '<p>Pas de travail à rendre : bonnes vacances !</p><p>Facultatif : refaire sur le site Révisions 5e les exercices des chapitres où l\'évaluation a été difficile (page « Mes erreurs »).</p>', site: [] },
+};
+
+/* =========================================================
+   Emploi du temps et planification
+   ========================================================= */
+const PERIODE_DEF = { debut: '2026-11-02', fin: '2026-12-18', feries: ['2026-11-11'] };
+let PERIODE = { ...PERIODE_DEF, feries: [...PERIODE_DEF.feries] };
+const EDT_DEF = () => ({ hebdo: [{ j: 3, d: 85 }, { j: 4, d: 85 }], extra: { on: true, j: 4, d: 85, first: '2026-11-09', every: 3 } });
+
+const JOURS = ['', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi'];
+const pad = (n) => String(n).padStart(2, '0');
+const iso = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const pdate = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d, 12); };
+function lundi(s) { const d = typeof s === 'string' ? pdate(s) : new Date(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return d; }
+const fmtJ = (s, o) => pdate(s).toLocaleDateString('fr-FR', o || { weekday: 'short', day: 'numeric', month: 'short' });
+const fmtD = (m) => (m >= 60 ? Math.floor(m / 60) + 'h' + (m % 60 ? pad(m % 60) : '') : m + ' min');
+
+function creneaux(edt) {
+  const out = [];
+  if (!edt) return out;
+  const d0 = lundi(PERIODE.debut), fin = pdate(PERIODE.fin);
+  const x = edt.extra && edt.extra.on ? edt.extra : null;
+  const x0 = x ? lundi(x.first || PERIODE.debut) : null;
+  for (let d = new Date(d0); d <= fin; d.setDate(d.getDate() + 1)) {
+    const s = iso(d);
+    if (s < PERIODE.debut || PERIODE.feries.includes(s)) continue;
+    const j = (d.getDay() + 6) % 7 + 1; // 1 = lundi
+    const here = [];
+    (edt.hebdo || []).forEach((h) => { if (+h.j === j) here.push(+h.d); });
+    const nb = here.length;
+    if (x && +x.j === j) { const w = Math.round((lundi(s) - x0) / (7 * 864e5)); if (w >= 0 && w % (+x.every || 3) === 0) here.push(+x.d); }
+    here.forEach((m, i) => out.push({ id: s + (i ? '#' + i : ''), date: s, j, d: m, extra: i >= nb }));
+  }
+  return out;
+}
+
+function unites() {
+  const u = [];
+  for (const s of SEANCES) s.b.forEach((b, i) => u.push({ sid: s.id, i, m: b.m, y: b.y, t: b.t, ch: b.ch || s.ch, g: b.g || s.k, min: b.min == null ? (b.y === 'e' ? Math.min(10, b.m) : b.m) : b.min }));
+  return u;
+}
+const droppable = (u) => u.min === 0;
+
+/** réduit les blocs souples (type e) de R minutes, par pas de 5, depuis la fin (sens = -1) ou depuis le début (sens = 1) */
+function reduire(us, from, R, sens) {
+  const el = us.map((u, k) => k).filter((k) => k >= from && us[k].y === 'e' && us[k].min < us[k].m);
+  if (sens === 1) el.reverse();
+  const dur = us.map((u) => u.m);
+  let r = R, guard = 0;
+  while (r > 0 && guard++ < 500) {
+    let moved = false;
+    for (let a = el.length - 1; a >= 0 && r > 0; a--) { const k = el[a]; if (dur[k] - 5 >= us[k].min) { dur[k] -= 5; r -= 5; moved = true; } }
+    if (!moved) break;
+  }
+  return { dur, ok: r <= 0 };
+}
+
+/** remplit les créneaux (cap = minutes disponibles) avec le flux de blocs ; un bloc non souple n'est jamais coupé */
+function simuler(cr, us, dur, etat) {
+  let k = etat.k, used = etat.used;
+  const res = [];
+  for (const c of cr) {
+    let rem = c.cap, t = 0;
+    const pieces = [];
+    while (rem > 0 && k < us.length) {
+      const u = us[k], left = dur[k] - used;
+      if (left <= 0) { k++; used = 0; continue; }
+      if (u.y !== 'e' && left > rem) break;
+      const take = Math.min(left, rem);
+      pieces.push({ sid: u.sid, i: u.i, t0: t, m: take, y: u.y, suite: used > 0, coupe: take < left });
+      t += take; rem -= take; used += take;
+      if (used >= dur[k]) { k++; used = 0; }
+    }
+    if (rem > 0 && k < us.length) {
+      // rend le temps libre aux blocs souples raccourcis de ce créneau
+      for (let a = pieces.length - 1; a >= 0 && rem > 0; a--) {
+        const pv = pieces[a];
+        if (pv.y === 'e' && !pv.coupe && !pv.suite) {
+          const add = Math.min(rem, Math.max(0, us.find((z) => z.sid === pv.sid && z.i === pv.i).m - pv.m));
+          pv.m += add; rem -= add;
+        }
+      }
+      let tt = 0; pieces.forEach((q) => { q.t0 = tt; tt += q.m; }); t = tt;
+      if (rem > 0) pieces.push({ marge: true, t0: t, m: rem });
+    }
+    res.push({ pieces, fin: { k, used } });
+  }
+  return { res, fin: { k, used }, reste: k < us.length };
+}
+
+function planifier(cr, us, depart) {
+  // plus petite réduction des blocs souples qui fait tout rentrer (les blocs « facultatifs », min 0, peuvent sauter)
+  const tient = (sim) => !sim.reste || !us.slice(sim.fin.k).some((u) => !droppable(u));
+  let secours = null;
+  for (let R = 0; R <= 900; R += 5) {
+    let fin = true;
+    for (const sens of [-1, 1]) {
+      const { dur, ok } = reduire(us, depart.k, R, sens);
+      const sim = simuler(cr, us, dur, depart);
+      if (tient(sim)) return { ...sim, R, dur };
+      if (ok) fin = false;
+      if (!secours || sim.fin.k > secours.fin.k) secours = { ...sim, R, dur };
+    }
+    if (fin) break;
+  }
+  return secours;
+}
+
+function lastUnitIndex(us) { const r = {}; us.forEach((u, k) => { r[u.sid] = k; }); return r; }
+
+/** plan complet d'une classe : créneaux déjà passés figés (fait / pas tout fini / annulé), créneaux à venir planifiés */
+function planClasse(c) {
+  const cr = creneaux(c.edt), us = unites(), st = c.cren || {};
+  let L = -1;
+  cr.forEach((x, i) => { if (st[x.id] && st[x.id].st) L = i; });
+  const out = [];
+  let cur = { k: 0, used: 0 }, last = null;
+  const capOf = (x) => { const s = st[x.id] || {}; if (s.st === 'annule') return 0; if (s.st === 'partiel') return Math.max(0, x.d - (+s.reste || 0)); return x.d; };
+  for (let i = 0; i < cr.length; i++) {
+    if (i <= L) {
+      const rest = cr.slice(i).map((x, j) => ({ ...x, cap: j === 0 ? capOf(x) : x.d }));
+      const p = planifier(rest, us, cur);
+      out.push({ ...cr[i], cap: rest[0].cap, ...p.res[0], st: (st[cr[i].id] || {}).st || 'fait', reste: (st[cr[i].id] || {}).reste || 0, fige: true });
+      cur = p.res[0].fin;
+    } else {
+      const rest = cr.slice(i).map((x) => ({ ...x, cap: capOf(x) }));
+      last = planifier(rest, us, cur);
+      last.res.forEach((r, j) => out.push({ ...rest[j], ...r, st: (st[rest[j].id] || {}).st || '', reste: 0 }));
+      cur = last.fin;
+      break;
+    }
+  }
+  const lu = lastUnitIndex(us);
+  const fige = L >= 0 ? out[L].fin : { k: 0, used: 0 };
+  const manque = cur.k < us.length ? us.slice(cur.k).filter((u) => !droppable(u)) : [];
+  return { cr: out, us, lu, fige, manque, R: last ? last.R : 0, fin: cur };
+}
+
+/* ---------- devoirs : donnés le jeudi (dernier créneau de la journée), à rendre la semaine suivante ---------- */
+function devoirsPlan(P) {
+  const res = {};
+  const lastOfDay = (i) => !P.cr[i + 1] || P.cr[i + 1].date !== P.cr[i].date;
+  SEANCES.forEach((s) => {
+    if (!DEV[s.id]) return;
+    const end = P.cr.findIndex((z) => z.fin.k > P.lu[s.id]);
+    if (end < 0) { res[s.id] = { give: -1, due: -1 }; return; }
+    let g = -1;
+    for (let i = end; i < P.cr.length; i++) { if (P.cr[i].j === 4 && P.cr[i].cap > 0 && lastOfDay(i)) { g = i; break; } }
+    let due = -1;
+    if (g >= 0) { const w = iso(lundi(P.cr[g].date)); due = P.cr.findIndex((z, i) => i > g && z.cap > 0 && iso(lundi(z.date)) > w); }
+    res[s.id] = { give: g, due };
+  });
+  return res;
+}
+
+/* ---------- repères ---------- */
+const labPiece = (sid, i) => { const s = SEANCES.find((x) => x.id === sid); return s.b[i].g || s.k; };
+function resumeCreneau(x) {
+  const seen = [];
+  x.pieces.filter((p) => !p.marge).forEach((p) => { const l = labPiece(p.sid, p.i); if (!seen.includes(l)) seen.push(l); });
+  return seen.join(' → ') || (x.cap === 0 ? 'Annulé' : '—');
+}
+function coupe(P) {
+  let nom = 0, fait = 0;
+  P.us.forEach((u, k) => { if (k < P.fin.k && !droppable(u)) nom += u.m; });
+  P.cr.forEach((x) => x.pieces.forEach((p) => { if (!p.marge) { const k = P.us.findIndex((u) => u.sid === p.sid && u.i === p.i); if (k < P.fin.k && !droppable(P.us[k])) fait += p.m; } }));
+  return Math.max(0, nom - fait);
+}
+/** avancement d'un chapitre : minutes de contenu (hors Plickers) dont le créneau est passé, début et fin prévus */
+function chapitres(P) {
+  const info = {};
+  Object.keys(CH).forEach((id) => { info[id] = { id, total: 0, fait: 0, d0: null, d1: null, ev: null }; });
+  P.us.forEach((u, k) => { if (u.y === 'q' || droppable(u)) return; const c = info[u.ch]; c.total += u.m; if (k < P.fige.k) c.fait += u.m; });
+  P.cr.forEach((x) => x.pieces.forEach((p) => {
+    if (p.marge) return;
+    const u = P.us.find((z) => z.sid === p.sid && z.i === p.i), c = info[u.ch];
+    if (u.y === 'q') return;
+    if (!c.d0 || x.date < c.d0) c.d0 = x.date;
+    if (!c.d1 || x.date > c.d1) c.d1 = x.date;
+    if (u.y === 'v') c.ev = x.date;
+  }));
+  return Object.values(info);
+}
+
+/* ---------- Adresse publique du site (liens « pour s'entraîner ») ---------- */
+const SITE_URL = 'https://darthialm.github.io/cinquieme/';
+
+/* ---------- Documents PDF (à la racine du site) ---------- */
+const DOCN = { prop: 'Proportionnalite', ang: 'Angles', fr: 'Fractions', div: 'Divisibilite' };
+const CHED = { prop: 'Proportionnalité', ang: 'Angles', fr: 'Fractions (partie 2)', div: 'Divisibilité' };
+const PDFP = {"cours": {"Proportionnalite": {"eleve": {"seance:N1": 1, "seance:N2": 2, "seance:N3": 4, "seance:N4": 5, "seance:N5": 7}, "prof": {"seance:N1": 1, "seance:N2": 2, "seance:N3": 4, "seance:N4": 5, "seance:N5": 7}}, "Angles": {"eleve": {"seance:N6": 1, "seance:N7": 3}, "prof": {"seance:N6": 1, "seance:N7": 3}}, "Fractions": {"eleve": {"seance:N8": 1, "seance:N9": 3, "seance:N10": 4}, "prof": {"seance:N8": 1, "seance:N9": 3, "seance:N10": 3}}, "Divisibilite": {"eleve": {"seance:N11": 1, "seance:N12": 2, "seance:N13": 3, "seance:N14": 4}, "prof": {"seance:N11": 1, "seance:N12": 2, "seance:N13": 2, "seance:N14": 4}}}, "exo": {"Proportionnalite": {"eleve": {"exo:1": 1, "exo:2": 1, "exo:3": 1, "exo:4": 1, "exo:5": 2, "exo:6": 2, "exo:7": 2, "exo:8": 2, "exo:9": 2, "exo:10": 3, "exo:11": 3, "exo:12": 3, "exo:13": 3, "exo:14": 3, "exo:15": 3, "exo:16": 3, "exo:17": 3, "exo:18": 4, "exo:19": 4, "exo:20": 4, "exo:21": 4, "exo:22": 4, "exo:23": 4}, "prof": {"exo:1": 1, "exo:2": 1, "exo:3": 1, "exo:4": 2, "exo:5": 2, "exo:6": 3, "exo:7": 3, "exo:8": 3, "exo:9": 3, "exo:10": 4, "exo:11": 4, "exo:12": 4, "exo:13": 4, "exo:14": 5, "exo:15": 5, "exo:16": 5, "exo:17": 5, "exo:18": 6, "exo:19": 6, "exo:20": 6, "exo:21": 7, "exo:22": 7, "exo:23": 7}}, "Angles": {"eleve": {"exo:1": 1, "exo:2": 1, "exo:3": 1, "exo:4": 1, "exo:5": 1, "exo:6": 1, "exo:7": 1, "exo:8": 2, "exo:9": 2, "exo:10": 2, "exo:11": 2, "exo:12": 2, "exo:13": 2, "exo:14": 3}, "prof": {"exo:1": 1, "exo:2": 1, "exo:3": 1, "exo:4": 1, "exo:5": 2, "exo:6": 2, "exo:7": 2, "exo:8": 2, "exo:9": 3, "exo:10": 3, "exo:11": 3, "exo:12": 3, "exo:13": 4, "exo:14": 4}}, "Fractions": {"eleve": {"exo:1": 1, "exo:2": 1, "exo:3": 1, "exo:4": 1, "exo:5": 1, "exo:6": 1, "exo:7": 1, "exo:8": 2, "exo:9": 2, "exo:10": 2, "exo:11": 2, "exo:12": 2, "exo:13": 2, "exo:14": 2, "exo:15": 2, "exo:16": 3}, "prof": {"exo:1": 1, "exo:2": 1, "exo:3": 1, "exo:4": 1, "exo:5": 2, "exo:6": 2, "exo:7": 2, "exo:8": 2, "exo:9": 3, "exo:10": 3, "exo:11": 3, "exo:12": 3, "exo:13": 3, "exo:14": 4, "exo:15": 4, "exo:16": 4}}, "Divisibilite": {"eleve": {"exo:1": 1, "exo:2": 1, "exo:3": 1, "exo:4": 1, "exo:5": 1, "exo:6": 1, "exo:7": 1, "exo:8": 2, "exo:9": 2, "exo:10": 2, "exo:11": 2, "exo:12": 2, "exo:13": 2, "exo:14": 2, "exo:15": 2, "exo:16": 3, "exo:17": 3, "exo:18": 3}, "prof": {"exo:1": 1, "exo:2": 1, "exo:3": 1, "exo:4": 1, "exo:5": 2, "exo:6": 2, "exo:7": 2, "exo:8": 2, "exo:9": 2, "exo:10": 3, "exo:11": 3, "exo:12": 3, "exo:13": 3, "exo:14": 4, "exo:15": 4, "exo:16": 4, "exo:17": 4, "exo:18": 4}}}, "proj": {"Proportionnalite": {"seance:N1": 2, "seance:N2": 8, "seance:N3": 11, "seance:N4": 15, "seance:N5": 20}, "Angles": {"seance:N6": 2, "seance:N7": 7, "seance:N9": 12}, "Fractions": {"seance:N8": 2, "seance:N9": 7, "seance:N10": 10}, "Divisibilite": {"seance:N11": 2, "seance:N12": 6, "seance:N13": 9, "seance:N14": 14, "seance:N15": 20}}};
+const pdfHref = (file, page) => file + (page ? '#page=' + page : '');
+/** liens utiles pour une séance : [libellé, adresse, prof ?] */
+function docLinks(sid) {
+  const s = SEANCES.find((q) => q.id === sid), n = DOCN[s.ch], L = [];
+  const cp = PDFP.cours[n] || {};
+  if (cp.eleve && cp.eleve['seance:' + sid]) {
+    L.push(['📄 Cours (élève)', pdfHref(`cours-eleve-${n}.pdf`, cp.eleve['seance:' + sid]), 0]);
+    L.push(['📘 Cours complété (prof)', pdfHref(`cours-prof-${n}.pdf`, cp.prof['seance:' + sid]), 1]);
+  }
+  const ex = s.b.map((b) => b.ex).filter(Boolean);
+  ex.forEach((e) => {
+    const en = DOCN[e[0]], ep = PDFP.exo[en] || {};
+    if (!ep.eleve) return;
+    const lab = e[1] === e[2] ? `exercice ${e[1]}` : `exercices ${e[1]} ${e[2] === e[1] + 1 ? 'et' : 'à'} ${e[2]}`;
+    L.push([`✏️ Fiche d'exercices (${lab})`, pdfHref(`exercices-${en}.pdf`, ep.eleve['exo:' + e[1]]), 0]);
+    L.push([`✅ Corrigés (${lab})`, pdfHref(`exercices-corriges-${en}.pdf`, ep.prof['exo:' + e[1]]), 1]);
+  });
+  Object.keys(PDFP.proj).forEach((pn) => { const pg = PDFP.proj[pn]['seance:' + sid]; if (pg) L.push([`🖥️ Projeter (${pn === n ? 'séance' : pn.replace('Proportionnalite', 'Proportionnalité').replace('Divisibilite', 'Divisibilité')})`, pdfHref(`projection-${pn}.pdf`, pg), 1]); });
+  const seen = new Set();
+  return L.filter((l) => !seen.has(l[1]) && seen.add(l[1]));
+}
+
+</script>
+<script>
+/* =========================================================
+   CLASSEUR 5e — interface
+   ========================================================= */
+const STORE_KEY = 'revisions5e-classeur';
+const UI_KEY = 'revisions5e-classeur-ui';
+let data = { classes: [], periode: null };
+let ui = { cls: null, tab: 'creneaux', openC: null, manage: false, confirmDel: false };
+try { Object.assign(ui, JSON.parse(localStorage.getItem(UI_KEY) || '{}')); ui.manage = false; ui.confirmDel = false; } catch (e) { /* rien */ }
+let timer = null;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const siteBase = () => new URL('./', location.href).href;
+const fmtLong = (s) => fmtJ(s, { weekday: 'long', day: 'numeric', month: 'long' });
+function saveUi() { try { localStorage.setItem(UI_KEY, JSON.stringify({ cls: ui.cls, tab: ui.tab, openC: ui.openC })); } catch (e) { /* rien */ } }
+function setStatus(t) { $('#status').textContent = t; }
+function cur() { return data.classes.find((c) => c.id === ui.cls) || data.classes[0] || null; }
+
+function norm(d) {
+  if (!d || !Array.isArray(d.classes)) return { classes: [], periode: null };
+  d.classes.forEach((c) => {
+    c.cren = c.cren || {}; if (!c.edt) c.edt = EDT_DEF();
+    if (!c.v85) { (c.edt.hebdo || []).forEach((h) => { if (+h.d === 90) h.d = 85; }); if (c.edt.extra && +c.edt.extra.d === 90) c.edt.extra.d = 85; c.v85 = true; }
+  });
+  if (d.periode && d.periode.debut && d.periode.fin) d.periode.feries = d.periode.feries || [];
+  else d.periode = null;
+  return d;
+}
+function applyPeriode() {
+  PERIODE = data.periode ? { debut: data.periode.debut, fin: data.periode.fin, feries: [...data.periode.feries] } : { ...PERIODE_DEF, feries: [...PERIODE_DEF.feries] };
+}
+
+/* ---------- enregistrement (sur cet appareil) ---------- */
+function persist() { clearTimeout(timer); setStatus('Enregistrement…'); timer = setTimeout(flush, 300); }
+function flush() {
+  timer = null;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(data, (k, v) => (k === '_plan' ? undefined : v))); setStatus('Enregistré sur cet appareil.'); }
+  catch (e) { setStatus('⚠ Pas enregistré : le navigateur refuse (navigation privée ?). Fais une sauvegarde dans un fichier.'); }
+}
+function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (d && Array.isArray(d.classes)) data = norm(d); } catch (e) { /* rien */ } applyPeriode(); }
+
+const plan = (c) => c._plan || (c._plan = planClasse(c));
+const invalider = (c) => { if (c) delete c._plan; };
+
+/* ---------- copie ---------- */
+async function copyText(text, btn, html) {
+  let ok = false;
+  try {
+    if (html && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
+      ok = true;
+    }
+  } catch (e) { /* on essaie autrement */ }
+  if (!ok) { try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { /* idem */ } }
+  if (!ok) {
+    const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+  }
+  if (btn) {
+    const old = btn.dataset.lab || btn.textContent;
+    btn.dataset.lab = old;
+    btn.textContent = ok ? 'Copié ✓' : 'Copie refusée';
+    setTimeout(() => { btn.textContent = old; }, 1400);
+  }
+  if (!ok) setStatus('La copie automatique est refusée par le navigateur : sélectionne le texte et copie-le avec le menu.');
+}
+
+/* ---------- Plickers ---------- */
+function quizText(sid) {
+  const Q = QUIZ[sid], s = SEANCES.find((x) => x.id === sid);
+  return `Plickers · ${s.k} · ${Q.titre} (${Q.quand} de séance)\n\n` + Q.q.map((q, i) => `${i + 1}. ${q[0]}\n` + q[1].map((o, j) => `${LET[j]}. ${o}`).join('\n') + `\nBonne réponse : ${LET[q[2]]}`).join('\n\n');
+}
+function quizCsv(sids) {
+  const rows = [['Séance', 'Question', 'A', 'B', 'C', 'D', 'Bonne réponse']];
+  sids.forEach((sid) => QUIZ[sid].q.forEach((q) => rows.push([sid, q[0], q[1][0] || '', q[1][1] || '', q[1][2] || '', q[1][3] || '', LET[q[2]]])));
+  return '﻿' + rows.map((r) => r.map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+}
+function download(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type: type || 'text/plain;charset=utf-8' }));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+function quizHtml(sid) {
+  const Q = QUIZ[sid];
+  return `<div class="quiz">
+    <div class="row"><button class="btn primary small" data-copyset="${sid}">Copier les 5 questions</button>
+    <button class="btn small" data-csv="${sid}">Télécharger en CSV</button>
+    <span class="hint">Dans Plickers : une question à la fois ; les boutons A à D copient chaque réponse. La bonne réponse (✔) est à cocher dans Plickers.</span></div>
+    ${Q.q.map((q, i) => `<div class="qz"><div class="qline"><span class="qn">${i + 1}</span><span class="qt">${esc(q[0])}</span><button class="mini" data-cq="${sid}:${i}:q" title="Copier la question">Copier</button></div>
+      <ul class="qopts">${q[1].map((o, j) => `<li class="${j === q[2] ? 'good' : ''}"><b>${LET[j]}</b> <span>${esc(o)}</span>${j === q[2] ? ' <span class="chk" title="Bonne réponse">✔</span>' : ''} <button class="mini" data-cq="${sid}:${i}:${j}" title="Copier la réponse ${LET[j]}">Copier</button></li>`).join('')}</ul></div>`).join('')}
+  </div>`;
+}
+function copyQ(spec, btn) {
+  const [sid, i, f] = spec.split(':'); const q = QUIZ[sid].q[+i];
+  copyText(f === 'q' ? q[0] : q[1][+f], btn);
+}
+
+/* ---------- devoirs ---------- */
+function siteLinks(sid) {
+  const d = DEV[sid]; if (!d.site || !d.site.length) return '';
+  return `<p>Pour s'entraîner sur le site : ${d.site.map(([ch, p]) => `<a href="${esc(SITE_URL + '#/' + ch + '/' + p)}">${esc(PAGES[ch][p])}</a>`).join(' · ')}</p>`;
+}
+function dueText(P, e) {
+  if (!e || e.give < 0) return '';
+  if (e.due >= 0) return `<p><b>À rendre pour le ${esc(fmtLong(P.cr[e.due].date))}.</b></p>`;
+  return '<p><b>À rendre à la rentrée.</b></p>';
+}
+function devoirHtml(sid, P, e) { return DEV[sid].h + siteLinks(sid) + dueText(P, e); }
+function devoirPlain(html) { const t = document.createElement('div'); t.innerHTML = html; return [...t.querySelectorAll('p')].map((p) => p.textContent).join('\n'); }
+
+/* ---------- École Directe : textes à copier ---------- */
+const exTxt = (e) => (e[1] === e[2] ? `Exercice ${e[1]} de la fiche d'exercices.` : `Exercices ${e[1]} ${e[2] === e[1] + 1 ? 'et' : 'à'} ${e[2]} de la fiche d'exercices.`);
+function edContenu(x) {
+  const parts = x.pieces.filter((p) => !p.marge && p.y !== 'q');
+  const lines = []; let cch = null;
+  parts.forEach((p) => {
+    const s = SEANCES.find((q) => q.id === p.sid), b = s.b[p.i], head = b.edch || CHED[b.ch || s.ch];
+    if (head !== cch) { if (lines.length) lines.push(''); lines.push(head); cch = head; }
+    let t = b.ed || (b.ex ? exTxt(b.ex) : b.t);
+    if (p.coupe) t = t.replace(/\.$/, '') + ' (commencé, suite à la prochaine séance).';
+    else if (p.suite) t = t.replace(/\.$/, '') + ' (suite et fin).';
+    if (!lines.includes('- ' + t)) lines.push('- ' + t);
+  });
+  return lines.join('\n');
+}
+function devPlainLines(sid) { const t = document.createElement('div'); t.innerHTML = DEV[sid].h; return [...t.querySelectorAll('p')].map((p) => p.textContent.trim()); }
+function siteLine(sid) {
+  const d = DEV[sid]; if (!d.site || !d.site.length) return '';
+  return `Pour s'entraîner (facultatif) : site Révisions 5e (${SITE_URL}), ${d.site.length > 1 ? 'pages' : 'page'} ${d.site.map(([ch, p]) => `« ${PAGES[ch][p]} »`).join(', ')}.`;
+}
+function edTravail(P, i, gives, D) {
+  const out = [];
+  gives.forEach((s) => {
+
+    devPlainLines(s.id).forEach((l) => out.push('- ' + l));
+    const sl = siteLine(s.id); if (sl) out.push(sl);
+  });
+  const ap = apporter(P, i);
+  if (ap) { const t = document.createElement('div'); t.innerHTML = ap; if (out.length) out.push(''); out.push(t.textContent.trim().replace(/^Pour le [^,]*, apporter/, 'Apporter à la prochaine séance')); }
+  return out.join('\n');
+}
+function edBox(x, P, i, gives, D) {
+  const c = edContenu(x), w = edTravail(P, i, gives, D);
+  return `<div class="box ed"><h3>École Directe <span class="hint">(texte prêt à coller)</span></h3><div class="edgrid">
+    <div><b>Contenu de séance</b><pre class="edtxt" id="edc-${x.id}">${esc(c || '—')}</pre><button class="btn small" data-copyed="edc-${x.id}">Copier le contenu</button></div>
+    <div><b>Travail à faire</b>${w ? `<pre class="edtxt" id="edw-${x.id}">${esc(w)}</pre><button class="btn small" data-copyed="edw-${x.id}">Copier le travail à faire</button>` : '<p class="hint">Rien à noter dans « Travail à faire » pour ce créneau (les devoirs sont donnés le jeudi, en fin de journée).</p>'}</div>
+  </div></div>`;
+}
+function devDocs(sid) {
+  const n = DEV[sid].n; if (!n) return '';
+  return `<a class="btn mini" href="devoirs-impression.pdf#page=${n}" target="_blank" rel="noopener">🖨️ Fiche « ${esc(DEV[sid].fiche)} » (2 par page)</a><a class="btn mini prof" href="devoirs-corriges.pdf#page=${2 * n}" target="_blank" rel="noopener">✅ Corrigé</a>`;
+}
+
+/* ---------- affichage : créneaux ---------- */
+function prochainCreneau(P) { const today = iso(new Date()); return P.cr.find((x) => !x.st && x.date >= today) || P.cr.find((x) => !x.st) || null; }
+
+function apporter(P, i) {
+  if (P.cr[i + 1] && P.cr[i + 1].date === P.cr[i].date && P.cr[i + 1].cap > 0) return '';
+  const nx = P.cr.slice(i + 1).find((z) => z.date !== P.cr[i].date && z.cap > 0 && z.pieces.some((p) => !p.marge));
+  if (!nx) return '';
+  const items = [];
+  new Set(nx.pieces.filter((p) => !p.marge).map((p) => p.sid)).forEach((sid) => SEANCES.find((s) => s.id === sid).mat.split(', ').forEach((m) => { if (!items.includes(m)) items.push(m); }));
+  return items.length ? `<p><b>Pour le ${esc(fmtLong(nx.date))}, apporter : ${esc(items.join(', '))}.</b></p>` : '';
+}
+
+function renderCreneaux(c) {
+  const P = plan(c), D = devoirsPlan(P);
+  const nfait = P.cr.filter((x) => x.st).length, nx = prochainCreneau(P);
+  let h = `<div class="panel"><div class="progress"><h2>${nfait} créneau${nfait > 1 ? 'x' : ''} passé${nfait > 1 ? 's' : ''} sur ${P.cr.length}</h2>
+    <div class="meter" role="img" aria-label="${nfait} sur ${P.cr.length}"><i style="width:${Math.round(nfait / Math.max(1, P.cr.length) * 100)}%"></i></div></div>
+    ${nx ? `<p class="now">Prochain créneau : <b>${esc(fmtLong(nx.date))}</b> (${fmtD(nx.d)}) · ${esc(resumeCreneau(nx))}</p>` : '<p class="now">Tous les créneaux de la période sont passés.</p>'}
+    <p class="hint">Après chaque cours, indique « Fait », « Pas tout fini » ou « Annulé » : la suite se recalcule. Une évaluation n'est jamais coupée.${coupe(P) ? ` Pour tout faire tenir, les temps d'exercices sont raccourcis de ${fmtD(coupe(P))} au total.` : ''}</p>
+    ${P.manque.length ? `<p class="warn">Ne tient plus avant les vacances : ${esc([...new Set(P.manque.map((u) => u.g))].join(', '))}. Raccourcis une activité, ajoute un créneau ou décale la fin de période.</p>` : ''}
+  </div>`;
+  let semaine = '';
+  P.cr.forEach((x, i) => {
+    const lu = iso(lundi(x.date));
+    if (lu !== semaine) { if (semaine) h += '</div>'; semaine = lu; h += `<div class="chap"><h2>Semaine du ${esc(fmtJ(lu, { day: 'numeric', month: 'long' }))}</h2>`; }
+    const evals = x.pieces.filter((p) => !p.marge && p.y === 'v');
+    const quiz = x.pieces.filter((p) => !p.marge && p.y === 'q');
+    const gives = SEANCES.filter((s) => DEV[s.id] && D[s.id] && D[s.id].give === i);
+    const stLab = { fait: 'Fait', partiel: 'Pas tout fini', annule: 'Annulé' }[x.st];
+    const tags = [x.st ? `<span class="tag ${x.st === 'annule' ? 'eval' : 'fait'}">${stLab}</span>` : '',
+      x.extra ? '<span class="tag extra">Créneau en plus</span>' : '',
+      ...evals.map(() => '<span class="tag eval">Évaluation</span>'),
+      ...quiz.map((p) => `<span class="tag plk">Plickers ${QUIZ[p.sid].quand}</span>`),
+      gives.length ? '<span class="tag dev">Devoir à donner</span>' : ''].join('');
+    const open = ui.openC && P.cr.some((z) => z.id === ui.openC) ? ui.openC === x.id : (nx && nx.id === x.id);
+    const sids = [...new Set(x.pieces.filter((p) => !p.marge).map((p) => p.sid))];
+    const acts = sids.map((sid) => SEANCES.find((s) => s.id === sid)).filter((s) => s.act && x.pieces.some((p) => p.sid === s.id && p.y === 'a'));
+    h += `<details class="seance${x.st ? ' done' : ''}" data-cid="${x.id}" ${open ? 'open' : ''}>
+      <summary><span class="sid">${esc(fmtJ(x.date))}</span><span class="stitle">${esc(resumeCreneau(x))}<small>${esc(JOURS[x.j])} · ${fmtD(x.d)}</small></span>${tags}</summary>
+      <div class="sbody">
+        <div class="seg" role="group" aria-label="Ce créneau">
+          ${[['', 'À venir'], ['fait', 'Fait'], ['partiel', 'Pas tout fini'], ['annule', 'Annulé']].map(([k, l]) => `<button data-cst="${k}" data-c="${x.id}" aria-pressed="${(x.st || '') === k}">${l}</button>`).join('')}
+        </div>
+        ${x.st === 'partiel' ? `<div class="row"><label for="reste-${x.id}">Temps qui n'a pas pu être fait</label>
+          <select id="reste-${x.id}" data-reste="${x.id}">${[10, 15, 20, 30, 40, 45, 60, 85].filter((m) => m <= x.d).map((m) => `<option value="${m}" ${+x.reste === m ? 'selected' : ''}>${fmtD(m)}</option>`).join('')}</select>
+          <span class="hint">Ce qui n'a pas été fait passe au créneau suivant.</span></div>` : ''}
+        <div class="box"><h3>Déroulé minuté</h3>
+          ${x.cap === 0 ? '<p class="hint">Créneau annulé : le contenu passe au créneau suivant.</p>' : `<ol class="deroule">${x.pieces.map((p) => {
+    const t = `${p.t0}–${p.t0 + p.m}`;
+    if (p.marge) return `<li><span class="tps">${t}</span><span><span class="lib">Temps libre</span> Exercices « pour aller plus loin » de la fiche, ou rattrapage</span></li>`;
+    const s = SEANCES.find((q) => q.id === p.sid), b = s.b[p.i];
+    const lab = p.y === 'q' ? '<span class="lib">Plickers</span>' : `<span class="lib">${esc(labPiece(p.sid, p.i))}</span>`;
+    const txt = p.y === 'q' ? b.t.replace(/^Plickers \([^)]*\) : /, `5 questions (${QUIZ[p.sid].quand} de séance) : `) : b.t;
+    return `<li class="y-${p.y}"><span class="tps">${t}</span><span>${lab} ${esc(txt)}${p.suite ? ' (suite)' : ''}${p.coupe ? ' (à finir au créneau suivant)' : ''}</span></li>`;
+  }).join('')}
+            ${x.st === 'partiel' && x.reste ? `<li><span class="tps">${x.d - x.reste}–${x.d}</span><span class="hint">Non fait : reporté au créneau suivant</span></li>` : ''}</ol>`}
+        </div>
+        <div class="sgrid">
+          <div class="box"><h3>Repère et documents</h3>${sids.map((sid) => { const s = SEANCES.find((q) => q.id === sid); return `<div><b>${esc(s.k)}</b><br><span class="hint">${esc(s.t)} · cours : ${esc(s.cours)}</span><div class="docs">${docLinks(sid).map(([l, h, p]) => `<a class="btn mini${p ? ' prof' : ''}" href="${esc(h)}" target="_blank" rel="noopener">${esc(l)}</a>`).join('')}</div></div>`; }).join('') || '<p class="hint">—</p>'}</div>
+          <div class="box"><h3>À préparer</h3>${sids.map((sid) => `<div class="hint">${esc(SEANCES.find((q) => q.id === sid).prep)}</div>`).join('') || '<p class="hint">—</p>'}</div>
+        </div>
+        ${x.cap > 0 ? edBox(x, P, i, gives, D) : ''}
+        ${acts.map((s) => `<div class="box"><h3>Activité · ${esc(s.act)}</h3><div class="act">${s.actD}</div></div>`).join('')}
+        ${quiz.map((p) => `<div class="box"><h3>Plickers · ${esc(QUIZ[p.sid].titre)} <span class="tag plk">${QUIZ[p.sid].quand} de séance</span></h3>
+          <details class="inner"><summary>Voir les 5 questions</summary>${quizHtml(p.sid)}</details></div>`).join('')}
+        ${gives.length ? `<div class="box"><h3>Devoir à donner en fin de créneau</h3>
+          <div class="devoir" id="devc-${x.id}">${gives.map((s) => devoirHtml(s.id, P, D[s.id])).join('')}${apporter(P, i)}</div>
+          <div class="row">${gives.filter((s) => DEV[s.id].fiche).map((s) => devDocs(s.id)).join('')}</div></div>` : (apporter(P, i) ? `<div class="box"><h3>Pas de devoir ce jour-là</h3><div class="devoir">${apporter(P, i)}</div><p class="hint">Les devoirs sont donnés le jeudi, à rendre la semaine suivante.</p></div>` : '')}
+      </div></details>`;
+  });
+  if (semaine) h += '</div>';
+  return h;
+}
+
+/* ---------- affichage : chapitres ---------- */
+function renderChapitres(c) {
+  const P = plan(c), info = chapitres(P);
+  return info.map((ch) => {
+    const C = CH[ch.id], pc = ch.total ? Math.round(ch.fait / ch.total * 100) : 0;
+    const lignes = P.cr.filter((x) => x.pieces.some((p) => !p.marge && p.y !== 'q' && P.us.find((u) => u.sid === p.sid && u.i === p.i).ch === ch.id));
+    return `<div class="panel chcard"><div class="progress"><h2>Chapitre ${C.n} · ${esc(C.nom)}</h2>
+      <div class="meter" role="img" aria-label="${pc} %"><i style="width:${pc}%"></i></div><span class="hint">${pc} % fait</span></div>
+      <p class="hint">Durée prévue par toi : ${esc(C.poids)} (deux séances de 1h25 par semaine, plus une un jeudi sur trois). ${ch.d0 ? `Dans le planning : du <b>${esc(fmtJ(ch.d0, { weekday: 'long', day: 'numeric', month: 'long' }))}</b> au <b>${esc(fmtJ(ch.d1, { weekday: 'long', day: 'numeric', month: 'long' }))}</b>${ch.ev ? `, évaluation le <b>${esc(fmtJ(ch.ev, { weekday: 'long', day: 'numeric', month: 'long' }))}</b>` : ''}.` : 'Ne tient pas dans la période.'}</p>
+      <ul class="lignes">${lignes.map((x) => `<li><span class="sid">${esc(fmtJ(x.date))}</span><span>${esc(x.pieces.filter((p) => !p.marge && p.y !== 'q' && P.us.find((u) => u.sid === p.sid && u.i === p.i).ch === ch.id).map((p) => SEANCES.find((s) => s.id === p.sid).b[p.i].t).filter((t, i, a) => a.indexOf(t) === i).slice(0, 3).join(' · '))}</span>${x.st ? `<span class="tag fait">${{ fait: 'Fait', partiel: 'Pas tout fini', annule: 'Annulé' }[x.st]}</span>` : ''}</li>`).join('')}</ul>
+      <p><a class="btn small" href="index.html#/${C.site}/fiche" target="_blank" rel="noopener">Fiche du chapitre sur le site</a></p></div>`;
+  }).join('');
+}
+
+/* ---------- affichage : Plickers ---------- */
+function renderPlickers(c) {
+  const P = plan(c);
+  const date = (sid) => { const x = P.cr.find((z) => z.pieces.some((p) => !p.marge && p.sid === sid && p.y === 'q')); return x ? fmtJ(x.date) : 'hors période'; };
+  return `<div class="panel"><h2>Questions Plickers</h2>
+    <p class="hint">5 questions par séance, à 4 choix au plus et en texte seul pour se coller dans Plickers. Le mercredi, elles sont posées en début de séance (retour sur la séance précédente) ; le jeudi, en fin de séance (bilan du jour).</p>
+    <div class="row"><button class="btn small" data-csv="all">Tout télécharger en CSV (75 questions)</button></div></div>`
+    + SEANCES.map((s) => `<details class="seance" data-sid="${s.id}"><summary><span class="sid">${s.id}</span><span class="stitle">${esc(QUIZ[s.id].titre)}<small>${esc(s.k)} · ${QUIZ[s.id].quand} de séance</small></span><span class="tag plk">${esc(date(s.id))}</span></summary><div class="sbody">${quizHtml(s.id)}</div></details>`).join('');
+}
+
+/* ---------- affichage : devoirs ---------- */
+function renderDevoirs(c) {
+  const P = plan(c), D = devoirsPlan(P);
+  return `<div class="panel"><h2>Devoirs de la période</h2>
+    <p class="hint">Un devoir est donné <b>chaque jeudi</b> (au dernier créneau de la journée) et se rend <b>à la première séance de la semaine suivante</b>. Le mercredi, pas de devoir. Chaque devoir est une fiche à coller (un résumé à apprendre et des exercices à faire dans le cahier). Les fiches sont dans <a href="devoirs-impression.pdf" target="_blank" rel="noopener">devoirs-impression.pdf</a> (deux fiches identiques par feuille A4, à couper) ; les corrigés dans <a href="devoirs-corriges.pdf" target="_blank" rel="noopener">devoirs-corriges.pdf</a>.</p></div>`
+    + SEANCES.filter((s) => DEV[s.id]).map((s) => {
+      const e = D[s.id], g = e && e.give >= 0 ? P.cr[e.give] : null;
+      return `<details class="seance" data-sid="${s.id}"><summary><span class="sid">${g ? esc(fmtJ(g.date)) : '—'}</span><span class="stitle">${esc(DEV[s.id].fiche || 'Vacances de Noël')}<small>${g ? `à rendre ${e.due >= 0 ? 'le ' + esc(fmtJ(P.cr[e.due].date)) : 'à la rentrée'}` : 'hors période'}${DEV[s.id].revise ? ' · révision avant évaluation' : ''}</small></span></summary>
+        <div class="sbody"><div class="devoir" id="dev-${s.id}">${devoirHtml(s.id, P, e)}</div>
+        <div class="row"><button class="btn primary small" data-copydevs="${s.id}">Copier pour École Directe</button>${DEV[s.id].fiche ? devDocs(s.id) : ''}</div></div></details>`;
+    }).join('');
+}
+
+/* ---------- affichage : vue d'ensemble (imprimable) ---------- */
+function renderApercu(c) {
+  const P = plan(c), D = devoirsPlan(P);
+  const rows = P.cr.map((x, i) => {
+    const gives = SEANCES.filter((s) => DEV[s.id] && D[s.id] && D[s.id].give === i);
+    const quiz = x.pieces.filter((p) => !p.marge && p.y === 'q').map((p) => `${QUIZ[p.sid].quand === 'début' ? 'début' : 'fin'} · ${QUIZ[p.sid].titre}`);
+    const ev = x.pieces.some((p) => !p.marge && p.y === 'v');
+    return `<tr class="${x.st ? 'dn' : ''}"><td>${esc(fmtJ(x.date))}${x.extra ? ' <small>(en plus)</small>' : ''}</td><td>${fmtD(x.d)}</td><td>${ev ? '<b>Éval.</b> ' : ''}${esc(resumeCreneau(x))}</td><td>${quiz.map(esc).join('<br>') || '—'}</td><td>${gives.length ? gives.map((s) => esc(DEV[s.id].fiche || 'Vacances') + (D[s.id].due >= 0 ? ` <small>(pour le ${esc(fmtJ(P.cr[D[s.id].due].date))})</small>` : ' <small>(rentrée)</small>')).join('<br>') : '—'}</td><td>${x.st ? { fait: 'Fait', partiel: 'Pas tout fini', annule: 'Annulé' }[x.st] : ''}</td></tr>`;
+  }).join('');
+  return `<div class="panel printable"><div class="row" style="justify-content:space-between"><h2>${esc(c.nom)} · progression de la période</h2><button class="btn small noprint" id="btnPrint">Imprimer</button></div>
+    <div class="scroll"><table class="ov"><thead><tr><th>Date</th><th>Durée</th><th>Contenu</th><th>Plickers</th><th>Devoir donné</th><th>Suivi</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="hint">Du ${esc(fmtJ(PERIODE.debut, { day: 'numeric', month: 'long' }))} au ${esc(fmtJ(PERIODE.fin, { day: 'numeric', month: 'long' }))}${PERIODE.feries.length ? ', sans le ' + PERIODE.feries.map((d) => fmtJ(d, { day: 'numeric', month: 'long' })).join(', ') : ''}. Les chapitres : ${Object.values(CH).map((x) => x.nom + ' (' + x.poids + ')').join(', ')}.</p></div>`;
+}
+
+/* ---------- gestion de la classe ---------- */
+function renderEdt(c) {
+  const e = c.edt;
+  const jsel = (v, a) => `<select ${a}>${[1, 2, 3, 4, 5].map((j) => `<option value="${j}" ${+v === j ? 'selected' : ''}>${JOURS[j]}</option>`).join('')}</select>`;
+  const dsel = (v, a) => `<select ${a}>${[45, 55, 60, 85, 90, 120].map((m) => `<option value="${m}" ${+v === m ? 'selected' : ''}>${fmtD(m)}</option>`).join('')}</select>`;
+  const n = creneaux(e);
+  return `<div class="edt"><h3>Emploi du temps de cette classe</h3>
+    <div class="edtrows">${e.hebdo.map((h, i) => `<div class="row">Chaque semaine, le ${jsel(h.j, `data-hj="${i}" aria-label="Jour"`)} ${dsel(h.d, `data-hd="${i}" aria-label="Durée"`)} <button class="btn small" data-hdel="${i}" aria-label="Retirer ce créneau">Retirer</button></div>`).join('')}
+      <div><button class="btn small" id="btnHadd">Ajouter un créneau par semaine</button></div>
+      <div class="row"><label class="row" style="font-weight:400"><input type="checkbox" id="xOn" ${e.extra && e.extra.on ? 'checked' : ''}> Un créneau en plus toutes les</label>
+        <select id="xEvery" aria-label="Nombre de semaines">${[2, 3, 4].map((k) => `<option ${+(e.extra || {}).every === k ? 'selected' : ''}>${k}</option>`).join('')}</select> semaines, le
+        ${jsel((e.extra || {}).j, 'id="xJ" aria-label="Jour du créneau en plus"')} ${dsel((e.extra || {}).d, 'id="xD" aria-label="Durée du créneau en plus"')}
+        , la première fois la semaine du <input type="date" id="xFirst" value="${esc((e.extra || {}).first || PERIODE.debut)}"></div>
+      <p class="hint">${n.length} créneaux dans la période, ${fmtD(n.reduce((a, x) => a + x.d, 0))} en tout (le contenu prévu demande 15 créneaux de 1h25).</p></div></div>`;
+}
+function renderPeriode() {
+  return `<div class="edt"><h3>Période (commune à toutes les classes)</h3>
+    <div class="row"><label for="pDeb">Du</label><input type="date" id="pDeb" value="${esc(PERIODE.debut)}"> <label for="pFin">au</label><input type="date" id="pFin" value="${esc(PERIODE.fin)}"></div>
+    <div class="row"><span>Jours sans cours :</span>${PERIODE.feries.map((d, i) => `<span class="tag">${esc(fmtJ(d, { weekday: 'short', day: 'numeric', month: 'short' }))} <button class="x" data-fdel="${i}" aria-label="Retirer ce jour">×</button></span>`).join('') || '<span class="hint">aucun</span>'}
+      <input type="date" id="fNew" aria-label="Ajouter un jour sans cours"> <button class="btn small" id="btnFadd">Ajouter</button></div>
+    <p class="hint">Change ces dates pour planifier une autre période : les chapitres et leurs durées restent ceux de cette période.</p></div>`;
+}
+function renderManage() {
+  const m = $('#manage'), c = cur();
+  m.hidden = !(ui.manage && c); if (m.hidden) return;
+  m.innerHTML = `<h2>Gérer ma progression</h2>
+    <div><label for="fNom">Nom de la classe</label><input type="text" id="fNom" value="${esc(c.nom)}"></div>
+    ${renderEdt(c)}${renderPeriode()}
+    <div class="row"><button class="btn primary" id="btnSaveClass">Enregistrer</button>
+    <button class="btn" id="btnAddClass">Ajouter une autre classe (mêmes horaires)</button>
+    <button class="btn" id="btnResetSuivi">Effacer le suivi (fait / annulé)</button>
+    <button class="btn danger" id="btnDel">Supprimer la classe</button></div>
+    ${ui.confirmDel ? `<div class="confirm"><span>Supprimer « ${esc(c.nom)} » et son suivi ?</span><button class="btn danger" id="btnDelYes">Oui, supprimer</button><button class="btn" id="btnDelNo">Annuler</button></div>` : ''}`;
+}
+function renderBar() {
+  $('#classBar').innerHTML = data.classes.map((c) => `<button class="chip" data-cls="${c.id}" aria-pressed="${cur() && cur().id === c.id}">${esc(c.nom)}</button>`).join('')
+    + (data.classes.length ? `<button class="btn" id="btnManage" aria-expanded="${ui.manage}">${ui.manage ? 'Fermer' : 'Gérer ma progression'}</button>` : '');
+}
+function renderTabs() {
+  const c = cur();
+  $('#tabs').hidden = !c;
+  $('#tabs').innerHTML = [['creneaux', 'Par créneau'], ['chap', 'Par chapitre'], ['plk', 'Plickers'], ['dev', 'Devoirs'], ['apercu', 'Vue d\'ensemble']]
+    .map(([k, l]) => `<button role="tab" data-tab="${k}" aria-selected="${ui.tab === k}">${l}</button>`).join('');
+}
+function emptyState() {
+  return `<div class="panel empty"><h2>Commence par ta classe</h2>
+    <p>Donne un nom à ta classe : le classeur calcule tout seul les 15 créneaux de la période (mercredi et jeudi, avec un créneau de plus un jeudi sur trois, sans le 11 novembre) et y place les séances, les Plickers et les devoirs. Tu pourras changer l'emploi du temps ensuite.</p>
+    <div style="width:100%;max-width:420px;display:flex;flex-direction:column;gap:10px;text-align:left">
+      <div><label for="nNom">Nom de la classe</label><input type="text" id="nNom" placeholder="5e A"></div>
+      <div class="row"><button class="btn primary" id="btnCreate">Créer la classe</button></div>
+    </div></div>`;
+}
+
+function render() {
+  const c = cur();
+  if (c && ui.cls !== c.id) ui.cls = c.id;
+  renderBar(); renderTabs(); renderManage();
+  const main = $('#main');
+  if (!c) { main.innerHTML = emptyState(); return; }
+  main.innerHTML = ui.tab === 'chap' ? renderChapitres(c) : ui.tab === 'plk' ? renderPlickers(c) : ui.tab === 'dev' ? renderDevoirs(c) : ui.tab === 'apercu' ? renderApercu(c) : renderCreneaux(c);
+}
+
+/* ---------- actions ---------- */
+function newClass(nom, edt) {
+  const c = { id: uid(), nom: nom || 'Ma classe', edt: edt || EDT_DEF(), cren: {}, v85: true };
+  data.classes.push(c); ui.cls = c.id; saveUi(); persist(); render(); return c;
+}
+function readManage(c) {
+  const nom = $('#fNom').value.trim(); if (nom) c.nom = nom;
+  const e = c.edt;
+  e.extra = e.extra || {};
+  e.extra.on = $('#xOn').checked; e.extra.every = +$('#xEvery').value; e.extra.j = +$('#xJ').value; e.extra.d = +$('#xD').value; e.extra.first = $('#xFirst').value || PERIODE.debut;
+  const deb = $('#pDeb').value, fin = $('#pFin').value;
+  if (deb && fin && deb < fin) { data.periode = { debut: deb, fin, feries: [...PERIODE.feries] }; applyPeriode(); }
+}
+
+document.addEventListener('click', (ev) => {
+  const t = ev.target.closest('button, a'); if (!t) return;
+  const c = cur();
+  if (t.dataset.cls) { ui.cls = t.dataset.cls; saveUi(); render(); return; }
+  if (t.dataset.tab) { ui.tab = t.dataset.tab; saveUi(); render(); return; }
+  if (t.id === 'btnManage') { ui.manage = !ui.manage; ui.confirmDel = false; render(); return; }
+  if (t.id === 'btnCreate') { newClass($('#nNom').value.trim() || '5e'); return; }
+  if (t.id === 'btnPrint') { window.print(); return; }
+  if (!c) return;
+  if (t.dataset.cst !== undefined) {
+    const id = t.dataset.c, k = t.dataset.cst;
+    if (k) c.cren[id] = { st: k, reste: k === 'partiel' ? (c.cren[id] && c.cren[id].reste) || 30 : 0 }; else delete c.cren[id];
+    ui.openC = id; invalider(c); saveUi(); persist(); render(); return;
+  }
+  if (t.dataset.copydev) {
+    const el = document.getElementById('devc-' + t.dataset.copydev); copyText(devoirPlain(el.innerHTML), t, el.innerHTML); return;
+  }
+  if (t.dataset.copyed) { copyText(document.getElementById(t.dataset.copyed).textContent, t); return; }
+  if (t.dataset.copydevs) {
+    const sid = t.dataset.copydevs, P = plan(c), e = devoirsPlan(P)[sid] || { due: -1 };
+    const lines = devPlainLines(sid).map((l) => '- ' + l);
+    const sl = siteLine(sid); if (sl) lines.push(sl);
+    copyText(lines.join('\n'), t); return;
+  }
+  if (t.dataset.copyset) { copyText(quizText(t.dataset.copyset), t); return; }
+  if (t.dataset.cq) { copyQ(t.dataset.cq, t); return; }
+  if (t.dataset.csv) {
+    const sids = t.dataset.csv === 'all' ? SEANCES.map((s) => s.id) : [t.dataset.csv];
+    download(t.dataset.csv === 'all' ? 'plickers_5e_periode2.csv' : `plickers_${t.dataset.csv}.csv`, quizCsv(sids), 'text/csv;charset=utf-8'); return;
+  }
+  if (t.id === 'btnHadd') { readManage(c); c.edt.hebdo.push({ j: 3, d: 85 }); invalider(c); persist(); render(); return; }
+  if (t.dataset.hdel !== undefined) { readManage(c); c.edt.hebdo.splice(+t.dataset.hdel, 1); invalider(c); persist(); render(); return; }
+  if (t.dataset.fdel !== undefined) { readManage(c); const p = data.periode || { debut: PERIODE.debut, fin: PERIODE.fin, feries: [...PERIODE.feries] }; p.feries.splice(+t.dataset.fdel, 1); data.periode = p; applyPeriode(); data.classes.forEach(invalider); persist(); render(); return; }
+  if (t.id === 'btnFadd') {
+    const v = $('#fNew').value; if (!v) return; readManage(c);
+    const p = data.periode || { debut: PERIODE.debut, fin: PERIODE.fin, feries: [...PERIODE.feries] }; if (!p.feries.includes(v)) p.feries.push(v); p.feries.sort(); data.periode = p; applyPeriode(); data.classes.forEach(invalider); persist(); render(); return;
+  }
+  if (t.id === 'btnSaveClass') { readManage(c); data.classes.forEach(invalider); persist(); ui.manage = false; render(); return; }
+  if (t.id === 'btnAddClass') { readManage(c); const n = newClass('Nouvelle classe', JSON.parse(JSON.stringify(c.edt))); ui.manage = true; render(); $('#fNom').focus(); $('#fNom').select(); return; }
+  if (t.id === 'btnResetSuivi') { c.cren = {}; invalider(c); persist(); render(); return; }
+  if (t.id === 'btnDel') { ui.confirmDel = true; render(); return; }
+  if (t.id === 'btnDelNo') { ui.confirmDel = false; render(); return; }
+  if (t.id === 'btnDelYes') { data.classes = data.classes.filter((x) => x.id !== c.id); ui.cls = data.classes[0] ? data.classes[0].id : null; ui.manage = false; ui.confirmDel = false; saveUi(); persist(); render(); return; }
+});
+document.addEventListener('change', (ev) => {
+  const t = ev.target, c = cur(); if (!c) return;
+  if (t.dataset.reste) { const e = c.cren[t.dataset.reste]; if (e) { e.reste = +t.value; invalider(c); persist(); render(); } return; }
+  if (t.dataset.hj !== undefined) { c.edt.hebdo[+t.dataset.hj].j = +t.value; invalider(c); persist(); render(); return; }
+  if (t.dataset.hd !== undefined) { c.edt.hebdo[+t.dataset.hd].d = +t.value; invalider(c); persist(); render(); return; }
+  if (['xOn', 'xEvery', 'xJ', 'xD', 'xFirst', 'pDeb', 'pFin'].includes(t.id)) { readManage(c); data.classes.forEach(invalider); persist(); render(); }
+});
+document.addEventListener('toggle', (ev) => {
+  const d = ev.target; if (d.tagName === 'DETAILS' && d.dataset.cid && d.open) { ui.openC = d.dataset.cid; saveUi(); }
+}, true);
+
+/* ---------- sauvegarde dans un fichier ---------- */
+$('#btnExport').addEventListener('click', () => {
+  download('classeur5e_sauvegarde.json', JSON.stringify(data, (k, v) => (k === '_plan' ? undefined : v), 1), 'application/json');
+  setStatus('Sauvegarde téléchargée.');
+});
+$('#fileImport').addEventListener('change', async (ev) => {
+  const f = ev.target.files[0]; if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    if (!d || !Array.isArray(d.classes)) throw new Error('format');
+    data = norm(d); applyPeriode(); ui.cls = data.classes[0] ? data.classes[0].id : null; persist(); render(); setStatus('Sauvegarde restaurée.');
+  } catch (e) { setStatus('Ce fichier n\'est pas une sauvegarde du classeur.'); }
+  ev.target.value = '';
+});
+
+loadLocal();
+if (!data.classes.length) { /* l'écran « Commence par ta classe » s'affiche */ }
+render();
+
+</script>
+</body>
+</html>

@@ -1,49 +1,47 @@
-# Révisions 5e — Mathématiques
+# Révisions 5e — site, Espace professeur, classeur et documents
 
-Site de révision tout-en-un pour les élèves de 5e. Au début, l'élève choisit son chapitre :
+Le site garde la même adresse. Les 3 premiers chapitres (calculs, triangles, fractions 1) ne changent pas.
+Quatre chapitres s'ajoutent : **4 Proportionnalité · 5 Angles · 6 Fractions (partie 2) · 7 Divisibilité**.
+Ils sont **fermés aux élèves par défaut** : c'est toi qui décides quand les ouvrir.
 
-| Chapitre | Fiche de cours | Exercices |
-|---|---|---|
-| **1. Règles de calcul** | Règles 1 à 6 avec calculs détaillés, vocabulaire | Calculs sans / avec priorité, parenthèses simples et imbriquées, « par où commencer ? » (clic sur l'opération), vocabulaire, phrase ↔ calcul |
-| **2. Triangles** | Les 3 constructions avec figures, inégalité triangulaire, somme des angles, droites remarquables | **Constructions à tracer** (règle, compas, rapporteur, équerre) vérifiées automatiquement, triangle constructible ou non, somme des angles, reconnaître et **tracer** médiatrice, hauteur, médiane |
-| **3. Fractions (partie 1)** | Écritures décimales, nombre quotient, droite graduée, fractions égales, simplification | Exercices correspondants |
+## Ce qu'il faut déposer dans le dépôt GitHub de 5e (tout à la racine, sans dossier)
+- Le site : `index.html`, `script.js`, `style.css`, `chapitres-5e.js`, `chapitres-5e.css`, `espace-prof.js`, `controles-5e.js`, `qrcode.js`, `reglages.js`, `ouverture.js`, `classeur.html`
+- Les documents PDF (22 fichiers) :
+  - `cours-eleve-<Chapitre>.pdf` : cours à trous, à imprimer pour les élèves
+  - `cours-prof-<Chapitre>.pdf` : le même cours complété (réponses en bleu)
+  - `exercices-<Chapitre>.pdf` : fiche d'exercices des élèves (exercices numérotés, faits dans le cahier)
+  - `exercices-corriges-<Chapitre>.pdf` : les mêmes exercices avec un corrigé détaillé
+  - `projection-<Chapitre>.pdf` : les fiches à projeter (questions flash, activités, jeux)
+  - `devoirs-impression.pdf` : les 6 fiches de devoirs à coller, deux exemplaires par feuille A4 (à couper)
+  - `devoirs-corriges.pdf` : chaque fiche de devoir suivie de son corrigé
 
-Chaque chapitre a aussi un **contrôle blanc** de 10 questions noté sur 20 (avec un bouton « Passer » si l'élève bloque).
-Les exercices changent à chaque fois et sont corrigés immédiatement, avec la méthode.
-La progression est enregistrée dans le navigateur de l'élève (aucun compte, aucune donnée envoyée).
+Les fichiers du même nom sont remplacés. Ne dépose rien dans le dépôt de 6e ni dans le dépôt « test ».
+Avant de déposer, change le code `prof5e` dans `reglages.js`.
 
-## Aides à la révision
+**Attention :** si le dépôt est public, les PDF « prof » et « corrigés » le sont aussi. Leur adresse n'est affichée nulle part pour les élèves, mais elle reste devinable.
 
-- **💡 Indices didactiques** (jamais la réponse) : 1. une question qui relance et renvoie à la fiche ; 2. un exemple résolu avec d'autres nombres ; 3. un outil (droite graduée coloriée, critères de divisibilité, ordre des priorités, exemple animé…). Une réussite avec indice compte comme juste, mais la progression l'indique. Pas d'indice dans les contrôles blancs.
-- **🤔 Remédiation selon l'erreur** : au premier essai, si la réponse correspond à une erreur classique (3/4 écrit 3,4 ; fraction inversée ; même nombre ajouté en haut et en bas ; calcul de gauche à droite sans les priorités ; parenthèses oubliées ; graduations comptées comme des unités ; angles additionnés…), un message ciblé l'explique et l'élève a un second essai. Pour les constructions, le site affiche d'abord ce que mesure la figure de l'élève, sans la correction.
-- **🎬 Animations des constructions** (chapitre 2) : règle, compas, rapporteur et équerre dessinés, étape par étape. Avant de répondre, « Voir un exemple » montre la méthode sur un **autre** triangle ; après la réponse, « Voir la construction » montre la correction. Aussi sur la fiche.
-- **📌 Mes erreurs** : chaque type de question raté (exercices et contrôle blanc) est ajouté à la page « Mes erreurs » du chapitre, qui ne propose que ces questions. Un point faible disparaît après 2 réussites d'affilée sans indice. Le nombre de points faibles s'affiche dans le menu et sur les accueils.
-- **🔊 Écouter** : lecture à voix haute des énoncés, des indices, des corrections et des fiches, avec la voix française de l'appareil (fractions lues « trois quarts », angles, segments, parenthèses…). La qualité de la voix dépend de l'appareil.
+## Espace professeur
+- Adresse : `…/#/prof` (lien « Espace professeur » en bas de chaque page), code dans `reglages.js`.
+- C'est la seule porte vers le classeur : sans le code, `classeur.html` renvoie vers l'Espace professeur.
+- « Ce que voient les élèves » : coche les pages vues en classe, puis télécharge `ouverture.js` et dépose-le dans GitHub.
 
-## La planche de construction (chapitre 2)
+## Le classeur
+Pour chaque créneau :
+- le déroulé minuté ;
+- **Repère et documents** : boutons qui ouvrent directement la bonne page du cours (élève ou prof), de la fiche d'exercices, des corrigés et de la fiche à projeter ;
+- **École Directe** : le « Contenu de séance » et le « Travail à faire » déjà rédigés, avec un bouton « Copier » pour chacun ;
+- l'activité, les 5 questions Plickers, le devoir à donner (avec la fiche à imprimer et son corrigé).
 
-- **Règle** : la longueur s'affiche au millimètre pendant le tracé.
-- **Compas** : le rayon s'affiche ; le cercle se trace d'un clic.
-- **Rapporteur** : sommet, puis côté de départ (0°), puis on tourne jusqu'à la bonne mesure.
-- **Point** : s'accroche aux intersections (arcs, demi-droites, droites).
-- **Équerre** : trace la perpendiculaire à une droite passant par un point.
-- **Déplacer** : fait glisser toute la figure si elle sort du cadre.
-- **− / +** : ajuste le dernier tracé (longueur, rayon, angle) — utile sur téléphone.
-- L'élève choisit le **nom du prochain point** (A, B, C…) avant de le placer.
+Après chaque cours, indique « Fait », « Pas tout fini » ou « Annulé » : la suite se recalcule, ainsi que les textes pour École Directe.
 
-Le site vérifie les longueurs (à 1,5 mm près), les angles (à 2° près) et que les côtés sont bien tracés. En cas d'erreur, il affiche la méthode et la figure attendue.
+## Les cours
+Mise en page LaTeX (encadrés, couleurs et polices comme ton modèle). Pas de nom ni de prénom sur les cours. Une petite mention « Séance n » indique où commence chaque séance. Les cours ne renvoient plus à un cahier d'activités : chaque « S'entraîner » donne les numéros de la fiche d'exercices du chapitre. Les sources LaTeX sont dans `Sources_LaTeX.zip`.
 
-## Mettre le site en ligne avec GitHub Pages
+## Les contrôles sur papier, avec QR code
+Espace professeur → « Contrôle sur papier » (même principe qu'en 6e) :
+1. Coche les compétences, indique la classe, colle la liste des élèves, coche la version aménagée si besoin.
+2. « Préparer le contrôle » : durée automatique (≈ 20, 30 ou 45 min), ajustable avec − et +, et vérification que chaque copie tient sur une page A4.
+3. « Imprimer les sujets » : une page par élève, avec en haut son nom et prénom, juste en dessous un code et un QR code. Tu disposes aussi d'un « Corrigé » et d'un « Fichier pour la correction assistée ».
+4. Colle les résultats (`CODE C1=TB C2=MF…`), vérifie le tableau, puis imprime les étiquettes QR (planche de 21 étiquettes L7160). Le QR ouvre « Mon contrôle » : le bilan de l'élève, le corrigé de son sujet et les exercices à refaire.
 
-1. Dans le dépôt, cliquer sur **Add file → Upload files** et glisser `index.html`, `style.css`, `script.js` (et ce `README.md`). Ils remplacent les anciens.
-2. **Commit changes**.
-3. Si ce n'est pas déjà fait : **Settings → Pages → Deploy from a branch → main → / (root) → Save**.
-4. Après 1 à 2 minutes, recharger le site avec **Ctrl + F5**.
-
-## Modifier le site
-
-- **Les fiches** sont dans `index.html`, une section par page (`data-ch` = chapitre, `data-p` = page, `data-title` = nom dans le menu).
-  - Chapitre 3 : une fraction s'écrit `[[numérateur|dénominateur]]`.
-  - Chapitre 1 : `<div class="calc-demo" data-name="A" data-expr="5 + 3 × 7"></div>` affiche le calcul détaillé étape par étape.
-- **Les exercices** sont dans `script.js` (une fonction par type) et sont déclarés dans l'objet `GENS`.
-- **Ajouter un chapitre** : ajouter des sections `data-ch="nouveau"` dans `index.html`, une entrée dans `CHAPTERS` et ses exercices dans `GENS` (`ch: 'nouveau'`). Le contrôle blanc et la progression suivent automatiquement.
+Rien n'est stocké sur un serveur : les contrôles restent sur l'appareil du professeur, et chaque sujet est recalculé à partir de son code.
