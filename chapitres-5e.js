@@ -1,3 +1,5 @@
+/** niveau demandé par une série d'entraînement (1, 2, 3) ou rien (0 : au hasard) */
+const LV = (a, b, c) => { const L = typeof GEN_LEVEL === 'number' ? GEN_LEVEL : 0; return L === 1 ? a : L === 2 ? b : L === 3 ? c : null; };
 'use strict';
 /* =========================================================
    Révisions 5e — chapitres 4 à 7 (suite de l'année)
@@ -509,7 +511,8 @@ function figTri(kind, txt) {
 // 1. Somme des angles d'un triangle
 function genAngle180() {
   let a, b, c;
-  do { a = rand(25, 100); b = rand(20, 100); c = 180 - a - b; } while (c < 15 || a === b || a === c || b === c || a === 90 || b === 90 || c === 90);
+  const st = LV(10, 5, 1) || 1;
+  do { a = st * Math.round(rand(25, 100) / st); b = st * Math.round(rand(20, 100) / st); c = 180 - a - b; } while (c < 15 || a === b || a === c || b === c || a === 90 || b === 90 || c === 90);
   const V = shuffle(['A', 'B', 'C']); const hid = V[0], g1 = V[1], g2 = V[2];
   const val = { A: a, B: b, C: c }; const txt = {};
   txt[g1] = deg(val[g1]); txt[g2] = deg(val[g2]); txt[hid] = '?';
@@ -540,7 +543,7 @@ function genAngle180() {
 
 // 2. Triangle rectangle
 function genAngleRect() {
-  const b = rand(15, 75), ans = 90 - b;
+  const st = LV(10, 5, 1) || 1, b = st * Math.round(rand(15, 75) / st), ans = 90 - b;
   const V = pick([['B', 'C'], ['C', 'B']]);
   const txt = { A: '', B: '', C: '' }; txt[V[0]] = deg(b); txt[V[1]] = '?';
   return {
@@ -567,9 +570,11 @@ function genAngleRect() {
 
 // 3. Triangle isocèle
 function genAngleIso() {
-  const apex = Math.random() < 0.5;
+  const L = LV(1, 2, 3);
+  const apex = L === 1 ? true : L === 2 ? false : Math.random() < 0.5;
   let top, base;
-  do { base = rand(25, 80); top = 180 - 2 * base; } while (top < 20 || base === 60 || top === base);
+  if (L === 3 && apex) { do { top = 2 * rand(10, 69) + 1; base = (180 - top) / 2; } while (base === 60); }
+  else do { base = L === 1 ? 5 * rand(5, 16) : rand(25, 80); top = 180 - 2 * base; } while (top < 20 || base === 60 || top === base);
   const txt = {}; let ans, ask, msg, rem;
   if (apex) { txt.C = deg(top); txt.A = '?'; ans = base; ask = 'Angle en A ='; msg = `ABC est isocèle en C : ses deux angles à la base sont égaux. Leur somme vaut 180 − ${top} = ${180 - top}, donc chacun vaut ${180 - top} : 2 = <b>${base}°</b>.`;
     rem = (x) => near(x, 180 - top) ? `${fmt(180 - top)}° est la somme des deux angles à la base. Ils sont égaux : il faut encore diviser par 2.` : near(x, top) ? 'L\'angle donné est celui du sommet C ; on te demande un angle à la base.' : null; }
@@ -807,7 +812,7 @@ function mkAddSub(kind) {
   let a, b, c, e, op, D;
   if (kind === 'same') { D = rand(3, 12); op = Math.random() < 0.5 ? '+' : '−'; if (op === '+') { a = rand(1, D - 1); c = rand(1, D); e = D; b = D; } else { a = rand(2, D + 3); c = rand(1, a - 1); b = e = D; } }
   else if (kind === 'mult') { b = pick([2, 3, 4, 5, 6]); e = b * rand(2, 4); op = Math.random() < 0.5 ? '+' : '−'; a = rand(1, b + 2); c = rand(1, e); if (op === '−') { while (a / b <= c / e) { a++; } } }
-  else { [b, e] = pick([[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [3, 7], [5, 6], [4, 3], [5, 2]]); op = Math.random() < 0.5 ? '+' : '−'; a = rand(1, b + 1); c = rand(1, e + 1); if (op === '−') { while (a / b <= c / e) a++; } }
+  else { [b, e] = pick(LV([[2, 3], [2, 5], [3, 4], [3, 2]], [[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [3, 7], [5, 6], [4, 3], [5, 2]], [[4, 6], [6, 8], [6, 9], [4, 10], [10, 15], [6, 4], [9, 6]]) || [[2, 3], [3, 4], [2, 5], [3, 5], [4, 5], [3, 7], [5, 6], [4, 3], [5, 2]]); op = Math.random() < 0.5 ? '+' : '−'; a = rand(1, b + 1); c = rand(1, e + 1); if (op === '−') { while (a / b <= c / e) a++; } }
   if (kind === 'same') { b = e = D; }
   else { if (a % b === 0) a++; if (c % e === 0) c = Math.max(1, c - 1); if (op === '−') { while (a / b <= c / e || a % b === 0) a++; } }
   const L = (() => { const x = b, y = e; return x * y / gcd(x, y); })();
@@ -864,7 +869,12 @@ function genFracProbleme() {
    CHAPITRE 7 — DIVISIBILITÉ
    ========================================================= */
 function genEuclide() {
-  const b = rand(3, 12); let a; do { a = rand(30, 300); } while (a % b === 0);
+  const L = LV(1, 2, 3);
+  const b = L === 1 ? rand(3, 6) : L === 2 ? rand(6, 9) : rand(3, 12); let a; do { a = L === 1 ? rand(25, 90) : L === 2 ? rand(80, 200) : rand(120, 300); if (L === 3) { const bb = rand(10, 15); a = rand(150, 400); return mkEuclid(bb, a); } } while (a % b === 0);
+  return mkEuclid(b, a);
+}
+function mkEuclid(b, a) {
+  if (a % b === 0) a++;
   const q = Math.floor(a / b), rest = a % b;
   return {
     hints: [
@@ -958,7 +968,7 @@ function genMultiples() {
 
 const divisors = (n) => { const d = []; for (let i = 1; i <= n; i++) if (n % i === 0) d.push(i); return d; };
 function genDiviseurs() {
-  const n = pick([12, 18, 20, 24, 28, 30, 32, 36, 40, 42, 45, 48, 50, 54, 56, 60]);
+  const n = pick(LV([12, 15, 18, 20, 21], [24, 28, 30, 32, 36, 40, 42, 45], [48, 50, 54, 56, 60, 72, 84, 90]) || [12, 18, 20, 24, 28, 30, 32, 36, 40, 42, 45, 48, 50, 54, 56, 60]);
   const D = divisors(n);
   const pairs = D.filter((x) => x * x <= n).map((x) => `${x} × ${n / x}`).join(' ; ');
   return {
@@ -1036,8 +1046,10 @@ function genCritereChiffre() {
 const PRIMES = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97];
 const isPrime = (n) => n > 1 && PRIMES.concat([101, 103, 107, 109, 113]).includes(n);
 function genPremier() {
-  const t = Math.random(); let n;
-  if (t < 0.45) n = pick(PRIMES.filter((x) => x > 10));
+  const L = LV(1, 2, 3); const t = Math.random(); let n;
+  if (L === 1) n = pick([2, 3, 5, 7, 11, 13, 4, 6, 9, 10, 15, 14, 21, 17, 19]);
+  else if (L === 3) n = pick([91, 87, 57, 51, 119, 77, 97, 89, 83, 111, 69, 93]);
+  else if (t < 0.45) n = pick(PRIMES.filter((x) => x > 10));
   else if (t < 0.75) n = pick([49, 51, 57, 65, 77, 85, 87, 91, 93, 95, 119, 111, 69, 39, 33, 55, 35, 25, 21, 91]);
   else n = pick([27, 45, 63, 72, 81, 99, 100, 56, 48, 64, 84, 90, 75, 54]);
   const p = isPrime(n);

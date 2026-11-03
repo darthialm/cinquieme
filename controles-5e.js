@@ -154,7 +154,7 @@ function sheetHTML(c, i) {
   const [name, ver] = c.s[i], n = i + 1, code = ctlCode(c.id, n);
   const qs = ctlQuestions(c.id, n, ver, c.k, ctlPlan(c), ctlSalt(c, n));
   const date = new Date(c.d).toLocaleDateString('fr-FR');
-  return `<div class="ctl-sheet${ver === 'a' ? ' ver-a' : ''}" data-code="${code}">
+  return `<div class="ctl-page"><div class="ctl-sheet${ver === 'a' ? ' ver-a' : ''}" data-code="${code}">
     <div class="ctl-band"><span>Nom et prénom : <b>${esc(name)}</b></span><span>${[c.c, date].filter(Boolean).map(esc).join(' · ')}</span></div>
     <div class="ctl-head">
       <div class="ctl-code">${window.qrSVG ? qrSVG(code, 'M') : ''}<b>${code}</b></div>
@@ -166,14 +166,18 @@ function sheetHTML(c, i) {
       const first = j === 0 || qs[j - 1].ci !== x.ci;
       return `<section class="pq ctl-q">${first ? `<h3 class="ctl-ch">C${x.ci + 1} · ${esc(GENS[x.k].label)}</h3>` : ''}<div class="ctl-qb"><span class="ctl-num"><span class="qn">${j + 1}</span></span><div class="ctl-qt">${paperHTML(x.o.q)}</div></div></section>`;
     }).join('')}</div>
-  </div>`;
+  </div></div>`;
 }
 /** Codes des copies qui dépassent une page A4 (mesure hors écran, largeur imprimable 190 mm) */
+/* Une copie = une boîte de 184 × 270 mm : elle tient dans une page A4 quel que soit le navigateur
+   (même avec ses marges par défaut, jusqu'à 13 mm). Si le contenu est un peu plus long, il est réduit
+   (jusqu'à 90 %) pour tenir dans la boîte ; au-delà, la copie est signalée comme trop longue. */
+const PAGE_W = 184, PAGE_H = 270, MIN_SCALE = 0.9;
 function ctlOverflow(c, only) {
   const box = document.createElement('div'); box.style.cssText = 'position:absolute;left:-10000px;top:0;visibility:hidden';
   box.innerHTML = '<div style="height:100mm;width:1px"></div>'; document.body.appendChild(box);
   const mm = box.firstElementChild.getBoundingClientRect().height / 100, over = [];
-  (only || c.s.map((_, i) => i)).forEach((i) => { box.innerHTML = sheetHTML(c, i); box.firstElementChild.style.width = '190mm'; if (box.firstElementChild.getBoundingClientRect().height > 277 * mm) over.push(ctlCode(c.id, i + 1)); });
+  (only || c.s.map((_, i) => i)).forEach((i) => { box.innerHTML = sheetHTML(c, i); const sh = box.querySelector('.ctl-sheet'); sh.style.cssText = `width:${PAGE_W}mm;margin:0;outline:0`; if (sh.getBoundingClientRect().height > (PAGE_H / MIN_SCALE) * mm) over.push(ctlCode(c.id, i + 1)); });
   box.remove(); return over;
 }
 /** Plan automatique : on ajoute des questions (compétences les moins fournies d'abord) tant que la durée visée
@@ -229,20 +233,24 @@ function ctlAutoPlan(c, target = 30) {
   const t = T();
   return { p, short: t < target - 3, long: t > target + 5, amOver };
 }
-const PRINT_CSS = `@page { size: A4; margin: 7mm 10mm; } body.print-doc { background: #fff; margin: 0; } .ctl-sheet { page-break-after: always; break-after: page; }`;
+const PRINT_CSS = `@page { size: A4 portrait; margin: 12mm 13mm; }
+html, body.print-doc { margin: 0; padding: 0; background: #fff; }
+.ctl-page { width: ${PAGE_W}mm; height: ${PAGE_H}mm; overflow: hidden; position: relative; margin: 0 auto; break-after: page; page-break-after: always; break-inside: avoid; page-break-inside: avoid; }
+.ctl-page:last-child { break-after: auto; page-break-after: auto; }
+.ctl-page > .ctl-sheet { width: ${PAGE_W}mm !important; margin: 0 !important; outline: 0 !important; transform-origin: 0 0; }
+@media screen { body.print-doc { background: #e9e9e9; } .ctl-page { background: #fff; margin: 6mm auto; box-shadow: 0 0 0 1px #bbb, 0 0 0 12mm #fff, 0 0 0 calc(12mm + 1px) #bbb; } .ctl-pages { padding: 14mm 0; } }
+@media print { .ctl-pages { padding: 0; } }`;
+/** script de la fenêtre d'impression : réduit chaque copie pour qu'elle tienne dans sa boîte (avant d'afficher, et juste avant d'imprimer) */
+const FIT_JS = `<script>
+function fitAll(){var p=document.createElement('div');p.style.cssText='position:absolute;height:100mm;width:1px;visibility:hidden';document.body.appendChild(p);var mm=p.getBoundingClientRect().height/100;p.remove();
+var small=[],n=0;document.querySelectorAll('.ctl-page').forEach(function(pg){var sh=pg.firstElementChild;sh.style.transform='none';var h=sh.scrollHeight,H=pg.clientHeight;var s=Math.min(1,(H-2)/h);sh.style.transform=s<1?'scale('+s+')':'none';n++;if(s<${MIN_SCALE - 0.02})small.push(sh.dataset.code);});
+var el=document.getElementById('ctl-fit');if(el){el.style.color=small.length?'#9a5b00':'#237a3b';el.textContent=small.length?'⚠ '+small.length+' copie(s) très chargées, réduites pour tenir sur une page ('+small.slice(0,8).join(', ')+') : tu peux enlever une question.':'✔ '+n+' copies, une page A4 chacune.';}
+var b=document.getElementById('ctl-go');if(b)b.disabled=false;}
+window.addEventListener('load',function(){setTimeout(fitAll,300);});window.addEventListener('beforeprint',fitAll);
+<\/script>`;
 function printSheets(c) {
-  const bar = `<div class="no-print ctl-bar"><p id="ctl-fit" class="small">Vérification de la mise en page…</p><p><button type="button" class="btn primary" onclick="print()">🖨️ Imprimer</button> <span class="small muted">Recto seul, sans mise à l'échelle (100 %).</span></p></div>`;
-  const w = printWindow(`Sujets ${c.id} — ${c.t}`, bar + c.s.map((_, i) => sheetHTML(c, i)).join(''), PRINT_CSS);
-  if (!w) return;
-  const go = () => {
-    const probe = w.document.createElement('div'); probe.style.cssText = 'position:absolute;height:100mm;width:1px;visibility:hidden'; w.document.body.appendChild(probe);
-    const mm = probe.getBoundingClientRect().height / 100; probe.remove();
-    const over = [...w.document.querySelectorAll('.ctl-sheet')].filter((s) => s.getBoundingClientRect().height > 283 * mm).map((s) => s.dataset.code);
-    const el = w.document.getElementById('ctl-fit'); if (!el) return;
-    el.style.color = over.length ? '#9a5b00' : '#237a3b';
-    el.textContent = over.length ? `⚠ ${over.length} copie(s) dépassent une page (${over.slice(0, 8).join(', ')}${over.length > 8 ? '…' : ''}) : enlève une question par compétence.` : `✔ ${c.s.length} copies, une page chacune.`;
-  };
-  if (w.document.readyState === 'complete') setTimeout(go, 400); else w.addEventListener('load', () => setTimeout(go, 400));
+  const bar = `<div class="no-print ctl-bar"><p id="ctl-fit" class="small">Mise en page en cours…</p><p><button type="button" class="btn primary" id="ctl-go" onclick="fitAll();print()" disabled>🖨️ Imprimer</button> <span class="small muted">A4, recto, échelle 100 % (ne pas choisir « ajuster à la page »). Chaque copie tient dans une page, quelles que soient les marges du navigateur.</span></p></div>`;
+  printWindow(`Sujets ${c.id} — ${c.t}`, bar + `<div class="ctl-pages">${c.s.map((_, i) => sheetHTML(c, i)).join('')}</div>` + FIT_JS, PRINT_CSS);
 }
 
 /* ---------- Corrigé du professeur, et fichier pour la correction assistée ---------- */
@@ -538,4 +546,81 @@ function routeRetour(spec) {
   });
   retourCh = GENS[keys.find((k) => GENS[k])]?.ch || '';
   return retourCh;
+}
+
+/* =========================================================
+   Contrôle blanc (élèves) : un sujet comme le contrôle sur papier
+   - 5 compétences du chapitre (dans l'ordre du cours), 2 questions chacune (une facile, une plus difficile) ;
+   - toutes les questions sur la page, sans indice ; l'élève rend sa copie ;
+   - bilan par compétence (TB, MS, MF, MI) comme sur la copie papier, corrigé, exercices à refaire.
+   ========================================================= */
+function makeBlank(root, ch) {
+  const keys = Object.keys(GENS).filter((k) => GENS[k].ch === ch && !GENS[k].locked && !isBoard(k));
+  let qs = [], comp = [], t0 = 0, timer = null, warned = false;
+  const nbC = Math.min(5, keys.length), per = keys.length >= 5 ? 2 : Math.min(3, Math.ceil(10 / Math.max(1, keys.length)));
+  function newSubject() {
+    comp = shuffle(keys.slice()).slice(0, nbC).sort((a, b) => keys.indexOf(a) - keys.indexOf(b));
+    const seen = new Set();
+    qs = comp.flatMap((k, ci) => Array.from({ length: per }, (_, m) => ({ k, ci, m, o: levelPick(() => mkQ(k), m === 0 ? 1 : m === per - 1 ? 3 : 2, seen) })));
+  }
+  const minutes = () => Math.max(10, Math.round(comp.reduce((s, k) => s + ctlT(k) * per, 0) / 5) * 5);
+  function tick() {
+    const el = root.querySelector('.bl-time'); if (!el) { clearInterval(timer); return; }
+    const s = Math.floor((Date.now() - t0) / 1000);
+    el.textContent = `⏱ ${Math.floor(s / 60)} min ${String(s % 60).padStart(2, '0')} s`;
+  }
+  function render() {
+    newSubject(); warned = false;
+    root.classList.remove('done');
+    root.innerHTML = `<div class="bl-head">
+        <div><b>Contrôle blanc</b> · ${comp.length} compétences · ${qs.length} questions · durée conseillée <b>≈ ${minutes()} min</b></div>
+        <span class="bl-time" aria-live="off"></span></div>
+      <table class="voc bl-grid"><tr><th>Compétence</th><th>Niveau</th></tr>${comp.map((k, ci) => `<tr><td><b>C${ci + 1}</b> · ${GENS[k].label}</td><td class="bl-lv" data-ci="${ci}">—</td></tr>`).join('')}</table>
+      <p class="small muted">Comme le jour du contrôle : pas d'indice, une seule réponse par question. Écris tes calculs au brouillon, puis réponds dans les cases.</p>
+      <div class="bl-qs">${qs.map((x, j) => `${j === 0 || qs[j - 1].ci !== x.ci ? `<h3 class="bl-ch">C${x.ci + 1} · ${GENS[x.k].label}</h3>` : ''}<section class="bl-q" data-j="${j}"><div class="bl-qh"><span class="qn">${j + 1}</span></div><div class="ex-q"></div><div class="ex-fb"></div></section>`).join('')}</div>
+      <p class="bl-warn ex-fb warn" hidden></p>
+      <div class="ex-actions"><button type="button" class="btn primary bl-send">📝 Rendre ma copie</button></div>
+      <div class="bl-res"></div>`;
+    qs.forEach((x, j) => { const q = root.querySelector(`.bl-q[data-j="${j}"] .ex-q`); q.innerHTML = x.o.q; if (x.o.mount) x.o.mount(q); });
+    root.querySelector('.bl-send').addEventListener('click', send);
+    t0 = Date.now(); clearInterval(timer); timer = setInterval(tick, 1000); tick();
+  }
+  const answeredQ = (q) => [...q.querySelectorAll('input.ans')].some((i) => i.value.trim()) || !!q.querySelector('.rb:checked') || !!q.dataset.sel;
+  function send() {
+    const empty = qs.filter((x, j) => !answeredQ(root.querySelector(`.bl-q[data-j="${j}"] .ex-q`))).length;
+    const w = root.querySelector('.bl-warn');
+    if (empty && !warned) { warned = true; w.hidden = false; w.textContent = `Il reste ${empty} question${empty > 1 ? 's' : ''} sans réponse. Clique encore sur « Rendre ma copie » pour rendre quand même.`; return; }
+    w.hidden = true; clearInterval(timer);
+    const bits = comp.map(() => '');
+    qs.forEach((x, j) => {
+      const sec = root.querySelector(`.bl-q[data-j="${j}"]`), q = sec.querySelector('.ex-q'), fb = sec.querySelector('.ex-fb');
+      let res = null;
+      try { res = answeredQ(q) ? x.o.check(q) : null; } catch (e) { res = null; }
+      let ok = !!(res && res.ok), msg = res && typeof res.msg === 'string' ? res.msg : '';
+      if (!res || res.retry) { ok = false; msg = questionAnswer(x.o).msg; }
+      q.querySelectorAll('input, button').forEach((i) => { i.disabled = true; });
+      fb.className = 'ex-fb ' + (ok ? 'ok' : 'ko');
+      fb.innerHTML = (ok ? '<strong>✔ Juste.</strong> ' : res ? '<strong>✘ Faux.</strong> ' : '<strong>✘ Pas de réponse.</strong> ') + msg;
+      bits[x.ci] += ok ? '1' : '0';
+      const wk = updateWeak(x.k, ok, false);
+      if (wk) refreshWeakBadge(ch);
+    });
+    const good = bits.join('').split('').filter((b) => b === '1').length, note = Math.round((good / qs.length) * 40) / 2;
+    const k = ch + ':controle', prev = stats[k] || {};
+    stats[k] = { last: note, best: Math.max(note, prev.best ?? 0), n: (prev.n ?? 0) + 1 }; persist();
+    const lv = bits.map((b) => levelFromBits(b));
+    const tone = { TB: 'ok', MS: 'ok2', MF: 'mid', MI: 'ko' };
+    root.querySelectorAll('.bl-lv').forEach((td) => { const l = lv[+td.dataset.ci]; td.innerHTML = `<span class="lv lv-${tone[l]}">${l}</span>`; });
+    const s = Math.floor((Date.now() - t0) / 1000);
+    root.querySelector('.bl-res').innerHTML = `<div class="result"><p class="note">${good} / ${qs.length}</p>
+      <p>Temps : ${Math.floor(s / 60)} min (conseillé : ${minutes()} min).</p>
+      <ul class="ctl-bilan">${comp.map((kk, ci) => { const l = lv[ci], link = pageOfGen(kk);
+        return `<li><span class="lv lv-${tone[l]}">${l}</span> <b>${GENS[kk].label}</b> <span class="small muted">${LEVEL_TXT[l]}</span> ${l === 'TB' ? '<span class="ok-t">✔ Bravo !</span>' : link ? `<a class="btn${l === 'MS' ? '' : ' primary'}" href="${link}">${l === 'MS' ? '💪 M\'entraîner encore' : '🔁 Refaire une série'}</a>` : ''}</li>`; }).join('')}</ul>
+      <p class="small muted">Le corrigé de chaque question est affiché sous ta réponse.</p></div>`;
+    const bt = root.querySelector('.bl-send'); bt.textContent = '🔁 Nouveau sujet'; bt.removeEventListener('click', send); bt.addEventListener('click', () => { render(); root.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    root.classList.add('done');
+    root.querySelector('.bl-grid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  if (!keys.length) { root.innerHTML = '<p>Pas encore de contrôle blanc pour ce chapitre.</p>'; return; }
+  render();
 }

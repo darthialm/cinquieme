@@ -44,4 +44,10 @@ Espace professeur → « Contrôle sur papier » (même principe qu'en 6e) :
 3. « Imprimer les sujets » : une page par élève, avec en haut son nom et prénom, juste en dessous un code et un QR code. Tu disposes aussi d'un « Corrigé » et d'un « Fichier pour la correction assistée ».
 4. Colle les résultats (`CODE C1=TB C2=MF…`), vérifie le tableau, puis imprime les étiquettes QR (planche de 21 étiquettes L7160). Le QR ouvre « Mon contrôle » : le bilan de l'élève, le corrigé de son sujet et les exercices à refaire.
 
+Chaque copie est mise dans une boîte de 184 × 270 mm, un peu plus petite qu'une feuille A4 : elle tient sur une page même si le navigateur ajoute ses propres marges (Chrome, Edge, Firefox, Safari). Si le contenu est un peu trop long, il est légèrement réduit. Imprime à l'échelle 100 %, sans « ajuster à la page ».
+
 Rien n'est stocké sur un serveur : les contrôles restent sur l'appareil du professeur, et chaque sujet est recalculé à partir de son code.
+
+## L'entraînement des élèves
+- Chaque exercice du site se fait par **séries de 8 questions** : 3 de niveau 1, 3 de niveau 2, 2 de niveau 3. Les nombres et les situations deviennent plus difficiles, et une question ne revient pas deux fois dans la même série. À la fin, l'élève a son bilan (par exemple 7 / 8, détaillé par niveau) ; le site retient sa meilleure série.
+- Le **contrôle blanc** ressemble au contrôle sur papier : 5 compétences du chapitre, 2 questions chacune (une facile, une plus difficile), toutes sur la page, sans indice, avec une durée conseillée et un chronomètre. Quand l'élève rend sa copie, il obtient son niveau dans chaque compétence (TB, MS, MF, MI), le corrigé de chaque question et un lien vers les exercices à refaire.

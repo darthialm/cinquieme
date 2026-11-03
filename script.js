@@ -2262,8 +2262,39 @@ const weakNote = {
 /* =========================================================
    Moteur d'exercice
    ========================================================= */
+/** difficulté approximative d'une question : taille des nombres, décimales, fractions */
+function diffScore(o) {
+  const t = String(o.q || '').replace(/<svg[\s\S]*?<\/svg>/g, ' ').replace(/<[^>]+>/g, ' ');
+  let s = 0;
+  (t.match(/\d+(?:[.,]\d+)?/g) || []).forEach((n) => { const [a, b = ''] = n.split(/[.,]/); s += a.replace(/^0+/, '').length + 1.5 * b.length; });
+  return s + (String(o.q).match(/class="frac"/g) || []).length * 1.5;
+}
+/** une question du niveau demandé (1 facile, 2 moyen, 3 difficile), différente des précédentes */
+let GEN_LEVEL = 0;
+function levelPick(gen, level, seen) {
+  const cands = [];
+  GEN_LEVEL = level;
+  for (let i = 0; i < 9; i++) {
+    let c; try { c = gen(); } catch (e) { continue; }
+    if (!c || c.empty || c.mount || /class="board"/.test(c.q)) { GEN_LEVEL = 0; return c; }
+    const key = c.q.replace(/name="q[a-z0-9]+"/g, '').replace(/data-o="\d+"/g, '');
+    c.__key = key; c.__d = diffScore(c);
+    if (!seen || !seen.has(key)) cands.push(c);
+  }
+  GEN_LEVEL = 0;
+  if (!cands.length) return gen();
+  cands.sort((a, b) => a.__d - b.__d);
+  const n = cands.length, lo = Math.floor(((level - 1) * n) / 3), hi = Math.max(lo + 1, Math.floor((level * n) / 3));
+  const c = cands[lo + Math.floor(Math.random() * (hi - lo))];
+  if (seen) seen.add(c.__key);
+  return c;
+}
+const SERIE_N = 8;
+const serieLevel = (i) => (i < 3 ? 1 : i < 6 ? 2 : 3);
 function makeExercise(root, gen, opts = {}) {
   const limit = opts.limit || 0;
+  const serie = !limit && !opts.weakCh && opts.key ? SERIE_N : 0;
+  let seen = new Set(), sHist = [];
   let cur = null, answered = false, count = 0, good = 0, history = [], used = 0, animSeen = false, tries = 0;
   if (opts.makeGen) gen = opts.makeGen();
 
@@ -2288,6 +2319,12 @@ function makeExercise(root, gen, opts = {}) {
   const helped = () => used > 0 || animSeen || tries > 0;
 
   function bar() {
+    if (serie) {
+      const best = stats[opts.key + ':serie']?.best;
+      cEl.innerHTML = `Série : question ${Math.min(answered ? count : count + 1, serie)} / ${serie} · <span class="lvl lvl-${serieLevel(answered ? count - 1 : count)}">niveau ${serieLevel(answered ? count - 1 : count)}</span>${best != null ? ` <span class="small muted">· meilleure série : ${best} / ${serie}${best >= serie - 1 ? ' ⭐' : ''}</span>` : ''}`;
+      sEl.textContent = count ? `Réussies : ${good} / ${count}` : '';
+      return;
+    }
     sEl.textContent = count && !opts.weakCh ? `Score : ${good} / ${count}` : count ? `Réussies : ${good} / ${count}` : '';
     cEl.textContent = limit ? `Question ${Math.min(answered ? count : count + 1, limit)} / ${limit}` : '';
   }
@@ -2300,7 +2337,7 @@ function makeExercise(root, gen, opts = {}) {
 
   function render(focus) {
     stopSpeaking();
-    cur = gen();
+    cur = serie ? levelPick(gen, serieLevel(count), seen) : gen();
     answered = false; used = 0; animSeen = false; tries = 0;
     root.classList.remove('done');
     delete qEl.dataset.sel;
@@ -2366,6 +2403,7 @@ function makeExercise(root, gen, opts = {}) {
     const w = k ? updateWeak(k, res.ok, h) : null;
     if (w && GENS[k]) refreshWeakBadge(GENS[k].ch);
     if (limit) history.push({ label: label(), ok: res.ok });
+    if (serie) sHist.push({ ok: res.ok, h, lv: serieLevel(count - 1) });
     root.classList.add('done');
     qEl.querySelectorAll('input').forEach((i) => { i.disabled = true; });
     fb.className = 'ex-fb ' + (res.ok ? 'ok' : 'ko');
@@ -2375,7 +2413,7 @@ function makeExercise(root, gen, opts = {}) {
     filmButton();
     hintButton();
     bNext.disabled = false;
-    bNext.textContent = limit && count >= limit ? 'Voir ma note' : 'Question suivante →';
+    bNext.textContent = limit && count >= limit ? 'Voir ma note' : serie && count >= serie ? 'Voir le bilan de la série →' : 'Question suivante →';
     bar();
     bNext.focus({ preventScroll: true });
   }
@@ -2405,8 +2443,27 @@ function makeExercise(root, gen, opts = {}) {
     };
   }
 
+  function serieSummary() {
+    const k = opts.key, sans = sHist.filter((x) => x.ok && !x.h).length;
+    const prev = stats[k + ':serie'] || {};
+    stats[k + ':serie'] = { last: good, best: Math.max(good, prev.best ?? 0), n: (prev.n ?? 0) + 1 };
+    persist();
+    const msg = good === serie ? (sans === serie ? 'Parfait, et sans aucune aide : tu maîtrises ce savoir-faire !' : 'Tout juste ! Refais une série sans indice pour montrer que tu le maîtrises.')
+      : good >= serie - 2 ? 'Très bien ! Une nouvelle série pour viser le sans-faute ?'
+        : good >= serie / 2 ? 'C\'est en bonne voie. Relis la fiche, puis refais une série.'
+          : 'Relis la fiche et la méthode, puis recommence : les questions repartent du niveau 1.';
+    qEl.innerHTML = `<div class="result serie-res"><p class="note">${good} / ${serie}</p><p>${msg}</p>
+      <div class="lvls">${[1, 2, 3].map((L) => `<span><b>Niveau ${L}</b> ${sHist.filter((x) => x.lv === L).map((x) => (x.ok ? (x.h ? '<span class="ok" title="avec aide">✔</span>' : '<span class="ok">✔</span>') : '<span class="ko">✘</span>')).join(' ')}</span>`).join('')}</div>
+      ${sans < good ? `<p class="small muted">${good - sans} réussie${good - sans > 1 ? 's' : ''} avec un indice ou un deuxième essai.</p>` : ''}</div>`;
+    fb.className = 'ex-fb'; fb.innerHTML = ''; hEl.innerHTML = ''; aEl.innerHTML = '';
+    bCheck.hidden = true; bHint.hidden = true; bFilm.hidden = true;
+    bNext.textContent = 'Nouvelle série (8 questions)';
+    cEl.textContent = 'Série terminée'; sEl.textContent = '';
+    restart = () => { restart = null; count = 0; good = 0; sHist = []; seen = new Set(); render(true); };
+  }
   function next() {
     if (restart) { restart(); return; }
+    if (serie && answered && count >= serie) { serieSummary(); return; }
     if (limit && !answered) {
       count++; history.push({ label: label() + ' (passée)', ok: false });
       if (cur.key) updateWeak(cur.key, false, false);
@@ -2592,6 +2649,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Contrôles blancs : chaque compétence au moins une fois, complété au hasard jusqu'à 10
   document.querySelectorAll('.exercise[data-exam]').forEach((el) => {
     const ch = el.dataset.exam;
+    if (typeof makeBlank === 'function') { makeBlank(el, ch); return; }
     makeExercise(el, null, {
       limit: 10, ch,
       examKey: ch + ':controle',

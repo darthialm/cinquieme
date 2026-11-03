@@ -147,3 +147,20 @@ body.print-doc { color: #000; }
 .lv-ok { background: #1f8a4c; color: #fff; } .lv-ok2 { background: #c9ecd5; color: #145c33; } .lv-mid { background: #ffd8a8; color: #8a4b00; } .lv-ko { background: #f6c3bf; color: #9c1f14; } .lv-none { background: #ddd; }
 .ctl-rq { border-top: 1px solid var(--line); padding: 10px 0; }
 .ctl-rq .ex-q input:disabled { opacity: 1; }
+/* ---------- séries d'entraînement et contrôle blanc ---------- */
+.lvl { display: inline-block; padding: 0 7px; border-radius: 99px; font-size: .85em; font-weight: 700; }
+.lvl-1 { background: #e4f4e8; color: #145c33; } .lvl-2 { background: #fff3df; color: #8a4b00; } .lvl-3 { background: #fdeceb; color: #9c1f14; }
+.serie-res .lvls { display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: center; margin: 6px 0; }
+.serie-res .ok { color: #1f8a4c; font-weight: 800; } .serie-res .ko { color: #b3261e; font-weight: 800; }
+.bl-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 8px; }
+.bl-time { font-variant-numeric: tabular-nums; color: var(--muted, #666); }
+.bl-grid { margin: 6px 0 10px; } .bl-grid td.bl-lv { text-align: center; width: 5em; }
+.bl-ch { margin: 18px 0 4px; font-size: 1rem; border-bottom: 2px solid var(--line, #ddd); padding-bottom: 3px; }
+.bl-q { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 0; border-bottom: 1px dashed var(--line, #ddd); }
+.bl-q .bl-qh .qn { display: inline-grid; place-items: center; min-width: 1.7em; height: 1.7em; border-radius: 50%; border: 2px solid currentColor; font-weight: 800; }
+.bl-q .ex-q { flex: 1; min-width: 0; margin: 0; }
+.bl-q .ex-fb { flex-basis: 100%; }
+.bl-q .ex-fb:empty { display: none; }
+/* copies papier : figures plus compactes, pour placer davantage de questions */
+.ctl-sheet .ctl-qt svg:not(.qr) { max-height: 38mm; max-width: 66mm; width: auto; height: auto; display: block; margin: .5mm auto; }
+.ctl-sheet .ctl-qt .small.muted { font-size: .75em; margin: 0; }
