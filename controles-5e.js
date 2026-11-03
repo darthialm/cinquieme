@@ -89,7 +89,7 @@ function paperHTML(html) {
     if (!prev || prev.tagName !== 'P' || !pp.querySelector('.blank') || pp.querySelector('svg, img, table, .frac') || pp.textContent.trim().length > 16) return;
     prev.append(' ', ...pp.childNodes); pp.remove();
   });
-  return d.innerHTML.replace(/Écris ta réponse sous la forme 3\/8\./g, 'Écris ta réponse sous la forme d\'une fraction.');
+  return d.innerHTML.replace(/Écris ta réponse sous la forme 3\/8\./g, 'Écris ta réponse sous la forme d\'une fraction.').replace(/clique sur la bonne graduation/g, 'marque la bonne graduation d\'une croix');
 }
 /** Texte brut d'un morceau de HTML (fichier pour la correction assistée) */
 function plain(html, strip = false) {
@@ -144,10 +144,13 @@ function printWindow(title, bodyHTML, extraCSS = '', after) {
   if (!w) { alert('Ton navigateur a bloqué la fenêtre d\'impression. Autorise les fenêtres pop-up pour ce site, puis recommence.'); return null; }
   const links = [...document.querySelectorAll('link[rel="stylesheet"]')].filter((l) => /style\.css|chapitres-5e\.css/.test(l.getAttribute('href'))).map((l) => `<link rel="stylesheet" href="${l.href}">`).join('');
   w.document.open();
-  w.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${esc(title)}</title>${links}<style>${extraCSS}</style></head><body class="print-doc">${bodyHTML}</body></html>`);
+  w.document.write(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>${esc(title)}</title>${links}<style>${extraCSS}</style>${backJS()}</head><body class="print-doc">${bodyHTML}</body></html>`);
   w.document.close();
   return w;
 }
+/** Retour au site depuis la fenêtre d'impression : on referme la fenêtre, ou on rouvre l'Espace professeur si le site n'est plus ouvert */
+const BACK_BTN = '<button type="button" class="btn" onclick="ctlBack()">← Retour au site</button>';
+const backJS = () => `<script>function ctlBack(){try{if(window.opener&&!window.opener.closed&&window.opener!==window){window.opener.focus();window.close();}}catch(e){}setTimeout(function(){location.href=${JSON.stringify(siteURL() + '#/prof')};},200);}<\/script>`;
 
 /* ---------- Sujets ---------- */
 function sheetHTML(c, i) {
@@ -170,9 +173,9 @@ function sheetHTML(c, i) {
 }
 /** Codes des copies qui dépassent une page A4 (mesure hors écran, largeur imprimable 190 mm) */
 /* Une copie = une boîte de 184 × 270 mm : elle tient dans une page A4 quel que soit le navigateur
-   (même avec ses marges par défaut, jusqu'à 13 mm). Si le contenu est un peu plus long, il est réduit
-   (jusqu'à 90 %) pour tenir dans la boîte ; au-delà, la copie est signalée comme trop longue. */
-const PAGE_W = 184, PAGE_H = 270, MIN_SCALE = 0.9;
+   (même avec ses marges par défaut, jusqu'à 13 mm). Si le contenu est trop long, il est réduit pour tenir
+   dans la boîte, en gardant toute la largeur ; en dessous de 90 %, la copie est signalée comme très chargée. */
+const PAGE_W = 184, PAGE_H = 270, MIN_SCALE = 0.9, FLOOR_SCALE = 0.6;
 function ctlOverflow(c, only) {
   const box = document.createElement('div'); box.style.cssText = 'position:absolute;left:-10000px;top:0;visibility:hidden';
   box.innerHTML = '<div style="height:100mm;width:1px"></div>'; document.body.appendChild(box);
@@ -240,16 +243,23 @@ html, body.print-doc { margin: 0; padding: 0; background: #fff; }
 .ctl-page > .ctl-sheet { width: ${PAGE_W}mm !important; margin: 0 !important; outline: 0 !important; transform-origin: 0 0; }
 @media screen { body.print-doc { background: #e9e9e9; } .ctl-page { background: #fff; margin: 6mm auto; box-shadow: 0 0 0 1px #bbb, 0 0 0 12mm #fff, 0 0 0 calc(12mm + 1px) #bbb; } .ctl-pages { padding: 14mm 0; } }
 @media print { .ctl-pages { padding: 0; } }`;
-/** script de la fenêtre d'impression : réduit chaque copie pour qu'elle tienne dans sa boîte (avant d'afficher, et juste avant d'imprimer) */
+/** script de la fenêtre d'impression, pour chaque copie (avant d'afficher, et juste avant d'imprimer) :
+    1. un élément trop large pour sa colonne est réduit seul ; 2. si la copie est trop haute, elle est réduite
+    en gardant toute la largeur de la page (on cherche la plus grande échelle qui tient). On utilise zoom et non
+    transform : à l'impression, une copie qui resterait plus haute que la page perdrait des questions. */
 const FIT_JS = `<script>
-function fitAll(){var p=document.createElement('div');p.style.cssText='position:absolute;height:100mm;width:1px;visibility:hidden';document.body.appendChild(p);var mm=p.getBoundingClientRect().height/100;p.remove();
-var small=[],n=0;document.querySelectorAll('.ctl-page').forEach(function(pg){var sh=pg.firstElementChild;sh.style.transform='none';var h=sh.scrollHeight,H=pg.clientHeight;var s=Math.min(1,(H-2)/h);sh.style.transform=s<1?'scale('+s+')':'none';n++;if(s<${MIN_SCALE - 0.02})small.push(sh.dataset.code);});
-var el=document.getElementById('ctl-fit');if(el){el.style.color=small.length?'#9a5b00':'#237a3b';el.textContent=small.length?'⚠ '+small.length+' copie(s) très chargées, réduites pour tenir sur une page ('+small.slice(0,8).join(', ')+') : tu peux enlever une question.':'✔ '+n+' copies, une page A4 chacune.';}
-var b=document.getElementById('ctl-go');if(b)b.disabled=false;}
+function fitWide(sh){sh.querySelectorAll('.ctl-qt').forEach(function(q){var R=q.getBoundingClientRect().right;Array.prototype.forEach.call(q.children,function(e){e.style.zoom='';var w=e.scrollWidth,r=e.getBoundingClientRect();var big=Math.max(r.right,r.left+w)-R;if(big>.5&&w>0)e.style.zoom=Math.max(.5,(w-big)/w);});});}
+function fitSheet(pg){var sh=pg.firstElementChild,W=pg.clientWidth,H=pg.clientHeight-2;function tall(s){sh.style.zoom=s;sh.style.setProperty('width',(W/s)+'px','important');return sh.getBoundingClientRect().height>H;}
+tall(1);fitWide(sh);if(!tall(1))return 1;var lo=${FLOOR_SCALE},hi=1;
+for(var i=0;i<8;i++){var m=(lo+hi)/2;if(tall(m))hi=m;else lo=m;}tall(lo);return lo;}
+function fitAll(){var small=[],cut=[],n=0;document.querySelectorAll('.ctl-page').forEach(function(pg){var s=fitSheet(pg),sh=pg.firstElementChild;n++;if(s<${MIN_SCALE})small.push(sh.dataset.code);
+var P=pg.getBoundingClientRect(),bad=sh.getBoundingClientRect().bottom>P.bottom+1;sh.querySelectorAll('.ctl-qt *').forEach(function(e){var r=e.getBoundingClientRect();if(r.width&&r.right>P.right+1)bad=true;});if(bad)cut.push(sh.dataset.code);});
+var el=document.getElementById('ctl-fit');if(el){el.style.color=cut.length?'#b3261e':small.length?'#9a5b00':'#237a3b';el.textContent=cut.length?'⚠ '+cut.length+' copie(s) trop longues même très réduites ('+cut.slice(0,8).join(', ')+') : reviens au site et enlève des questions.':small.length?'⚠ '+small.length+' copie(s) très chargées, écrites plus petit pour tenir sur une page ('+small.slice(0,8).join(', ')+') : tu peux enlever une question.':'✔ '+n+' copies, une page A4 chacune.';}
+var b=document.getElementById('ctl-go');if(b)b.disabled=cut.length>0;}
 window.addEventListener('load',function(){setTimeout(fitAll,300);});window.addEventListener('beforeprint',fitAll);
 <\/script>`;
 function printSheets(c) {
-  const bar = `<div class="no-print ctl-bar"><p id="ctl-fit" class="small">Mise en page en cours…</p><p><button type="button" class="btn primary" id="ctl-go" onclick="fitAll();print()" disabled>🖨️ Imprimer</button> <span class="small muted">A4, recto, échelle 100 % (ne pas choisir « ajuster à la page »). Chaque copie tient dans une page, quelles que soient les marges du navigateur.</span></p></div>`;
+  const bar = `<div class="no-print ctl-bar"><p id="ctl-fit" class="small">Mise en page en cours…</p><p>${BACK_BTN} <button type="button" class="btn primary" id="ctl-go" onclick="fitAll();print()" disabled>🖨️ Imprimer</button> <span class="small muted">A4, recto, échelle 100 % (ne pas choisir « ajuster à la page »). Chaque copie tient dans une page, quelles que soient les marges du navigateur.</span></p></div>`;
   printWindow(`Sujets ${c.id} — ${c.t}`, bar + `<div class="ctl-pages">${c.s.map((_, i) => sheetHTML(c, i)).join('')}</div>` + FIT_JS, PRINT_CSS);
 }
 
@@ -262,7 +272,7 @@ function printCorrige(c) {
       return `<li><span class="small muted">C${x.ci + 1}</span> ${a.good ? `<b>${esc(a.good)}</b> — ` : ''}${String(a.msg).replace(/<table[\s\S]*?<\/table>/g, '')}</li>`;
     }).join('')}</ol></section>`;
   }).join('');
-  printWindow(`Corrigé ${c.id}`, `<div class="no-print ctl-bar"><p><button type="button" class="btn primary" onclick="print()">🖨️ Imprimer le corrigé</button></p></div><h1>Corrigé — ${esc(c.t)}${c.c ? ` (${esc(c.c)})` : ''}</h1>${parts}`, '@page { size: A4; margin: 10mm; } .ctl-corr { break-inside: avoid; } body.print-doc { padding: 0 8mm; }');
+  printWindow(`Corrigé ${c.id}`, `<div class="no-print ctl-bar"><p>${BACK_BTN} <button type="button" class="btn primary" onclick="print()">🖨️ Imprimer le corrigé</button></p></div><h1>Corrigé — ${esc(c.t)}${c.c ? ` (${esc(c.c)})` : ''}</h1>${parts}`, '@page { size: A4; margin: 10mm; } .ctl-corr { break-inside: avoid; } body.print-doc { padding: 0 8mm; }');
 }
 function aiText(c) {
   const L = [];
@@ -330,7 +340,7 @@ function printLabels(c, rows, skip) {
   const cells = [...Array(skip).fill(null), ...rows];
   const pages = [];
   for (let p = 0; p * PER < cells.length; p++) pages.push(cells.slice(p * PER, (p + 1) * PER));
-  const body = `<div class="no-print ctl-bar"><p><button type="button" class="btn primary" onclick="print()">🖨️ Imprimer les étiquettes</button></p>
+  const body = `<div class="no-print ctl-bar"><p>${BACK_BTN} <button type="button" class="btn primary" onclick="print()">🖨️ Imprimer les étiquettes</button></p>
     <p class="small">Planche A4 de 21 étiquettes (3 × 7, 63,5 × 38,1 mm, type L7160). Dans la fenêtre d'impression : <b>marges : aucune</b>, <b>échelle : 100 %</b>. Fais d'abord un essai sur une feuille blanche, posée sur la planche, à contre-jour.</p></div>`
     + pages.map((pg) => `<div class="lbl-page">${pg.map((r, i) => {
       const x = LEFT + (i % 3) * (W + GAP), y = TOP + Math.floor(i / 3) * H;
@@ -436,9 +446,14 @@ function setupControles() {
     }));
     $('ctl-print').addEventListener('click', () => {
       const cc = { ...c, n: [...p.n], a: p.a ? [...p.a] : null, r: { ...(p.r || {}) } };
-      const over = ctlOverflow(cc);
+      // une copie trop longue à cause du tirage reçoit d'autres nombres avant de déranger le professeur
+      const over = ctlOverflow(cc).filter((code) => {
+        const i = parseInt(code.split('-')[1], 10) - 1;
+        for (let sl = 1; sl <= 8; sl++) { cc.r[i + 1] = sl; if (!ctlOverflow(cc, [i]).length) return false; }
+        delete cc.r[i + 1]; return true;
+      });
       if (!over.length) { create(cc); return; }
-      drawPlan(`<span class="warn-t">⚠ ${over.length} copie${over.length > 1 ? 's' : ''} sur ${cc.s.length} dépasse${over.length > 1 ? 'nt' : ''} une page (${over.slice(0, 6).join(', ')}${over.length > 6 ? '…' : ''}) : enlève une question (−), ou</span> <button type="button" class="mini" id="ctl-force">imprime quand même</button>`);
+      drawPlan(`<span class="warn-t">⚠ ${over.length} copie${over.length > 1 ? 's' : ''} sur ${cc.s.length} ser${over.length > 1 ? 'ont' : 'a'} écrite${over.length > 1 ? 's' : ''} plus petit pour tenir sur une page (${over.slice(0, 6).join(', ')}${over.length > 6 ? '…' : ''}) : enlève une question (−), ou</span> <button type="button" class="mini" id="ctl-force">imprime quand même</button>`);
       $('ctl-force').addEventListener('click', () => create(cc));
     });
   }
