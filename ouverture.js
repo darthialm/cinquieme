@@ -3,10 +3,12 @@
    Fichier fabriqué par l'Espace professeur (« Ce que voient les élèves »).
    Pour chaque chapitre :  true = tout est ouvert ;  [] = chapitre fermé ;
    ["fiche", "tableaux", …] = seulement ces pages.
-   Un chapitre absent de la liste est entièrement ouvert.
    ========================================================= */
 window.OUVERTURE = {
-  "proportionnalite": [],
+  "calculs": true,
+  "triangles": true,
+  "fractions": true,
+  "proportionnalite": true,
   "angles": [],
   "fractions2": [],
   "divisibilite": []
