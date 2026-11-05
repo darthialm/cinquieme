@@ -505,7 +505,7 @@ function tokensFrom(str) {
   const out = [];
   const re = /\d+|[+−×:()]/g;
   let m;
-  while ((m = re.exec(str.replace(/-/g, '−')))) {
+  while ((m = re.exec(str.replace(/-/g, '−').replace(/÷/g, ':')))) {
     const t = m[0];
     if (/\d/.test(t)) out.push({ t: 'n', v: Number(t) });
     else if (t === '(' || t === ')') out.push({ t });
@@ -513,7 +513,9 @@ function tokensFrom(str) {
   }
   return out;
 }
-const tokTxt = (k) => (k.t === 'n' ? String(k.v) : k.t === 'op' ? k.v : k.t);
+// la division est rangée sous « : » dans les calculs, mais s'affiche ÷
+const opTxt = (o) => (o === ':' ? '÷' : o);
+const tokTxt = (k) => (k.t === 'n' ? String(k.v) : k.t === 'op' ? opTxt(k.v) : k.t);
 
 /** Jetons -> texte, avec surlignage éventuel des jetons [hi, hi+2] */
 function tokHTML(toks, hi = -1) {
@@ -640,7 +642,7 @@ function genFirstOp() {
   const e = buildExpr(pick([TPL_SANS, TPL_PRIO, TPL_PRIO, TPL_PAR, TPL_IMB]));
   const first = e.steps[0];
   const html = e.toks.map((k, i) => (k.t === 'op'
-    ? `<button type="button" class="opbtn" data-i="${i}" aria-label="${OPNOM[k.v]}">${k.v}</button>`
+    ? `<button type="button" class="opbtn" data-i="${i}" aria-label="${OPNOM[k.v]}">${opTxt(k.v)}</button>`
     : `<span class="${k.t === 'n' ? 'tn' : 'tp'}">${tokTxt(k)}</span>`)).join('');
   const hasPar = e.toks.some((k) => k.t === '(');
   let ex = buildExpr([e.tpl]);
@@ -649,7 +651,7 @@ function genFirstOp() {
   return {
     hints: [
       hasPar ? 'Y a-t-il des parenthèses ? Si oui, lesquelles sont le plus à l\'intérieur ?' : 'Pas de parenthèses ici. Y a-t-il des multiplications ou des divisions ?',
-      'Outil — l\'ordre des priorités : 1. les parenthèses (les plus intérieures d\'abord) ; 2. × et : ; 3. + et −. Pour des opérations de même priorité : de gauche à droite.',
+      'Outil — l\'ordre des priorités : 1. les parenthèses (les plus intérieures d\'abord) ; 2. × et ÷ ; 3. + et −. Pour des opérations de même priorité : de gauche à droite.',
       `Exemple : dans ${tokHTML(ex.toks, ex.steps[0].opIndex)}, on commence par le calcul surligné (${ex.steps[0].rule}).`,
     ],
     remediate(r) {
@@ -657,7 +659,7 @@ function genFirstOp() {
       const sel = Number(r.dataset.sel); if (sel === first.opIndex) return null;
       const dSel = depthAt(e.toks, sel), op = e.toks[sel].v;
       if (dSel < dFirst) return dSel === 0 ? 'Il y a des parenthèses dans ce calcul : on commence toujours par le calcul entre parenthèses (règle 5).' : 'Il y a des parenthèses à l\'intérieur d\'autres parenthèses : on commence par les plus intérieures (règle 6).';
-      if (PRIO[op] === 1 && PRIO[first.op] === 2) return `Tu as choisi « ${op} ». Y a-t-il une multiplication ou une division au même niveau ? Elles passent avant (règles 3 et 4).`;
+      if (PRIO[op] === 1 && PRIO[first.op] === 2) return `Tu as choisi « ${opTxt(op)} ». Y a-t-il une multiplication ou une division au même niveau ? Elles passent avant (règles 3 et 4).`;
       return 'Ces opérations ont la même priorité : dans ce cas, on calcule de gauche à droite.';
     },
     q: `<p>Clique sur l'opération à effectuer <b>en premier</b> :</p><div class="expr">${html}</div>`,
@@ -674,7 +676,7 @@ function genFirstOp() {
         if (Number(b.dataset.i) === first.opIndex) b.classList.add('good');
         else if (b.classList.contains('sel')) b.classList.add('bad');
       });
-      return { ok, msg: `On commence par <b>${first.a} ${first.op} ${first.b}</b> (${first.rule}).${stepsHTML('A', e.toks)}` };
+      return { ok, msg: `On commence par <b>${first.a} ${opTxt(first.op)} ${first.b}</b> (${first.rule}).${stepsHTML('A', e.toks)}` };
     },
   };
 }
@@ -744,7 +746,7 @@ function calcRemed(toks, value, ans) {
     [{ '+': 1, '−': 1, '×': 1, ':': 1 }, false, 'Tu as calculé dans l\'ordre de lecture. Mais la multiplication et la division sont <b>prioritaires</b> sur l\'addition et la soustraction (règles 3 et 4).'],
     [PRIO, true, 'As-tu commencé par le calcul <b>entre parenthèses</b> ? C\'est toujours la première chose à faire (règle 5).'],
     [{ '+': 2, '−': 1, '×': 3, ':': 3 }, false, 'Quand il n\'y a que des + et des −, on ne fait pas les additions d\'abord : on calcule <b>de gauche à droite</b> (règle 1).'],
-    [{ '+': 0, '−': 0, '×': 2, ':': 1 }, false, 'Quand il n\'y a que des × et des :, on ne fait pas les multiplications d\'abord : on calcule <b>de gauche à droite</b> (règle 2).'],
+    [{ '+': 0, '−': 0, '×': 2, ':': 1 }, false, 'Quand il n\'y a que des × et des ÷, on ne fait pas les multiplications d\'abord : on calcule <b>de gauche à droite</b> (règle 2).'],
   ];
   for (const [P, ign, msg] of tries) {
     const v = evalWith(toks, P, ign);
@@ -785,13 +787,13 @@ function genMot() {
       ['termes', 'facteurs', 'quotients', 'produits'], 0, `Dans une différence, comme dans une somme, les nombres s'appellent des <b>termes</b>.`),
     () => mcq(`<p class="statement">Dans <b>${b} × ${a}</b>, les nombres ${b} et ${a} sont les … de ce produit.</p>`,
       ['facteurs', 'termes', 'dividendes', 'diviseurs'], 0, `Dans un produit, les nombres s'appellent des <b>facteurs</b>.`),
-    () => mcq(`<p class="statement">Dans <b>${a * b} : ${b}</b>, le nombre ${a * b} est le …</p>`,
-      ['dividende', 'diviseur', 'facteur', 'terme'], 0, `Dans ${a * b} : ${b}, ${a * b} est le <b>dividende</b> (le nombre qu'on partage) et ${b} est le <b>diviseur</b>.`),
-    () => mcq(`<p class="statement">Dans <b>${a * b} : ${b}</b>, le nombre ${b} est le …</p>`,
-      ['diviseur', 'dividende', 'facteur', 'terme'], 0, `Dans ${a * b} : ${b}, ${b} est le <b>diviseur</b> et ${a * b} est le <b>dividende</b>.`),
+    () => mcq(`<p class="statement">Dans <b>${a * b} ÷ ${b}</b>, le nombre ${a * b} est le …</p>`,
+      ['dividende', 'diviseur', 'facteur', 'terme'], 0, `Dans ${a * b} ÷ ${b}, ${a * b} est le <b>dividende</b> (le nombre qu'on partage) et ${b} est le <b>diviseur</b>.`),
+    () => mcq(`<p class="statement">Dans <b>${a * b} ÷ ${b}</b>, le nombre ${b} est le …</p>`,
+      ['diviseur', 'dividende', 'facteur', 'terme'], 0, `Dans ${a * b} ÷ ${b}, ${b} est le <b>diviseur</b> et ${a * b} est le <b>dividende</b>.`),
     () => {
       const op = pick(['+', '−', '×', ':']);
-      const ex = op === '+' ? `${a} + ${b}` : op === '−' ? `${a + b} − ${b}` : op === '×' ? `${a} × ${b}` : `${a * b} : ${b}`;
+      const ex = op === '+' ? `${a} + ${b}` : op === '−' ? `${a + b} − ${b}` : op === '×' ? `${a} × ${b}` : `${a * b} ÷ ${b}`;
       const [x, y] = op === '+' ? [a, b] : op === '−' ? [a + b, b] : op === '×' ? [a, b] : [a * b, b];
       const opts = ['+', '−', '×', ':'].map((o) => `${NOM[o][0]} de ${x} ${NOM[o][1] === 'et' ? 'et de' : 'par'} ${y}`);
       return mcq(`<p class="statement"><b>${ex}</b> est …</p>`, opts, ['+', '−', '×', ':'].indexOf(op),
@@ -816,7 +818,7 @@ function genDerniere() {
   const inner = typeof tree.l === 'object' ? tree.l.op : tree.r.op;
   const EXD = { '+': 'A = 25 + 4 × 3 : on calcule d\'abord 4 × 3, puis on ajoute 25. La dernière opération est une addition : A est une somme.',
     '×': 'B = (5 + 3) × 4 : on calcule d\'abord 5 + 3, puis on multiplie par 4. La dernière opération est une multiplication : B est un produit.',
-    ':': 'C = 18 : (7 − 1) : on calcule d\'abord 7 − 1, puis on divise. La dernière opération est une division : C est un quotient.',
+    ':': 'C = 18 ÷ (7 − 1) : on calcule d\'abord 7 − 1, puis on divise. La dernière opération est une division : C est un quotient.',
     '−': 'D = 40 − (5 + 8) : on calcule d\'abord 5 + 8, puis on soustrait. La dernière opération est une soustraction : D est une différence.' };
   const exK = pick(Object.keys(EXD).filter((o) => o !== tree.op));
   return withRemed(withHints(mcq(`<p class="big">${name} = ${tokStr(toks)}</p><p>${name} est …</p>`,
@@ -2364,8 +2366,13 @@ function makeExercise(root, gen, opts = {}) {
   function showHint() {
     if (!cur.hints || used >= cur.hints.length) return;
     const h = cur.hints[used];
-    const html = (typeof h === 'string' ? h : h.html).replace(/\[\[(.+?)\|(.+?)\]\]/g, (m, a, b) => F(a, b));
-    hEl.insertAdjacentHTML('beforeend', `<div class="hint-box"><b>Indice ${used + 1} :</b> ${html}</div>`);
+    let html = (typeof h === 'string' ? h : h.html).replace(/\[\[(.+?)\|(.+?)\]\]/g, (m, a, b) => F(a, b));
+    // un exemple (avec d'autres nombres) est présenté à part, pour ne pas être confondu avec l'exercice
+    const isEx = /^Exemple\b/.test(html);
+    if (isEx) html = html.replace(/^Exemple\s*(\([^)]*\))?\s*:\s*/, '').replace(/^[a-zà-ÿ]/, (c) => c.toUpperCase());
+    hEl.insertAdjacentHTML('beforeend', isEx
+      ? `<div class="hint-box ex-box"><b>Indice ${used + 1} — un exemple avec d'autres nombres</b> <span class="small">(ce n'est pas ton exercice)</span><div class="ex-in">${html}</div></div>`
+      : `<div class="hint-box"><b>Indice ${used + 1} :</b> ${html}</div>`);
     if (h && h.act) h.act(qEl);
     used++;
     hintButton();

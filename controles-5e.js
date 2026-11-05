@@ -89,13 +89,23 @@ function paperHTML(html) {
     if (!prev || prev.tagName !== 'P' || !pp.querySelector('.blank') || pp.querySelector('svg, img, table, .frac') || pp.textContent.trim().length > 16) return;
     prev.append(' ', ...pp.childNodes); pp.remove();
   });
-  return d.innerHTML.replace(/Écris ta réponse sous la forme 3\/8\./g, 'Écris ta réponse sous la forme d\'une fraction.').replace(/clique sur la bonne graduation/g, 'marque la bonne graduation d\'une croix');
+  // sur papier, on ne « saisit » rien et on ne « clique » pas
+  return d.innerHTML.replace(/Écris ta réponse sous la forme 3\/8\./g, 'Écris ta réponse sous la forme d\'une fraction.')
+    .replace(/ ?\(exemple( de saisie)? : [^)]*\)/g, '')
+    .replace(/clique sur la bonne graduation/g, 'marque la bonne graduation d\'une croix')
+    .replace(/Clique sur l'opération/g, 'Entoure l\'opération');
+}
+/** Enlève les figures d'une correction (corrigé imprimé compact) : le texte suffit */
+function noFigs(html) {
+  const d = document.createElement('div'); d.innerHTML = String(html || '');
+  d.querySelectorAll('table, .pfig').forEach((e) => e.remove());
+  return d.innerHTML;
 }
 /** Texte brut d'un morceau de HTML (fichier pour la correction assistée) */
 function plain(html, strip = false) {
   const d = document.createElement('div'); d.innerHTML = String(html || '');
   d.querySelectorAll('.frac').forEach((f) => { const [a, b] = f.children; if (a && b) f.textContent = ` ${a.textContent}/${b.textContent} `; });
-  d.querySelectorAll(strip ? 'svg, table' : 'svg').forEach((e) => e.remove());
+  d.querySelectorAll(strip ? 'svg, table, .pfig' : 'svg').forEach((e) => e.remove());
   d.querySelectorAll('td, th').forEach((e) => e.append(' | '));
   d.querySelectorAll('p, div, li, label, tr, br, h3, h4').forEach((e) => e.after(' '));
   return d.textContent.replace(/\s+/g, ' ').replace(/ ([.,;)])(?=\s|$)/g, '$1').trim();
@@ -269,7 +279,7 @@ function printCorrige(c) {
     const n = i + 1, qs = ctlQuestions(c.id, n, ver, c.k, ctlPlan(c), ctlSalt(c, n));
     return `<section class="ctl-corr"><h3>${ctlCode(c.id, n)} — ${esc(name)}${ver === 'a' ? ' <span class="small muted">(aménagé)</span>' : ''}</h3><ol>${qs.map((x) => {
       const a = questionAnswer(x.o);
-      return `<li><span class="small muted">C${x.ci + 1}</span> ${a.good ? `<b>${esc(a.good)}</b> — ` : ''}${String(a.msg).replace(/<table[\s\S]*?<\/table>/g, '')}</li>`;
+      return `<li><span class="small muted">C${x.ci + 1}</span> ${a.good ? `<b>${esc(a.good)}</b> — ` : ''}${noFigs(a.msg)}</li>`;
     }).join('')}</ol></section>`;
   }).join('');
   printWindow(`Corrigé ${c.id}`, `<div class="no-print ctl-bar"><p>${BACK_BTN} <button type="button" class="btn primary" onclick="print()">🖨️ Imprimer le corrigé</button></p></div><h1>Corrigé — ${esc(c.t)}${c.c ? ` (${esc(c.c)})` : ''}</h1>${parts}`, '@page { size: A4; margin: 10mm; } .ctl-corr { break-inside: avoid; } body.print-doc { padding: 0 8mm; }');

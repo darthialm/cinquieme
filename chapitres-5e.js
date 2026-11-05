@@ -26,7 +26,98 @@ function solveMcq(o) { o.__solve = (r) => { r.querySelector(`.rb[data-o="${o._co
 function ptab(rows) {
   return `<table class="ptab">${rows.map((r) => `<tr><th>${r[0]}</th>${r.slice(1).map((c) => `<td>${c}</td>`).join('')}</tr>`).join('')}</table>`;
 }
-const quo = (a, b) => { const v = a / b, t = Math.round(v * 1000) / 1000; return { txt: (Math.abs(t - v) < 1e-9 ? '' : '≈ ') + fmt(t), v }; };
+const quo = (a, b) => { const v = a / b, t = Math.round(v * 100) / 100; return { txt: (Math.abs(t - v) < 1e-9 ? '' : '≈ ') + fmt(t), v }; };
+
+/* ---------- Aides visuelles : tableaux fléchés, enchaînements de calculs, calculatrice ---------- */
+const fig5v = (x) => (typeof x === 'number' ? big(x) : String(x));
+/** Tableau dessiné avec ses flèches.
+    rows : [[titre, valeurs…], …] · hl : cases à surligner [ligne, colonne]
+    top / bot : flèches entre colonnes, au-dessus / au-dessous { from, to, t } ·
+    right / left : flèche descendante à droite / montante à gauche ·
+    down : sous le tableau (qui reste entier), le nombre par lequel on multiplie dans chaque colonne { col, t, c: 'ok' | 'ko' } ·
+    cap : petite légende au-dessus (« Ton tableau ») */
+function tabFig({ rows, hl = [], top = [], bot = [], right, left, down, cap }) {
+  const nc = rows[0].length - 1, H = 32, GAP = 0;
+  const w = (s, b) => String(fig5v(s)).length * (b ? 9 : 8.4) + 20;
+  const W0 = Math.max(down ? 128 : 0, ...rows.map((r) => w(r[0], true)));
+  const cw = Array.from({ length: nc }, (_, c) => Math.max(top.length || bot.length ? 52 : 40, ...rows.map((r) => w(r[c + 1]))));
+  if (down) down.forEach((d) => { cw[d.col] = Math.max(cw[d.col], String(d.t).length * 8 + 44); });
+  const mL = left ? String(left).length * 8 + 34 : 2, mR = right ? String(right).length * 8 + 34 : 2;
+  const pT = top.length ? 36 : 3, pB = bot.length || down ? 38 : 3;
+  const xs = []; let x = mL + W0; cw.forEach((c) => { xs.push(x); x += c; });
+  const TW = x, yRow = (i) => pT + i * (H + GAP), yEnd = yRow(rows.length - 1) + H, cx = (c) => xs[c] + cw[c] / 2;
+  const isHl = (i, c) => hl.some(([a, b]) => a === i && b === c);
+  let s = '';
+  rows.forEach((r, i) => {
+    const y = yRow(i);
+    s += `<rect class="tf-th" x="${mL}" y="${y}" width="${W0}" height="${H}"/><text class="tf-b" x="${mL + 9}" y="${y + 21}">${r[0]}</text>`;
+    r.slice(1).forEach((v, c) => {
+      s += `<rect class="${isHl(i, c) ? 'tf-hl' : 'tf-c'}" x="${xs[c]}" y="${y}" width="${cw[c]}" height="${H}"/><text class="${isHl(i, c) ? 'tf-b tf-a' : ''}" x="${cx(c)}" y="${y + 21}" text-anchor="middle">${fig5v(v)}</text>`;
+    });
+  });
+  const arc = (a, up) => {
+    const x1 = cx(a.from), x2 = cx(a.to), d = up ? -1 : 1, y0 = up ? pT - 2 : yEnd + 2, ym = y0 + d * 22, sg = x2 > x1 ? 1 : -1;
+    return `<path class="tf-ar" d="M${x1} ${y0} C${x1} ${ym} ${x2} ${ym} ${x2} ${y0} m${-sg * 7} ${d * 5} l${sg * 7} ${-d * 5} l${sg * 1} ${d * 8}"/><text class="tf-l" x="${(x1 + x2) / 2}" y="${up ? y0 - 21 : y0 + 31}" text-anchor="middle">${a.t}</text>`;
+  };
+  top.forEach((a) => { s += arc(a, true); });
+  bot.forEach((a) => { s += arc(a, false); });
+  const y1 = pT + H / 2, y2 = yEnd - H / 2;
+  if (right) s += `<path class="tf-ar" d="M${TW + 3} ${y1} C${TW + 24} ${y1 + 3} ${TW + 24} ${y2 - 3} ${TW + 3} ${y2} m8 -7 l-8 7 l9 3"/><text class="tf-l" x="${TW + 26}" y="${(y1 + y2) / 2 + 5}">${right}</text>`;
+  if (left) s += `<path class="tf-ar" d="M${mL - 3} ${y2} C${mL - 24} ${y2 - 3} ${mL - 24} ${y1 + 3} ${mL - 3} ${y1} m-8 7 l8 -7 l-9 -3"/><text class="tf-l" x="${mL - 26}" y="${(y1 + y2) / 2 + 5}" text-anchor="end">${left}</text>`;
+  if (down) {
+    // une ligne de pastilles sous le tableau : « × 4 ✓ » dans chaque colonne
+    const y = yEnd + 6;
+    s += `<text class="tf-n" x="${mL + 6}" y="${y + 18}">on a multiplié par</text>`;
+    down.forEach((d) => {
+      const c = d.c ? ` tf-${d.c}` : '', mark = d.c === 'ok' ? ' ✓' : d.c === 'ko' ? ' ✗' : '', t = d.t + mark, wd = t.length * 8 + 14;
+      s += `<rect class="tf-chip${c}" x="${cx(d.col) - wd / 2}" y="${y}" width="${wd}" height="26" rx="13"/><text class="tf-l${c}" x="${cx(d.col)}" y="${y + 18}" text-anchor="middle">${t}</text>`;
+    });
+  }
+  const fw = TW + mR, fh = yEnd + pB;
+  return `<div class="pfig">${cap ? `<div class="pcap">${cap}</div>` : ''}<svg class="tabfig" viewBox="0 0 ${fw} ${fh}" width="${fw}" height="${fh}" role="img" aria-label="Tableau de proportionnalité avec des flèches">${s}</svg></div>`;
+}
+/** Enchaînement de calculs : pasAPas('8 ÷ 25', {a:'='}, '0,32') : un bloc par étape, une flèche étiquetée entre deux */
+const pasAPas = (...it) => `<div class="pchain">${it.map((x) => (typeof x === 'object' ? `<span class="ch-a">${x.a === '=' ? '=' : `<small>${x.a}</small>→`}</span>` : `<span class="ch-b">${x}</span>`)).join('')}</div>`;
+/** Pourquoi on divise pour trouver le coefficient : la division fait le chemin inverse de la multiplication */
+const whyDiv = (a, b) => `<div class="pwhy"><b>Pourquoi une division ?</b> On cherche le nombre caché dans <b>${fmt(a)} × ? = ${fmt(b)}</b>. La division fait le chemin <b>inverse</b> de la multiplication : comme 3 × 4 = 12, on retrouve le 4 en faisant 12 ÷ 3 = 4. Ici, c'est pareil :${pasAPas(fmt(a), { a: '× ?' }, fmt(b))}${pasAPas(fmt(b), { a: `÷ ${fmt(a)}` }, '?')}On retrouve donc le coefficient avec <b>${fmt(b)} ÷ ${fmt(a)}</b> : le nombre du bas divisé par le nombre du haut.</div>`;
+/** Calculatrice d'indice : le calcul est déjà écrit, l'élève appuie sur « = » (les nombres se tapent aussi au clavier) */
+const CALC_KEYS = ['7', '8', '9', '÷', 'C', '4', '5', '6', '×', '⌫', '1', '2', '3', '−', '(', '0', ',', '=', '+', ')'];
+function calcBox(expr = '') {
+  const e = String(expr).replace(/\./g, ',');
+  return `<div class="calc5"><div class="c5-t">🧮 Calculatrice</div><div class="c5-l"><input class="c5-in" type="text" inputmode="none" autocomplete="off" aria-label="Calcul" value="${e}"><output class="c5-r"></output></div><div class="c5-k">${CALC_KEYS.map((k) => `<button type="button" data-k="${k}"${k === '=' ? ' class="eq"' : ''}>${k}</button>`).join('')}</div></div>`;
+}
+/** Calcule une expression (+ − × ÷ et parenthèses) ; null si elle est incomplète */
+function calcEval(src) {
+  const t = String(src).replace(/\s/g, '').replace(/,/g, '.').replace(/[*x]/g, '×').replace(/[/:]/g, '÷').replace(/-/g, '−').match(/\d+\.?\d*|\.\d+|[+−×÷()]|./g) || [];
+  let i = 0;
+  const atom = () => {
+    if (t[i] === '−') { i++; const v = atom(); return v === null ? null : -v; }
+    if (t[i] === '(') { i++; const v = sum(); if (t[i++] !== ')') return null; return v; }
+    const v = Number(t[i]); if (t[i] === undefined || Number.isNaN(v)) return null; i++; return v;
+  };
+  const prod = () => { let v = atom(); while (v !== null && (t[i] === '×' || t[i] === '÷')) { const o = t[i++], b = atom(); if (b === null) return null; v = o === '×' ? v * b : v / b; } return v; };
+  function sum() { let v = prod(); while (v !== null && (t[i] === '+' || t[i] === '−')) { const o = t[i++], b = prod(); if (b === null) return null; v = o === '+' ? v + b : v - b; } return v; }
+  const v = sum();
+  return v === null || i < t.length || !Number.isFinite(v) ? null : v;
+}
+function calcRun(box) {
+  const v = calcEval(box.querySelector('.c5-in').value), out = box.querySelector('.c5-r');
+  if (v === null) { out.textContent = 'Calcul incomplet'; return; }
+  const a = Math.round(v * 1000) / 1000;
+  out.textContent = `${Math.abs(a - v) < 1e-9 ? '=' : '≈'} ${big(a)}`;
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest?.('.calc5 button'); if (!b) return;
+  const box = b.closest('.calc5'), input = box.querySelector('.c5-in'), k = b.dataset.k;
+  if (k === '=') { calcRun(box); return; }
+  box.querySelector('.c5-r').textContent = '';
+  input.value = k === 'C' ? '' : k === '⌫' ? input.value.slice(0, -1) : input.value + k;
+});
+// Entrée dans la calculatrice : calcule, sans valider l'exercice
+document.addEventListener('keydown', (e) => {
+  const box = e.key === 'Enter' && e.target.closest?.('.calc5'); if (!box) return;
+  e.preventDefault(); e.stopPropagation(); calcRun(box);
+}, true);
 
 /* =========================================================
    CHAPITRE 4 — PROPORTIONNALITÉ
@@ -38,26 +129,29 @@ function genReconnaitre() {
   let r1;
   do { r1 = Array.from({ length: n }, () => pick([1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 0.5, 1.5, 2.5, 0.8, 1.2])); } while (new Set(r1).size < n);
   r1.sort((a, b) => a - b);
-  let r2 = r1.map((x) => rnd(x * k)), kind = 'prop';
+  let r2 = r1.map((x) => rnd(x * k)), kind = 'prop', bad = -1;
   if (Math.random() < 0.5) {
     if (Math.random() < 0.5) {
       const j = rand(1, n - 1), old = r2[j];
       do { r2[j] = rnd(old + pick([1, 2, -1, 0.5, -0.5, 3])); } while (r2[j] <= 0 || near(r2[j], old));
-      kind = 'une';
+      kind = 'une'; bad = j;
     } else { const c = pick([2, 3, 4, 5, 6, 10]); r2 = r1.map((x) => rnd(x + c)); kind = 'add'; r2.c = c; }
   }
   const ok = kind === 'prop';
   const qs = r1.map((x, j) => quo(r2[j], x));
-  const lines = r1.map((x, j) => `${fmt(r2[j])} : ${fmt(x)} ${qs[j].txt.startsWith('≈') ? '' : '= '}${qs[j].txt}`).join(' ; ');
-  let explain = `On divise chaque nombre de la 2<sup>e</sup> ligne par celui de la 1<sup>re</sup> : ${lines}. `;
-  explain += ok ? `Tous les quotients sont égaux à ${fmt(k)} : c'est un tableau de proportionnalité (coefficient ${fmt(k)}).`
-    : 'Les quotients ne sont pas tous égaux : ce n\'est <b>pas</b> un tableau de proportionnalité.' + (kind === 'add' ? ` On passe de la 1<sup>re</sup> à la 2<sup>e</sup> ligne en <b>ajoutant</b> ${r2.c} : l'addition ne donne pas de la proportionnalité.` : '');
+  const rows = [['Ligne 1', ...r1], ['Ligne 2', ...r2]];
+  const lab = (q) => (q.txt.startsWith('≈') ? `≈ × ${q.txt.slice(2)}` : `× ${q.txt}`);
+  const figA = tabFig({ rows, down: qs.map((q, j) => ({ col: j, t: lab(q), c: ok || (kind === 'une' && j !== bad) ? 'ok' : 'ko' })) });
+  const list = qs.map((q) => q.txt).join(' ; ');
+  let explain = `Dans chaque colonne, on cherche par combien on multiplie le nombre du haut pour obtenir celui du bas. On le trouve avec une division (le chemin inverse) : par exemple ${fmt(r1[0])} × ? = ${fmt(r2[0])}, donc ? = ${fmt(r2[0])} ÷ ${fmt(r1[0])} ${qs[0].txt.startsWith('≈') ? '' : '= '}${qs[0].txt}. Dans les colonnes, on trouve : ${list}.${figA}`;
+  explain += ok ? `C'est <b>le même nombre</b> partout : c'est un tableau de proportionnalité, de coefficient ${fmt(k)}.`
+    : 'Ce n\'est <b>pas le même nombre</b> partout : ce n\'est pas un tableau de proportionnalité.' + (kind === 'add' ? ` Ici, on passe de la 1<sup>re</sup> à la 2<sup>e</sup> ligne en <b>ajoutant</b> ${r2.c} : l'addition ne donne pas de la proportionnalité.` : '');
   const o = mcq(`<p>Ce tableau est-il un tableau de proportionnalité ?</p>${ptab([['Ligne 1', ...r1.map(fmt)], ['Ligne 2', ...r2.map(fmt)]])}`,
     ['Oui, c\'est un tableau de proportionnalité', 'Non, ce n\'est pas un tableau de proportionnalité'], ok ? 0 : 1, explain, { col: true });
   o.hints = [
-    `Un tableau est de proportionnalité s'il existe un <b>coefficient</b> : le même nombre par lequel on multiplie chaque nombre de la 1<sup>re</sup> ligne pour obtenir celui de la 2<sup>e</sup>. Pour le chercher, on divise la 2<sup>e</sup> ligne par la 1<sup>re</sup>, colonne par colonne. Y a-t-il un coefficient ?`,
-    `Exemple : 2 → 6 ; 5 → 15 ; 8 → 24. Quotients : 6 : 2 = 3 ; 15 : 5 = 3 ; 24 : 8 = 3. Ils sont tous égaux : tableau de proportionnalité. Autre exemple : 2 → 5 ; 4 → 7. Quotients : 2,5 et 1,75 : pas égaux, ce n'est pas de la proportionnalité.`,
-    `Outil : calcule le quotient de la <b>première</b> colonne : ${fmt(r2[0])} : ${fmt(r1[0])}${qs[0].txt.startsWith('≈') ? ' ' + qs[0].txt : ' = ' + qs[0].txt}. Puis vérifie si les autres colonnes donnent le même résultat.`,
+    `Dans chaque colonne, par quel nombre multiplie-t-on le nombre du haut pour obtenir celui du bas ? C'est un tableau de proportionnalité seulement si c'est <b>le même nombre dans toutes les colonnes</b>.${tabFig({ rows, cap: 'Ton tableau', down: r1.map((_, j) => ({ col: j, t: '× ?' })) })}`,
+    `Exemple : ici, on multiplie par 3 dans toutes les colonnes : c'est un tableau de proportionnalité.${tabFig({ rows: [['Ligne 1', 2, 5, 8], ['Ligne 2', 6, 15, 24]], down: [0, 1, 2].map((col) => ({ col, t: '× 3', c: 'ok' })) })}Là, le nombre change d'une colonne à l'autre : ce n'en est pas un.${tabFig({ rows: [['Ligne 1', 2, 4], ['Ligne 2', 5, 7]], down: [{ col: 0, t: '× 2,5', c: 'ko' }, { col: 1, t: '× 1,75', c: 'ko' }] })}`,
+    `Méthode : commence par la première colonne.${whyDiv(r1[0], r2[0])}Fais ensuite la même chose avec les autres colonnes.${calcBox(`${fmt(r2[0])} ÷ ${fmt(r1[0])}`)}`,
   ];
   o.remediate = (r) => {
     const sel = r.querySelector('.rb:checked'); if (!sel) return null;
@@ -81,12 +175,14 @@ function genCompleter() {
   const cell = (rw, c) => (rw === row && c === j ? inp('num') : fmt(rw === 0 ? r1[c] : r2[c]));
   const given = row === 0 ? r2[j] : r1[j];
   const rows = [['Ligne 1', ...r1.map((_, c) => cell(0, c))], ['Ligne 2', ...r2.map((_, c) => cell(1, c))]];
-  const kTxt = `${fmt(r2[0])} : ${fmt(r1[0])} = ${fmt(k)}`;
+  const kTxt = `${fmt(r2[0])} ÷ ${fmt(r1[0])} = ${fmt(k)}`;
+  const figRows = (v) => [['Ligne 1', ...r1.map((x, c) => (row === 0 && c === j ? v : x))], ['Ligne 2', ...r2.map((x, c) => (row === 1 && c === j ? v : x))]];
+  const sideArrow = (t) => (row === 1 ? { right: `× ${t}` } : { left: `÷ ${t}` });
   return {
     hints: [
-      `Cherche d'abord le <b>coefficient de proportionnalité</b> dans une colonne qui est complète : on divise le nombre de la 2<sup>e</sup> ligne par celui de la 1<sup>re</sup>.`,
-      `Exemple : 3 → 4,5 ; 4 → ? Coefficient : 4,5 : 3 = 1,5. Donc ? = 4 × 1,5 = 6. Si c'est un nombre de la 1<sup>re</sup> ligne qui manque, on <b>divise</b> par le coefficient.`,
-      `Outil : le coefficient est ${fmt(k)} (${kTxt}). ${row === 1 ? 'Le nombre manquant est dans la 2<sup>e</sup> ligne : on <b>multiplie</b> par le coefficient.' : 'Le nombre manquant est dans la 1<sup>re</sup> ligne : on <b>divise</b> par le coefficient.'}`,
+      `Cherche d'abord le <b>coefficient</b> : le nombre par lequel on multiplie en haut pour obtenir le nombre du bas. Utilise la colonne colorée, qui est complète.${tabFig({ rows: figRows('?'), cap: 'Ton tableau', hl: [[0, 0], [1, 0]], right: '× ?' })}${whyDiv(r1[0], r2[0])}`,
+      `Exemple : pour <b>descendre</b>, on multiplie par le coefficient.${tabFig({ rows: [['Ligne 1', 3, 4], ['Ligne 2', 4.5, 6]], hl: [[1, 1]], right: '× 1,5' })}Pour <b>remonter</b>, on divise par le coefficient.${tabFig({ rows: [['Ligne 1', 15, 20], ['Ligne 2', 18, 24]], hl: [[0, 1]], left: '÷ 1,2' })}`,
+      `Méthode : le coefficient est ${kTxt}. ${row === 1 ? 'Le nombre manquant est en bas : tu descends, donc tu <b>multiplies</b>.' : 'Le nombre manquant est en haut : tu remontes, donc tu <b>divises</b>.'}${tabFig({ rows: figRows('?'), cap: 'Ton tableau', hl: [[row, j]], ...sideArrow(fmt(k)) })}${calcBox(`${fmt(given)} ${row === 1 ? '×' : '÷'} ${fmt(k)}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, hidden)) return null;
@@ -99,7 +195,7 @@ function genCompleter() {
     q: `<p>Complète ce tableau de proportionnalité.</p>${ptab(rows)}`,
     check(r) {
       const x = valU(r); if (!x) return null;
-      const expl = `On calcule le coefficient dans la colonne complète : ${kTxt}. ${row === 1 ? `Le nombre manquant est sur la 2<sup>e</sup> ligne : on <b>multiplie</b> par le coefficient : ${fmt(given)} × ${fmt(k)} = <b>${fmt(hidden)}</b>.` : `Le nombre manquant est sur la 1<sup>re</sup> ligne : on remonte en <b>divisant</b> par le coefficient : ${fmt(given)} : ${fmt(k)} = <b>${fmt(hidden)}</b>.`} Vérification : ${row === 1 ? `${fmt(given)} × ${fmt(k)}` : `${fmt(hidden)} × ${fmt(k)}`} = ${fmt(row === 1 ? hidden : given)}.`;
+      const expl = `Le coefficient se calcule dans la colonne complète : ${fmt(r1[0])} × ? = ${fmt(r2[0])}, et on le retrouve avec la division (le chemin inverse) : ${kTxt}.${tabFig({ rows: figRows(hidden), hl: [[row, j]], ...sideArrow(fmt(k)) })}${row === 1 ? `Le nombre manquant est en bas : on descend en <b>multipliant</b> : ${fmt(given)} × ${fmt(k)} = <b>${fmt(hidden)}</b>.` : `Le nombre manquant est en haut : on remonte en <b>divisant</b> : ${fmt(given)} ÷ ${fmt(k)} = <b>${fmt(hidden)}</b>. Vérification : ${fmt(hidden)} × ${fmt(k)} = ${fmt(given)}.`}`;
       if (!near(x.value, hidden)) { markInput(r, 0, false); return { ok: false, msg: expl }; }
       markInput(r, 0, true);
       return { ok: true, msg: expl };
@@ -118,11 +214,14 @@ function genCoef() {
   r1.sort((a, b) => a - b);
   const r2 = r1.map((x) => rnd(x * k));
   const ctx = pick([['Quantité', 'Prix (€)'], ['Durée (min)', 'Distance (m)'], ['Nombre de pains', 'Farine (g)']]);
+  // la colonne la plus simple pour chercher : celle du 1, du 10, du 2… sinon la première
+  const ib = Math.max(0, [1, 10, 2, 5].map((x) => r1.indexOf(x)).find((i) => i >= 0) ?? 0);
+  const rows = [[ctx[0], ...r1], [ctx[1], ...r2]], a = r1[ib], b = r2[ib], other = ib === 0 ? 1 : 0;
   return {
     hints: [
-      'Le coefficient de proportionnalité est le nombre par lequel on <b>multiplie</b> la 1<sup>re</sup> ligne pour obtenir la 2<sup>e</sup>. Quelle opération faut-il faire pour le trouver ?',
-      'Exemple : 4 → 10 ; 6 → 15. Le coefficient est 10 : 4 = 2,5 (on vérifie : 6 × 2,5 = 15).',
-      `Outil : divise ${fmt(r2[0])} par ${fmt(r1[0])}.`,
+      `<b>Méthode.</b> Le coefficient est le nombre par lequel on multiplie le nombre du haut pour obtenir celui du bas. Choisis la colonne la plus simple (ici, la colonne colorée) et demande-toi : <b>${fmt(a)} × ? = ${fmt(b)}</b>.${tabFig({ rows, cap: 'Ton tableau', hl: [[0, ib], [1, ib]], right: '× ?' })}`,
+      `Exemple : on cherche 4 × ? = 10. On ne le voit pas de tête, alors on fait la <b>division</b> 10 ÷ 4 = 2,5. On vérifie avec l'autre colonne : 6 × 2,5 = 15.${tabFig({ rows: [['Ligne 1', 4, 6], ['Ligne 2', 10, 15]], hl: [[0, 0], [1, 0]], right: '× 2,5' })}`,
+      `${whyDiv(a, b)}Vérifie ensuite avec une autre colonne.${a === 1 ? ' Astuce : sous le nombre 1, on lit directement le coefficient, car 1 × ? = ?.' : ''}${calcBox(`${fmt(b)} ÷ ${fmt(a)}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, k)) return null;
@@ -135,7 +234,7 @@ function genCoef() {
       const x = valU(r); if (!x) return null;
       const ok = near(x.value, k);
       markInput(r, 0, ok);
-      return { ok, msg: `On divise la 2<sup>e</sup> ligne par la 1<sup>re</sup> : ${fmt(r2[0])} : ${fmt(r1[0])} = <b>${fmt(k)}</b>. Vérification : ${fmt(r1[1])} × ${fmt(k)} = ${fmt(r2[1])}.` };
+      return { ok, msg: `On cherche ${fmt(a)} × ? = ${fmt(b)}. La division fait le chemin inverse : ? = ${fmt(b)} ÷ ${fmt(a)} = <b>${fmt(k)}</b>.${tabFig({ rows, hl: [[0, ib], [1, ib]], right: `× ${fmt(k)}` })}Vérification avec une autre colonne : ${fmt(r1[other])} × ${fmt(k)} = ${fmt(r2[other])}.` };
     },
     __solve: (r) => setAns(r, 0, fmt(k)),
     __wrong: (r) => setAns(r, 0, fmt(k + 1)),
@@ -144,11 +243,11 @@ function genCoef() {
 
 // 4. Problèmes de proportionnalité
 const PB = [
-  { u: [0.8, 1.2, 1.5, 2, 2.5, 3, 4, 0.5], what: 'des cahiers', sing: 'un cahier', cost: true, ctx: (n, P) => `${n} cahiers coûtent ${fmt(P)} €.`, ask: (m) => `Combien coûtent ${m} cahiers ?`, un: '€' },
-  { u: [1.5, 2, 2.5, 3, 4, 1.2, 0.6], what: 'des kilogrammes de pommes', sing: 'un kilogramme', ctx: (n, P) => `${n} kg de pommes coûtent ${fmt(P)} €.`, ask: (m) => `Combien coûtent ${m} kg de pommes ?`, un: '€' },
-  { u: [50, 60, 75, 80, 100, 125, 200], what: 'de la farine', sing: 'une personne', ctx: (n, P) => `Pour ${n} personnes, une recette demande ${fmt(P)} g de farine.`, ask: (m) => `Quelle masse de farine faut-il pour ${m} personnes ?`, un: 'g' },
-  { u: [0.6, 0.7, 0.8, 0.9, 1, 1.2], what: 'des litres', sing: 'un kilomètre', ctx: (n, P) => `Une voiture consomme ${fmt(P)} L d'essence pour ${n}0 km.`, ask: (m) => `Quelle quantité d'essence faut-il pour ${m}0 km ?`, un: 'L', fix: true },
-  { u: [2, 3, 4, 5, 6, 8, 12], what: 'des mètres de ruban', sing: 'un mètre', ctx: (n, P) => `${n} m de ruban coûtent ${fmt(P)} €.`, ask: (m) => `Combien coûtent ${m} m de ruban ?`, un: '€' },
+  { l: ['Cahiers', 'Prix (€)'], u: [0.8, 1.2, 1.5, 2, 2.5, 3, 4, 0.5], what: 'des cahiers', sing: 'un cahier', cost: true, ctx: (n, P) => `${n} cahiers coûtent ${fmt(P)} €.`, ask: (m) => `Combien coûtent ${m} cahiers ?`, un: '€' },
+  { l: ['Pommes (kg)', 'Prix (€)'], u: [1.5, 2, 2.5, 3, 4, 1.2, 0.6], what: 'des kilogrammes de pommes', sing: 'un kilogramme', ctx: (n, P) => `${n} kg de pommes coûtent ${fmt(P)} €.`, ask: (m) => `Combien coûtent ${m} kg de pommes ?`, un: '€' },
+  { l: ['Personnes', 'Farine (g)'], u: [50, 60, 75, 80, 100, 125, 200], what: 'de la farine', sing: 'une personne', ctx: (n, P) => `Pour ${n} personnes, une recette demande ${fmt(P)} g de farine.`, ask: (m) => `Quelle masse de farine faut-il pour ${m} personnes ?`, un: 'g' },
+  { l: ['Distance (km)', 'Essence (L)'], u: [0.6, 0.7, 0.8, 0.9, 1, 1.2], what: 'des litres', sing: 'un kilomètre', ctx: (n, P) => `Une voiture consomme ${fmt(P)} L d'essence pour ${n}0 km.`, ask: (m) => `Quelle quantité d'essence faut-il pour ${m}0 km ?`, un: 'L', fix: true },
+  { l: ['Ruban (m)', 'Prix (€)'], u: [2, 3, 4, 5, 6, 8, 12], what: 'des mètres de ruban', sing: 'un mètre', ctx: (n, P) => `${n} m de ruban coûtent ${fmt(P)} €.`, ask: (m) => `Combien coûtent ${m} m de ruban ?`, un: '€' },
 ];
 function genProbleme() {
   const T = pick(PB);
@@ -160,15 +259,15 @@ function genProbleme() {
   const additive = rnd(P1 + (n2 - n1));
   const stem = T.ctx(n1, P1);
   const ask = T.ask(n2);
-  let steps;
-  const one = T.fix ? '10 km' : T.sing;
-  steps = `Passage à l'unité : on cherche d'abord la valeur pour ${one} : ${fmt(P1)} : ${n1} = ${fmt(u)} ${T.un}. Puis on multiplie par ${n2} : ${n2} × ${fmt(u)} = <b>${fmt(ans)} ${T.un}</b>.`
-    + (n2 % n1 === 0 ? `<br>Autre méthode : ${n2} = ${n1} × ${n2 / n1}, donc ${fmt(P1)} × ${n2 / n1} = ${fmt(ans)} ${T.un}.` : '');
+  const one = T.fix ? '10 km' : T.sing, q = (x) => (T.fix ? x * 10 : x), mid = T.fix ? 10 : 1;
+  const unitFig = (uv, av) => tabFig({ rows: [[T.l[0], q(n1), mid, q(n2)], [T.l[1], P1, uv, av]], hl: [[1, 2]], top: [{ from: 0, to: 1, t: `÷ ${n1}` }, { from: 1, to: 2, t: `× ${n2}` }], bot: [{ from: 0, to: 1, t: `÷ ${n1}` }, { from: 1, to: 2, t: `× ${n2}` }] });
+  const steps = `Passage à l'unité : on cherche d'abord la valeur pour ${one} : ${fmt(P1)} ÷ ${n1} = ${fmt(u)} ${T.un}. Puis on multiplie par ${n2} : ${n2} × ${fmt(u)} = <b>${fmt(ans)} ${T.un}</b>.${unitFig(u, ans)}`
+    + (n2 % n1 === 0 ? `Autre méthode : ${n2} = ${n1} × ${n2 / n1}, donc ${fmt(P1)} × ${n2 / n1} = ${fmt(ans)} ${T.un}.` : '');
   return {
     hints: [
-      `Fais un tableau de proportionnalité avec les deux données de l'énoncé et la valeur cherchée. Quelle méthode choisis-tu : coefficient, multiplication, addition, passage à l'unité ?`,
-      `Exemple : 4 places coûtent 28 €. Passage à l'unité : 28 : 4 = 7 € pour une place. Donc 6 places coûtent 6 × 7 = 42 €.`,
-      `Outil : calcule d'abord la valeur pour <b>une seule</b> unité : ${fmt(P1)} : ${n1}. Puis multiplie par ${n2}.`,
+      `Range les nombres de l'énoncé dans un tableau de proportionnalité. Quelle méthode choisis-tu : coefficient, multiplication, addition ou passage à l'unité ?${tabFig({ rows: [[T.l[0], q(n1), q(n2)], [T.l[1], P1, '?']], cap: 'Ton tableau', hl: [[1, 1]] })}`,
+      `Exemple : 4 places coûtent 36 €, combien coûtent 6 places ? Passage à l'unité : on redescend à 1 place, puis on remonte à 6 places.${tabFig({ rows: [['Places', 4, 1, 6], ['Prix (€)', 36, 9, 54]], hl: [[1, 2]], top: [{ from: 0, to: 1, t: '÷ 4' }, { from: 1, to: 2, t: '× 6' }], bot: [{ from: 0, to: 1, t: '÷ 4' }, { from: 1, to: 2, t: '× 6' }] })}`,
+      `Méthode (passage à l'unité) : on avance dans la ligne, en deux flèches : d'abord on recule jusqu'à <b>${one}</b>, puis on avance jusqu'à la valeur demandée.${unitFig('?', '?').replace('<div class="pfig">', '<div class="pfig"><div class="pcap">Ton tableau</div>')}${calcBox(`${fmt(P1)} ÷ ${n1}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, ans)) return null;
@@ -201,11 +300,13 @@ function genPctAppliquer() {
   if (sujet !== SUJ[2] && !Number.isInteger((p * N) / 100)) return genPctAppliquer();
   const ans = rnd((p * N) / 100);
   const ex = pick([[35, 60, 21], [8, 250, 20], [65, 40, 26]]);
+  const coefP = `× ${dec(p / 100)}`;
+  const pctFig = (t, v, cap) => tabFig({ rows: [['Pourcentage', 100, p], ['Quantité', N, v]], cap, hl: [[1, 1]], bot: [{ from: 0, to: 1, t }] });
   return {
     hints: [
-      `Un pourcentage est une fraction de dénominateur 100 : ${p} % = ${F(p, 100)} = ${dec(p / 100)}. Prendre ${p} % d'une quantité, c'est multiplier cette quantité par ce nombre.`,
-      `Exemple : ${ex[0]} % de ${ex[1]} = ${dec(ex[0] / 100)} × ${ex[1]} = ${ex[2]}.`,
-      'Outil : 50 % = la moitié (÷ 2) ; 25 % = le quart (÷ 4) ; 10 % = diviser par 10 ; 1 % = diviser par 100. On peut combiner : 30 % = 3 × 10 %.',
+      `Un pourcentage est une fraction de dénominateur 100 : ${p} % = ${F(p, 100)} = ${dec(p / 100)}. Prendre ${p} % d'une quantité, c'est la multiplier par ce nombre.${pctFig('× ?', '?', 'Ton tableau')}`,
+      `Exemple : ${ex[0]} % de ${ex[1]}.${pasAPas(String(ex[1]), { a: `× ${dec(ex[0] / 100)}` }, String(ex[2]))}`,
+      `Méthode de calcul mental : 50 % = la moitié (÷ 2) ; 25 % = le quart (÷ 4) ; 10 % = ÷ 10 ; 1 % = ÷ 100. On peut combiner : 30 % = 3 × 10 %. Sinon, utilise la calculatrice.${calcBox(`${dec(p / 100)} × ${N}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, ans)) return null;
@@ -219,7 +320,7 @@ function genPctAppliquer() {
       const x = valU(r); if (!x) return null;
       const ok = near(x.value, ans);
       markInput(r, 0, ok);
-      return { ok, msg: `${p} % de ${N} = ${F(p, 100)} × ${N} = ${dec(p / 100)} × ${N} = <b>${fmt(ans)}</b>.` };
+      return { ok, msg: `${p} % de ${N} = ${F(p, 100)} × ${N} = ${dec(p / 100)} × ${N} = <b>${fmt(ans)}</b>.${pctFig(coefP, ans)}` };
     },
     __solve: (r) => setAns(r, 0, fmt(ans)),
     __wrong: (r) => setAns(r, 0, fmt(ans + 1)),
@@ -237,17 +338,18 @@ function genPctCalculer() {
     `Sur ${N} questions, un élève en réussit ${k}. Quel est son pourcentage de réussite ?`,
     `Sur ${N} places de cinéma, ${k} sont occupées. Quel pourcentage de la salle est occupé ?`,
   ]);
+  const coefQ = dec(k / N);
   return {
     hints: [
-      `Un pourcentage est une fraction de dénominateur 100. Il faut écrire la proportion « ${k} sur ${N} » sous la forme d'une fraction, puis la transformer en fraction sur 100.`,
-      'Exemple : 18 élèves sur 50. 18 : 50 = 0,36 = 36/100 = 36 %.',
-      `Outil : calcule ${k} : ${N}. Le résultat décimal se lit en centièmes : 0,54 = 54 %.`,
+      `On compare <b>la partie</b> (${k}) <b>au total</b> (${N}) : on divise, puis on écrit le résultat sur 100.${pasAPas(`${k} ÷ ${N}`, { a: '=' }, '?', { a: '=' }, F('?', 100), { a: '=' }, '? %')}`,
+      `Exemple : 18 élèves sur 50.${pasAPas('18 ÷ 50', { a: '=' }, '0,36', { a: '=' }, F(36, 100), { a: '=' }, '36 %')}`,
+      `Méthode : le résultat de la division se lit en centièmes : 0,54 = 54 centièmes = 54 %.${calcBox(`${k} ÷ ${N}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, p)) return null;
       if (near(x.value, p / 100)) return `${dec(p / 100)} est le bon calcul, mais on demande un <b>pourcentage</b> : ${dec(p / 100)} = ${F(p, 100)} = ${p} %. Écris-le en pourcentage.`;
       if (near(x.value, N - k)) return 'Tu as calculé le nombre qui <b>reste</b>. Il faut comparer le nombre demandé au total : division, puis pourcentage.';
-      if (near(x.value, k)) return `${k} est le nombre d'élèves, pas le pourcentage. Calcule ${k} : ${N}, puis transforme en pourcentage.`;
+      if (near(x.value, k)) return `${k} est le nombre d'élèves, pas le pourcentage. Calcule ${k} ÷ ${N}, puis transforme en pourcentage.`;
       return null;
     },
     q: `<p>${sujet}</p><p class="big">${inp('num')} ${unit('%')}</p>`,
@@ -255,7 +357,7 @@ function genPctCalculer() {
       const x = valU(r); if (!x) return null;
       const ok = near(x.value, p);
       markInput(r, 0, ok);
-      return { ok, msg: `${F(k, N)} = ${k} : ${N} = ${dec(k / N)} = ${F(p, 100)} = <b>${p} %</b>.` };
+      return { ok, msg: `On divise la partie par le total, puis on écrit le résultat sur 100.${pasAPas(`${k} ÷ ${N}`, { a: '=' }, coefQ, { a: '=' }, F(p, 100), { a: '=' }, `<b>${p} %</b>`)}` };
     },
     __solve: (r) => setAns(r, 0, String(p)),
     __wrong: (r) => setAns(r, 0, String(p + 5)),
@@ -268,11 +370,13 @@ function genSolde() {
   const P = pick([40, 60, 80, 100, 120, 150, 200, 240]);
   const red = rnd((rr * P) / 100), fin = rnd(P - red);
   const art = pick(['un casque', 'une paire de baskets', 'un jeu vidéo', 'un sac', 'un sweat']);
+  const pron = art.startsWith('une') ? 'elle' : 'il';
+  const twoSteps = (a, b, c, d, e) => pasAPas(`${a} €`, { a: b }, `${c} € de réduction`) + pasAPas(`${a} €`, { a: d }, e);
   return {
     hints: [
-      `Il y a deux étapes : 1) calculer la réduction en euros (${rr} % du prix) ; 2) la soustraire au prix de départ.`,
-      'Exemple : un article à 80 € avec 30 % de réduction. Réduction : 0,3 × 80 = 24 €. Nouveau prix : 80 − 24 = 56 €.',
-      `Outil : la réduction est ${rr} % de ${P} = ${dec(rr / 100)} × ${P}. Ensuite : ${P} − (la réduction).`,
+      `Il y a deux étapes : d'abord la réduction en euros (${rr} % du prix), puis on la soustrait au prix de départ.${twoSteps(P, `× ${dec(rr / 100)}`, '?', '− la réduction', 'nouveau prix')}`,
+      `Exemple : un article à 80 € avec 30 % de réduction.${twoSteps(80, '× 0,3', 24, '− 24', '56 €')}`,
+      `Méthode : calcule la réduction, puis soustrais-la à ${P} €.${calcBox(`${dec(rr / 100)} × ${P}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, fin)) return null;
@@ -280,12 +384,12 @@ function genSolde() {
       if (near(x.value, P - rr)) return `Tu as soustrait ${rr} € (le nombre du pourcentage). Mais ${rr} % de ${P} ne fait pas ${rr} €.`;
       return null;
     },
-    q: `<p>${cap(art)} coûte ${P} €. Pendant les soldes, il bénéficie de ${rr} % de réduction. Quel est son nouveau prix ?</p><p class="big">${inp('num')} ${unit('€')}</p>`,
+    q: `<p>${cap(art)} coûte ${P} €. Pendant les soldes, ${pron} bénéficie de ${rr} % de réduction. Quel est son nouveau prix ?</p><p class="big">${inp('num')} ${unit('€')}</p>`,
     check(r) {
       const x = valU(r); if (!x) return null;
       const ok = near(x.value, fin);
       markInput(r, 0, ok);
-      return { ok, msg: `Réduction : ${rr} % de ${P} = ${dec(rr / 100)} × ${P} = ${fmt(red)} €. Nouveau prix : ${P} − ${fmt(red)} = <b>${fmt(fin)} €</b>.` };
+      return { ok, msg: `Réduction : ${rr} % de ${P} = ${dec(rr / 100)} × ${P} = ${fmt(red)} €. Nouveau prix : ${P} − ${fmt(red)} = <b>${fmt(fin)} €</b>.${twoSteps(P, `× ${dec(rr / 100)}`, fmt(red), `− ${fmt(red)}`, `<b>${fmt(fin)} €</b>`)}` };
     },
     __solve: (r) => setAns(r, 0, fmt(fin)),
     __wrong: (r) => setAns(r, 0, fmt(fin + 2)),
@@ -301,11 +405,13 @@ function genEchelleAppliquer() {
   if (sens === 'plan→réel') {
     const l = pick([2, 3, 4, 5, 6, 7, 8, 8.3, 4.5, 2.5, 12, 9.5]);
     const realCm = rnd(l * N), ans = rnd(realCm / toCm);
+    const conv = vu === 'cm' ? '' : pasAPas(`${big(realCm)} cm`, { a: `÷ ${big(toCm)}` }, `<b>${big(ans)} ${vu}</b>`);
+    const carte = (t, v, cap) => tabFig({ rows: [['Carte (cm)', 1, l], ['Réalité (cm)', N, v]], cap, hl: [[1, 1]], right: t });
     return {
       hints: [
-        `Une échelle ${F(1, big(N))} signifie que 1 cm sur le plan représente ${big(N)} cm dans la réalité. Fais un tableau de proportionnalité.`,
-        `Exemple : échelle ${F(1, 1000)}, 8,3 cm sur la carte. Tableau : 1 cm → 1 000 cm ; 8,3 cm → 8 300 cm = 83 m.`,
-        `Outil : multiplie ${fmt(l)} par ${big(N)} pour avoir des centimètres. Puis convertis : 1 m = 100 cm ; 1 km = 100 000 cm.`,
+        `Une échelle ${F(1, big(N))} signifie que 1 cm sur la carte représente ${big(N)} cm dans la réalité. Range les nombres dans un tableau.${carte('× ?', '?', 'Ton tableau')}`,
+        `Exemple : échelle ${F(1, 1000)}, 6 cm sur la carte.${tabFig({ rows: [['Carte (cm)', 1, 6], ['Réalité (cm)', 1000, 6000]], hl: [[1, 1]], right: '× 1 000' })}${pasAPas('6 000 cm', { a: '÷ 100' }, '60 m')}`,
+        `Méthode : multiplie pour obtenir des centimètres, puis convertis : 1 m = 100 cm ; 1 km = 100 000 cm.${calcBox(`${fmt(l)} × ${N}`)}`,
       ],
       remediate(r) {
         const x = valU(r); if (!x || near(x.value, ans)) return null;
@@ -318,7 +424,7 @@ function genEchelleAppliquer() {
         const x = valU(r); if (!x) return null;
         const ok = near(x.value, ans);
         markInput(r, 0, ok);
-        return { ok, msg: `${fmt(l)} × ${big(N)} = ${big(realCm)} cm${vu === 'cm' ? '' : ` = <b>${big(ans)} ${vu}</b>`}${vu === 'cm' ? '.' : '.'}${vu === 'cm' ? ` La longueur réelle est <b>${big(ans)} cm</b>.` : ''}` };
+        return { ok, msg: `${fmt(l)} × ${big(N)} = ${big(realCm)} cm${vu === 'cm' ? `. La longueur réelle est <b>${big(ans)} cm</b>.` : ` = <b>${big(ans)} ${vu}</b>.`}${carte(`× ${big(N)}`, realCm)}${conv}` };
       },
       __solve: (r) => setAns(r, 0, fmt(ans)),
       __wrong: (r) => setAns(r, 0, fmt(ans + 1)),
@@ -328,11 +434,12 @@ function genEchelleAppliquer() {
   const NN = pick([50, 100, 200, 500, 1000]);
   const lcm = pick([2, 4, 5, 8, 10, 12, 6, 2.5, 7.5]);
   const realCm = rnd(lcm * NN), realM = rnd(realCm / 100);
+  const plan = (t, v, cap) => tabFig({ rows: [['Plan (cm)', 1, v], ['Réalité (cm)', NN, realCm]], cap, hl: [[0, 1]], left: t });
   return {
     hints: [
-      `L'échelle ${F(1, NN)} signifie que 1 cm sur le plan représente ${NN} cm dans la réalité. Mets d'abord la longueur réelle en centimètres.`,
-      `Exemple : échelle ${F(1, 50)}, une table de 120 cm. Sur le plan : 120 : 50 = 2,4 cm.`,
-      `Outil : ${fmt(realM)} m = ${big(realCm)} cm. Combien de fois ${NN} cm « rentre » dans ${big(realCm)} cm ?`,
+      `L'échelle ${F(1, NN)} signifie que 1 cm sur le plan représente ${NN} cm dans la réalité. Mets d'abord la longueur réelle en centimètres : tu pourras remonter du bas vers le haut du tableau.${plan('÷ ?', '?', 'Ton tableau')}`,
+      `Exemple : échelle ${F(1, 50)}, une table de 120 cm.${tabFig({ rows: [['Plan (cm)', 1, 2.4], ['Réalité (cm)', 50, 120]], hl: [[0, 1]], left: '÷ 50' })}`,
+      `Méthode : ${fmt(realM)} m = ${big(realCm)} cm. Pour remonter, on divise.${calcBox(`${realCm} ÷ ${NN}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, lcm)) return null;
@@ -345,7 +452,7 @@ function genEchelleAppliquer() {
       const x = valU(r); if (!x) return null;
       const ok = near(x.value, lcm);
       markInput(r, 0, ok);
-      return { ok, msg: `${fmt(realM)} m = ${big(realCm)} cm. Sur le plan : ${big(realCm)} : ${NN} = <b>${fmt(lcm)} cm</b>.` };
+      return { ok, msg: `${fmt(realM)} m = ${big(realCm)} cm. Sur le plan : ${big(realCm)} ÷ ${NN} = <b>${fmt(lcm)} cm</b>.${plan(`÷ ${NN}`, lcm)}` };
     },
     __solve: (r) => setAns(r, 0, fmt(lcm)),
     __wrong: (r) => setAns(r, 0, fmt(lcm + 1)),
@@ -360,11 +467,12 @@ function genEchelleCalculer() {
   const inM = realCm >= 200;
   const realTxt = inM ? `${fmt(realM)} m` : `${fmt(realCm)} cm`;
   const obj = pick(['Un bateau', 'Un immeuble', 'Un avion', 'Un camion']);
+  const mod = (t, v, cap) => tabFig({ rows: [['Modèle (cm)', l, 1], ['Réalité (cm)', realCm, v]], cap, hl: [[1, 1]], top: [{ from: 0, to: 1, t }], bot: [{ from: 0, to: 1, t }] });
   return {
     hints: [
-      `Pour trouver l'échelle, il faut savoir : « 1 cm sur le modèle représente combien de centimètres dans la réalité ? ». Commence par mettre les deux longueurs dans la <b>même unité</b>.`,
-      'Exemple : un bateau de 25 m (= 2 500 cm) est représenté par 10 cm. 1 cm sur le modèle représente 2 500 : 10 = 250 cm : l\'échelle est 1/250.',
-      `Outil : ${realTxt} = ${big(realCm)} cm. Divise ${big(realCm)} par ${l}.`,
+      `Pour trouver l'échelle, on cherche : « 1 cm sur le modèle représente combien de centimètres dans la réalité ? ». Commence par mettre les deux longueurs dans la <b>même unité</b>.${mod('÷ ?', '?', 'Ton tableau')}`,
+      `Exemple : un bateau de 25 m (= 2 500 cm) est représenté par 10 cm. L'échelle est ${F(1, 250)}.${tabFig({ rows: [['Modèle (cm)', 10, 1], ['Réalité (cm)', 2500, 250]], hl: [[1, 1]], top: [{ from: 0, to: 1, t: '÷ 10' }], bot: [{ from: 0, to: 1, t: '÷ 10' }] })}`,
+      `Méthode : ${realTxt} = ${big(realCm)} cm. Pour passer de ${l} cm à 1 cm, on divise par ${l} : on fait pareil sur la ligne du bas.${calcBox(`${realCm} ÷ ${l}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, N)) return null;
@@ -377,7 +485,7 @@ function genEchelleCalculer() {
       const x = valU(r); if (!x) return null;
       const ok = near(x.value, N);
       markInput(r, 0, ok);
-      return { ok, msg: `${realTxt} = ${big(realCm)} cm. 1 cm sur le modèle représente ${big(realCm)} : ${l} = ${big(N)} cm. L'échelle est <b>${F(1, big(N))}</b>.` };
+      return { ok, msg: `${realTxt} = ${big(realCm)} cm. 1 cm sur le modèle représente ${big(realCm)} ÷ ${l} = ${big(N)} cm. L'échelle est <b>${F(1, big(N))}</b>.${mod(`÷ ${l}`, N)}` };
     },
     __solve: (r) => setAns(r, 0, String(N)),
     __wrong: (r) => setAns(r, 0, String(N + 10)),
@@ -398,11 +506,20 @@ function genVitesse() {
   const who = pick(['Un cycliste roule', 'Un coureur court', 'Un train roule', 'Une voiture roule']);
   const g = gcd(t, T), dg = (d * g) / t;
   const coef = rnd(t / d);
+  // le tableau : on passe par une durée « commune » quand elle donne des nombres simples
+  const simple = exact(dg), direct = g === t || g === T;
+  const enMin = T === 60 || T === 90 || T === 120 || T === 75 ? `${Ttxt} = ${T} min. ` : '';
+  const vFig = (midV, endV) => {
+    if (!simple) return tabFig({ rows: [['Temps (min)', t, T], ['Distance (km)', d, endV]], hl: [[1, 1]] });
+    if (direct) { const lb = T > t ? `× ${T / t}` : `÷ ${t / T}`; return tabFig({ rows: [['Temps (min)', t, T], ['Distance (km)', d, endV]], hl: [[1, 1]], top: [{ from: 0, to: 1, t: lb }], bot: [{ from: 0, to: 1, t: lb }] }); }
+    const A = { from: 0, to: 1, t: `÷ ${t / g}` }, B = { from: 1, to: 2, t: `× ${T / g}` };
+    return tabFig({ rows: [['Temps (min)', t, g, T], ['Distance (km)', d, midV, endV]], hl: [[1, 2]], top: [A, B], bot: [A, B] });
+  };
   return {
     hints: [
-      'Convertis les durées dans la <b>même unité</b> (des minutes), puis fais un tableau de proportionnalité : distance et temps.',
-      'Exemple : un athlète court 12 km en 45 min. En 1 h = 60 min : coefficient 45 : 12 = 3,75 puis 60 : 3,75 = 16 km.',
-      `Outil : ${Ttxt} = ${T} min. Tableau : ${fmt(d)} km pour ${t} min ; ? km pour ${T} min.`,
+      `Écris les durées dans la <b>même unité</b> (des minutes). ${enMin}Puis range les nombres dans un tableau.${tabFig({ rows: [['Temps (min)', t, T], ['Distance (km)', d, '?']], cap: 'Ton tableau', hl: [[1, 1]] })}`,
+      `Exemple : un athlète court 12 km en 45 min. Combien en 1 h, soit 60 min ? On passe par 15 min, qui est dans les deux durées.${tabFig({ rows: [['Temps (min)', 45, 15, 60], ['Distance (km)', 12, 4, 16]], hl: [[1, 2]], top: [{ from: 0, to: 1, t: '÷ 3' }, { from: 1, to: 2, t: '× 4' }], bot: [{ from: 0, to: 1, t: '÷ 3' }, { from: 1, to: 2, t: '× 4' }] })}`,
+      `Méthode : suis les flèches, en faisant la même opération en haut et en bas.${vFig('?', '?')}${calcBox(simple ? `${fmt(d)} ${direct ? (T > t ? `× ${T / t}` : `÷ ${t / T}`) : `÷ ${t / g}`}` : `${fmt(d)} ÷ ${t} × ${T}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, ans)) return null;
@@ -411,15 +528,17 @@ function genVitesse() {
       if (T === 75 && near(x.value, rnd(d * 1.15))) return '1 h 15 min ne s\'écrit pas 1,15 h : 1 h 15 min = 75 min.';
       return null;
     },
-    q: `<p>${who} à vitesse constante : ${who.startsWith('Une') ? 'elle' : 'il'} parcourt ${fmt(d)} km en ${t} minutes. Quelle distance parcourt-il en ${Ttxt} ?</p><p class="big">${inp('num')} ${unit('km')}</p>`,
+    q: `<p>${who} à vitesse constante : ${who.startsWith('Une') ? 'elle' : 'il'} parcourt ${fmt(d)} km en ${t} minutes. Quelle distance parcourt-${who.startsWith('Une') ? 'elle' : 'il'} en ${Ttxt} ?</p><p class="big">${inp('num')} ${unit('km')}</p>`,
     check(r) {
       const x = valU(r); if (!x) return null;
       const ok = near(x.value, ans);
       markInput(r, 0, ok);
-      const m = exact(dg)
-        ? `${Ttxt} = ${T} min. On passe par une durée « commune » de ${g} min : ${t} min = ${t / g} × ${g} min, donc en ${g} min on parcourt ${fmt(d)} : ${t / g} = ${fmt(dg)} km. Or ${T} min = ${T / g} × ${g} min, donc la distance est ${T / g} × ${fmt(dg)} = <b>${fmt(ans)} km</b>.`
-        : `${Ttxt} = ${T} min. Tableau : ${fmt(d)} km pour ${t} min ; coefficient ${t} : ${fmt(d)} = ${fmt(coef)} min par km, donc distance = ${T} : ${fmt(coef)} = <b>${fmt(ans)} km</b>.`;
-      return { ok, msg: m + ` (Vitesse moyenne : ${fmt(v)} km en 1 h, soit ${fmt(v)} km/h.)` };
+      const m = !simple
+        ? `${enMin}En 1 min, on parcourt ${fmt(d)} ÷ ${t} km ; en ${T} min : ${fmt(d)} ÷ ${t} × ${T} = <b>${fmt(ans)} km</b>.`
+        : direct
+          ? `${enMin}Le temps est ${T > t ? `multiplié par ${T / t}` : `divisé par ${t / T}`}, donc la distance aussi : ${fmt(d)} ${T > t ? `× ${T / t}` : `÷ ${t / T}`} = <b>${fmt(ans)} km</b>.`
+          : `${enMin}On passe par ${g} min : ${fmt(d)} ÷ ${t / g} = ${fmt(dg)} km. Puis ${fmt(dg)} × ${T / g} = <b>${fmt(ans)} km</b>.`;
+      return { ok, msg: m + vFig(dg, ans) + `Vitesse moyenne : ${fmt(v)} km en 1 h, soit ${fmt(v)} km/h.` };
     },
     __solve: (r) => setAns(r, 0, fmt(ans)),
     __wrong: (r) => setAns(r, 0, fmt(ans + 2)),
@@ -430,14 +549,15 @@ function genVitesse() {
 function genDuree() {
   const kind = pick(['dec', 'frac', 'hm']);
   let h, ask, ans, msg;
-  if (kind === 'dec') { h = pick([0.5, 0.25, 0.75, 1.5, 2.5, 1.25, 0.2, 0.1, 3.5]); ans = rnd(h * 60); ask = `Convertis ${fmt(h)} h en minutes.`; msg = `${fmt(h)} h = ${fmt(h)} × 60 min = <b>${fmt(ans)} min</b>.`; }
-  else if (kind === 'frac') { const [a, b] = pick([[1, 4], [3, 4], [1, 2], [1, 3], [2, 3], [1, 6], [1, 5]]); ans = (60 * a) / b; ask = `Convertis ${F(a, b)} d'heure en minutes.`; msg = `${F(a, b)} h = ${F(a, b)} × 60 = ${F(`${a} × 60`, b)} = <b>${fmt(ans)} min</b>.`; }
-  else { const hh = rand(1, 3), mm = pick([10, 15, 20, 30, 40, 45, 50]); ans = hh * 60 + mm; ask = `Convertis ${hh} h ${mm} min en minutes.`; msg = `${hh} h ${mm} min = ${hh} × 60 + ${mm} = ${hh * 60} + ${mm} = <b>${ans} min</b>.`; }
+  let tool = '';
+  if (kind === 'dec') { h = pick([0.5, 0.25, 0.75, 1.5, 2.5, 1.25, 0.2, 0.1, 3.5]); ans = rnd(h * 60); ask = `Convertis ${fmt(h)} h en minutes.`; tool = `${fmt(h)} × 60`; msg = pasAPas(`${fmt(h)} h`, { a: '× 60' }, `<b>${fmt(ans)} min</b>`); }
+  else if (kind === 'frac') { const [a, b] = pick([[1, 4], [3, 4], [1, 2], [1, 3], [2, 3], [1, 6], [1, 5]]); ans = (60 * a) / b; ask = `Convertis ${F(a, b)} d'heure en minutes.`; tool = `60 ÷ ${b} × ${a}`; msg = `${F(a, b)} h = ${F(a, b)} × 60 = ${F(`${a} × 60`, b)} = <b>${fmt(ans)} min</b>.`; }
+  else { const hh = rand(1, 3), mm = pick([10, 15, 20, 30, 40, 45, 50]); ans = hh * 60 + mm; ask = `Convertis ${hh} h ${mm} min en minutes.`; tool = `${hh} × 60 + ${mm}`; msg = pasAPas(`${hh} h`, { a: '× 60' }, `${hh * 60} min`, { a: `+ ${mm} min` }, `<b>${ans} min</b>`); }
   return {
     hints: [
-      'Une heure contient 60 minutes. Pour passer des heures aux minutes, on multiplie par 60.',
-      'Exemple : 0,5 h = 0,5 × 60 = 30 min. 2 h 20 min = 2 × 60 + 20 = 140 min.',
-      kind === 'hm' ? 'Outil : convertis les heures seules en minutes, puis ajoute les minutes.' : 'Outil : ¼ h = 15 min ; ½ h = 30 min ; ¾ h = 45 min.',
+      `Une heure contient 60 minutes. Pour passer des heures aux minutes, on multiplie par 60.${pasAPas('1 h', { a: '× 60' }, '60 min')}`,
+      `Exemple :${pasAPas('0,5 h', { a: '× 60' }, '30 min')}${pasAPas('2 h', { a: '× 60' }, '120 min', { a: '+ 20 min' }, '140 min')}`,
+      `${kind === 'hm' ? 'Méthode : convertis les heures seules en minutes, puis ajoute les minutes.' : `À connaître :${tabFig({ rows: [['Durée', '1 h', '½ h', '¼ h', '¾ h'], ['Minutes', 60, 30, 15, 45]] })}`}${calcBox(tool)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, ans)) return null;
@@ -456,6 +576,16 @@ function genDuree() {
     __wrong: (r) => setAns(r, 0, fmt(ans + 5)),
   };
 }
+
+// les exemples fléchés de la fiche de révision
+const FICHE_FIGS = {
+  why: () => whyDiv(4, 10),
+  unite: () => `<p class="tip"><b>Coefficient ou passage à l'unité ?</b> Les deux commencent par le même calcul (36 ÷ 4 = 9), mais pas par le même chemin. Avec le <b>coefficient</b>, on descend d'une ligne à l'autre : on multiplie les places par 9.${tabFig({ rows: [['Places', 4, 6], ['Prix (€)', 36, 54]], hl: [[1, 1]], right: '× 9' })}Avec le <b>passage à l'unité</b>, on reste dans les lignes : on recule de 4 places à 1 place, puis on avance jusqu'à 6 places.${tabFig({ rows: [['Places', 4, 1, 6], ['Prix (€)', 36, 9, 54]], hl: [[1, 2]], top: [{ from: 0, to: 1, t: '÷ 4' }, { from: 1, to: 2, t: '× 6' }], bot: [{ from: 0, to: 1, t: '÷ 4' }, { from: 1, to: 2, t: '× 6' }] })}</p>`,
+  reco: () => `Le même nombre partout : oui, le coefficient est 7.${tabFig({ rows: [['Ligne 1', 3.2, 1.3, 5.4], ['Ligne 2', 22.4, 9.1, 37.8]], down: [0, 1, 2].map((col) => ({ col, t: '× 7', c: 'ok' })) })}Un nombre différent : non, ce n'est pas un tableau de proportionnalité.${tabFig({ rows: [['Ligne 1', 0.8, 1.5, 1.25], ['Ligne 2', 2.4, 4.5, 3.9]], down: [{ col: 0, t: '× 3', c: 'ok' }, { col: 1, t: '× 3', c: 'ok' }, { col: 2, t: '× 3,12', c: 'ko' }] })}`,
+  comp: () => `Le coefficient est 4,5 ÷ 3 = 1,5. Pour descendre, on <b>multiplie</b> : 4 × 1,5 = 6.${tabFig({ rows: [['Ligne 1', 3, 4], ['Ligne 2', 4.5, 6]], hl: [[1, 1]], right: '× 1,5' })}Le coefficient est 18 ÷ 15 = 1,2. Pour remonter, on <b>divise</b> : 24 ÷ 1,2 = 20.${tabFig({ rows: [['Ligne 1', 15, 20], ['Ligne 2', 18, 24]], hl: [[0, 1]], left: '÷ 1,2' })}`,
+  duree: () => `Un athlète parcourt 12 km en trois quarts d'heure (45 min). Combien en 1 h (60 min) ? On passe par 15 min.${tabFig({ rows: [['Temps (min)', 45, 15, 60], ['Distance (km)', 12, 4, 16]], hl: [[1, 2]], top: [{ from: 0, to: 1, t: '÷ 3' }, { from: 1, to: 2, t: '× 4' }], bot: [{ from: 0, to: 1, t: '÷ 3' }, { from: 1, to: 2, t: '× 4' }] })}`,
+};
+document.querySelectorAll('[data-pfig]').forEach((el) => { el.innerHTML = FICHE_FIGS[el.dataset.pfig](); });
 
 CHAPTERS.push(
   { id: 'proportionnalite', num: 4, title: 'Proportionnalité', symbol: '%', desc: 'Tableaux, coefficient, pourcentages, échelles, vitesses et durées.' },

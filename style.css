@@ -512,6 +512,11 @@ table.voc td:first-child { white-space: nowrap; font-weight: 700; }
 .ex-anim > p.small { margin: 0 0 6px; }
 .hint-box .calc-steps { background: rgba(255,255,255,.6); border-radius: 8px; padding: 6px 8px; margin-top: 6px; }
 .hint-box ul { margin: 4px 0; padding-left: 20px; }
+/* un indice « exemple » : autre présentation, pour ne pas le confondre avec l'exercice */
+.hint-box.ex-box { background: #eef1f6; border-left: 0; border: 2px dashed #8a94a6; border-radius: 10px; color: #26303d; }
+.hint-box.ex-box .ex-in { margin-top: 4px; font-size: .95em; }
+.hint-box.ex-box .tabfig { opacity: .9; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hint-box.ex-box { background: #222a36; border-color: #6e7a8e; color: #dfe6f1; } }
 .nl-svg .u-zone { fill: rgba(232, 89, 12, .12); }
 .nl-svg .u-num { font-size: 12px; fill: #e8590c; text-anchor: middle; font-weight: 700; font-family: inherit; }
 .nl-svg .u-arc { fill: none; stroke: #e8590c; stroke-width: 1.5; }
