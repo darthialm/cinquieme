@@ -78,8 +78,12 @@ function tabFig({ rows, hl = [], top = [], bot = [], right, left, down, cap }) {
 }
 /** Enchaînement de calculs : pasAPas('8 ÷ 25', {a:'='}, '0,32') : un bloc par étape, une flèche étiquetée entre deux */
 const pasAPas = (...it) => `<div class="pchain">${it.map((x) => (typeof x === 'object' ? `<span class="ch-a">${x.a === '=' ? '=' : `<small>${x.a}</small>→`}</span>` : `<span class="ch-b">${x}</span>`)).join('')}</div>`;
-/** Pourquoi on divise pour trouver le coefficient : la division fait le chemin inverse de la multiplication */
-const whyDiv = (a, b) => `<div class="pwhy"><b>Pourquoi une division ?</b> On cherche le nombre caché dans <b>${fmt(a)} × ? = ${fmt(b)}</b>. La division fait le chemin <b>inverse</b> de la multiplication : comme 3 × 4 = 12, on retrouve le 4 en faisant 12 ÷ 3 = 4. Ici, c'est pareil :${pasAPas(fmt(a), { a: '× ?' }, fmt(b))}${pasAPas(fmt(b), { a: `÷ ${fmt(a)}` }, '?')}On retrouve donc le coefficient avec <b>${fmt(b)} ÷ ${fmt(a)}</b> : le nombre du bas divisé par le nombre du haut.</div>`;
+/** Pourquoi on divise pour trouver le coefficient. own : les nombres sont ceux de l'élève (sinon, ceux d'un exemple) */
+const whyDiv = (a, b, own = true) => `<div class="pwhy"><b>Pourquoi une division ?</b>
+  <p>${own ? 'Dans ton tableau, on' : 'On'} cherche le nombre caché : <b>${fmt(a)} × ? = ${fmt(b)}</b>.</p>${pasAPas(fmt(a), { a: '× ?' }, fmt(b))}
+  <p>Pour retrouver un nombre caché dans une multiplication, on fait l'opération <b>inverse</b> : une <b>division</b>.</p>
+  ${autre('3 × ? = 12. On sait que 3 × 4 = 12, et on retrouve ce 4 par une division : 12 ÷ 3 = 4.', 'Avec des nombres plus faciles')}
+  <p>${own ? 'Dans ton tableau' : 'Ici'}, on retrouve donc le nombre caché avec <b>${fmt(b)} ÷ ${fmt(a)}</b> : le nombre du bas divisé par le nombre du haut.</p>${pasAPas(fmt(b), { a: `÷ ${fmt(a)}` }, '?')}</div>`;
 /** Calculatrice d'indice : le calcul est déjà écrit, l'élève appuie sur « = » (les nombres se tapent aussi au clavier) */
 const CALC_KEYS = ['7', '8', '9', '÷', 'C', '4', '5', '6', '×', '⌫', '1', '2', '3', '−', '(', '0', ',', '=', '+', ')'];
 function calcBox(expr = '') {
@@ -143,7 +147,7 @@ function genReconnaitre() {
   const lab = (q) => (q.txt.startsWith('≈') ? `≈ × ${q.txt.slice(2)}` : `× ${q.txt}`);
   const figA = tabFig({ rows, down: qs.map((q, j) => ({ col: j, t: lab(q), c: ok || (kind === 'une' && j !== bad) ? 'ok' : 'ko' })) });
   const list = qs.map((q) => q.txt).join(' ; ');
-  let explain = `Dans chaque colonne, on cherche par combien on multiplie le nombre du haut pour obtenir celui du bas. On le trouve avec une division (le chemin inverse) : par exemple ${fmt(r1[0])} × ? = ${fmt(r2[0])}, donc ? = ${fmt(r2[0])} ÷ ${fmt(r1[0])} ${qs[0].txt.startsWith('≈') ? '' : '= '}${qs[0].txt}. Dans les colonnes, on trouve : ${list}.${figA}`;
+  let explain = `Dans chaque colonne, on cherche par combien on multiplie le nombre du haut pour obtenir celui du bas. On le trouve avec une division (le chemin inverse) : dans la 1<sup>re</sup> colonne, ${fmt(r1[0])} × ? = ${fmt(r2[0])}, donc ? = ${fmt(r2[0])} ÷ ${fmt(r1[0])} ${qs[0].txt.startsWith('≈') ? '' : '= '}${qs[0].txt}. Dans les colonnes, on trouve : ${list}.${figA}`;
   explain += ok ? `C'est <b>le même nombre</b> partout : c'est un tableau de proportionnalité, de coefficient ${fmt(k)}.`
     : 'Ce n\'est <b>pas le même nombre</b> partout : ce n\'est pas un tableau de proportionnalité.' + (kind === 'add' ? ` Ici, on passe de la 1<sup>re</sup> à la 2<sup>e</sup> ligne en <b>ajoutant</b> ${r2.c} : l'addition ne donne pas de la proportionnalité.` : '');
   const o = mcq(`<p>Ce tableau est-il un tableau de proportionnalité ?</p>${ptab([['Ligne 1', ...r1.map(fmt)], ['Ligne 2', ...r2.map(fmt)]])}`,
@@ -343,7 +347,7 @@ function genPctCalculer() {
     hints: [
       `On compare <b>la partie</b> (${k}) <b>au total</b> (${N}) : on divise, puis on écrit le résultat sur 100.${pasAPas(`${k} ÷ ${N}`, { a: '=' }, '?', { a: '=' }, F('?', 100), { a: '=' }, '? %')}`,
       `Exemple : 18 élèves sur 50.${pasAPas('18 ÷ 50', { a: '=' }, '0,36', { a: '=' }, F(36, 100), { a: '=' }, '36 %')}`,
-      `Méthode : le résultat de la division se lit en centièmes : 0,54 = 54 centièmes = 54 %.${calcBox(`${k} ÷ ${N}`)}`,
+      `Méthode : fais la division, puis lis le résultat en centièmes : c'est le pourcentage.${autre('0,54 = 54 centièmes = 54 %.')}${calcBox(`${k} ÷ ${N}`)}`,
     ],
     remediate(r) {
       const x = valU(r); if (!x || near(x.value, p)) return null;
@@ -579,7 +583,7 @@ function genDuree() {
 
 // les exemples fléchés de la fiche de révision
 const FICHE_FIGS = {
-  why: () => whyDiv(4, 10),
+  why: () => whyDiv(4, 10, false),
   unite: () => `<p class="tip"><b>Coefficient ou passage à l'unité ?</b> Les deux commencent par le même calcul (36 ÷ 4 = 9), mais pas par le même chemin. Avec le <b>coefficient</b>, on descend d'une ligne à l'autre : on multiplie les places par 9.${tabFig({ rows: [['Places', 4, 6], ['Prix (€)', 36, 54]], hl: [[1, 1]], right: '× 9' })}Avec le <b>passage à l'unité</b>, on reste dans les lignes : on recule de 4 places à 1 place, puis on avance jusqu'à 6 places.${tabFig({ rows: [['Places', 4, 1, 6], ['Prix (€)', 36, 9, 54]], hl: [[1, 2]], top: [{ from: 0, to: 1, t: '÷ 4' }, { from: 1, to: 2, t: '× 6' }], bot: [{ from: 0, to: 1, t: '÷ 4' }, { from: 1, to: 2, t: '× 6' }] })}</p>`,
   reco: () => `Le même nombre partout : oui, le coefficient est 7.${tabFig({ rows: [['Ligne 1', 3.2, 1.3, 5.4], ['Ligne 2', 22.4, 9.1, 37.8]], down: [0, 1, 2].map((col) => ({ col, t: '× 7', c: 'ok' })) })}Un nombre différent : non, ce n'est pas un tableau de proportionnalité.${tabFig({ rows: [['Ligne 1', 0.8, 1.5, 1.25], ['Ligne 2', 2.4, 4.5, 3.9]], down: [{ col: 0, t: '× 3', c: 'ok' }, { col: 1, t: '× 3', c: 'ok' }, { col: 2, t: '× 3,12', c: 'ko' }] })}`,
   comp: () => `Le coefficient est 4,5 ÷ 3 = 1,5. Pour descendre, on <b>multiplie</b> : 4 × 1,5 = 6.${tabFig({ rows: [['Ligne 1', 3, 4], ['Ligne 2', 4.5, 6]], hl: [[1, 1]], right: '× 1,5' })}Le coefficient est 18 ÷ 15 = 1,2. Pour remonter, on <b>divise</b> : 24 ÷ 1,2 = 20.${tabFig({ rows: [['Ligne 1', 15, 20], ['Ligne 2', 18, 24]], hl: [[0, 1]], left: '÷ 1,2' })}`,
@@ -1189,7 +1193,7 @@ function genPremier() {
     p ? `${n} n'est divisible par aucun des nombres premiers ${tested.join(', ')} (ceux dont le carré ne dépasse pas ${n}) : il n'a que deux diviseurs, 1 et ${n}. C'est un <b>nombre premier</b>.` : `${n} = ${small} × ${n / small} : il est divisible par ${small}, donc il a un diviseur autre que 1 et lui-même. Ce n'est <b>pas</b> un nombre premier.`, {});
   o.hints = [
     'Un nombre premier a exactement deux diviseurs : 1 et lui-même. Pour savoir si un nombre est premier, cherche un diviseur autre que 1 et lui-même.',
-    'Teste les nombres premiers dans l\'ordre : 2, 3, 5, 7... avec les critères de divisibilité (et 7 par division). Exemple : 91 n\'est divisible ni par 2, 3, 5 mais 91 = 7 × 13 : pas premier.',
+    `Teste les nombres premiers dans l'ordre : 2, 3, 5, 7… avec les critères de divisibilité (et 7 par une division).${autre('91 n\'est divisible ni par 2, ni par 3, ni par 5, mais 91 = 7 × 13 : il n\'est pas premier.')}`,
     `Outil : ${n} est-il divisible par 2 ? par 3 (somme des chiffres ${digSum(n)}) ? par 5 ? par 7 ?`,
   ];
   o.remediate = () => !p && n % 2 === 1 ? 'Un nombre impair n\'est pas toujours premier : teste aussi 3, 5 et 7.' : null;

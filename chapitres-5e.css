@@ -60,6 +60,7 @@ table.ptab td .ans { width: 5.5em; text-align: center; }
 .tabfig rect.tf-chip.tf-ok { stroke: #1f8a4c; } .tabfig rect.tf-chip.tf-ko { stroke: #c0392b; }
 .pfig .pcap { font-size: .85em; font-weight: 700; opacity: .8; margin-bottom: 2px; }
 .pwhy { border-left: 3px solid var(--accent, #b3541e); padding: 2px 0 2px 10px; margin: 8px 0; }
+.pwhy p { margin: 6px 0; }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .tabfig .tf-ar.tf-ok { stroke: #5fd08a; } :root:not([data-theme="light"]) .tabfig .tf-l.tf-ok { fill: #5fd08a; }
   :root:not([data-theme="light"]) .tabfig .tf-ar.tf-ko { stroke: #ff8f80; } :root:not([data-theme="light"]) .tabfig .tf-l.tf-ko { fill: #ff8f80; }

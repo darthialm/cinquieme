@@ -516,6 +516,9 @@ table.voc td:first-child { white-space: nowrap; font-weight: 700; }
 .hint-box.ex-box { background: #eef1f6; border-left: 0; border: 2px dashed #8a94a6; border-radius: 10px; color: #26303d; }
 .hint-box.ex-box .ex-in { margin-top: 4px; font-size: .95em; }
 .hint-box.ex-box .tabfig { opacity: .9; }
+/* exemple avec d'autres nombres, à l'intérieur d'une aide : même allure que les indices « exemple » */
+.pautre { background: #eef1f6; color: #26303d; border: 2px dashed #8a94a6; border-radius: 10px; padding: 6px 10px; margin: 8px 0; font-size: .95em; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pautre { background: #222a36; border-color: #6e7a8e; color: #dfe6f1; } }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hint-box.ex-box { background: #222a36; border-color: #6e7a8e; color: #dfe6f1; } }
 .nl-svg .u-zone { fill: rgba(232, 89, 12, .12); }
 .nl-svg .u-num { font-size: 12px; fill: #e8590c; text-anchor: middle; font-weight: 700; font-family: inherit; }

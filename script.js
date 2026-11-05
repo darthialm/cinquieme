@@ -61,6 +61,8 @@ const val = (root, i = 0) => parse(root.querySelectorAll('.ans')[i]?.value);
 const markInput = (root, i, ok) => root.querySelectorAll('.ans')[i]?.classList.add(ok ? 'right' : 'wrong');
 
 /* ---------- Aides didactiques communes ---------- */
+/** Un exemple avec d'autres nombres, glissé dans une aide : encadré à part pour ne pas le confondre avec l'exercice */
+const autre = (html, t = 'Avec d\'autres nombres') => `<div class="pautre"><b>${t}</b> <span class="small">(ce n'est pas ton exercice)</span><br>${html}</div>`;
 const ficheLink = (ch, t = 'la fiche') => `<a href="#/${ch}/fiche">${t}</a>`;
 /** Colore l'unité de la droite graduée et numérote ses parts (outil, sans donner la réponse) */
 function unitOverlay(r, L) {
@@ -184,7 +186,7 @@ function genDecimal() {
   }
   return {
     hints: [
-      `Comment se lit ${fmt(v)} ? Par exemple, ${eq(v, 0.7) ? '0,9 se lit « 9 dixièmes »' : '0,7 se lit « 7 dixièmes »'}.`,
+      `Comment se lit ${fmt(v)} ?${autre(eq(v, 0.7) ? '0,9 se lit « 9 dixièmes ».' : '0,7 se lit « 7 dixièmes ».')}`,
       eq(v, 1.5) ? `Exemple : 2,5 = 25 dixièmes = ${F(25, 10)}, que l'on peut simplifier en ${F(5, 2)}.` : `Exemple : 1,5 = 15 dixièmes = ${F(15, 10)}, que l'on peut simplifier en ${F(3, 2)}.`,
       'Outil : place le nombre dans un tableau unités | dixièmes | centièmes. Le rang du dernier chiffre donne le dénominateur (10 ou 100).',
     ],
