@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le puzzle agrandi</title>
+<style>
+:root { --bg:#f6f4ee; --surface:#fff; --ink:#1d2230; --muted:#5d6475; --line:#e2dfd5; --accent:#3451d1; --accent-soft:#e8ecff; --ok:#237a3b; --ok-soft:#e4f4e8; --ko:#c0392b; --ko-soft:#fdeceb; --grid:#e9e6dc; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#14161d; --surface:#1d2029; --ink:#eceef4; --muted:#a3a9b8; --line:#2f3442; --accent:#8ea2ff; --accent-soft:#262d4d; --ok:#6fd08c; --ok-soft:#1d3326; --ko:#ff8a7a; --ko-soft:#3a2222; --grid:#262a35; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 16px; }
+a.back { color: var(--accent); text-decoration: none; font-size: 15px; }
+h1 { font-size: 28px; margin: 8px 0 4px; }
+.lead { color: var(--muted); margin: 0 0 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 18px; }
+.player { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 760px) { .player { grid-template-columns: 1fr; } }
+svg.scene { width: 100%; height: auto; display: block; background: var(--surface); }
+.caption h2 { font-size: 20px; margin: 0 0 6px; }
+.caption p { margin: 6px 0; }
+.step-dots { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
+.step-dots button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; cursor: pointer; }
+.step-dots button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ctrl { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+button.btn { font: inherit; font-size: 15px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.btn:disabled { opacity: .45; cursor: default; }
+.tag { display: inline-block; padding: 1px 8px; border-radius: 6px; font-weight: 600; }
+.tag.ko { background: var(--ko-soft); color: var(--ko); }
+.tag.ok { background: var(--ok-soft); color: var(--ok); }
+table.m { border-collapse: collapse; margin: 8px 0; font-variant-numeric: tabular-nums; }
+table.m th, table.m td { border: 1px solid var(--line); padding: 3px 9px; text-align: center; }
+table.m th { background: var(--accent-soft); }
+table.m td.ko { color: var(--ko); font-weight: 600; }
+table.m td.ok { color: var(--ok); font-weight: 600; }
+.lab { font: 700 0.8px system-ui, sans-serif; }
+.essai { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+.essai input { width: 80px; font: inherit; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { font: inherit; font-size: 15px; border: 0; padding: 7px 12px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.seg button.on { background: var(--accent); color: #fff; }
+.verdict { font-weight: 600; margin: 6px 0; }
+.small { font-size: 14px; color: var(--muted); }
+</style></head>
+<body><main>
+<a class="back" href="./#/proportionnalite/accueil">← Retour au site</a>
+<h1>Le puzzle agrandi</h1>
+<p class="lead">Six pièces forment un carré de 10 cm. On veut agrandir le puzzle : le côté qui mesure 4 cm doit mesurer 7 cm. Que faut-il faire aux autres longueurs ?</p>
+
+<section class="card">
+  <div class="player">
+    <svg class="scene" id="scene" viewBox="-1.8 -1 22.8 22" role="img" aria-label="Animation du puzzle"></svg>
+    <div class="caption">
+      <div class="step-dots" id="dots"></div>
+      <h2 id="capT"></h2>
+      <div id="capB"></div>
+      <div class="ctrl">
+        <button class="btn" id="prev">← Précédent</button>
+        <button class="btn primary" id="next">Suivant →</button>
+        <button class="btn" id="replay">↻ Rejouer l'animation</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2 style="margin-top:0">À toi de tester</h2>
+  <p>Choisis un côté du puzzle de départ et sa nouvelle longueur, puis une méthode. Le puzzle se reconstruit tout seul.</p>
+  <div class="essai">
+    <label>Le côté de <select id="tFrom"></select> cm</label>
+    <label>devient <input id="tTo" type="number" step="0.5" min="0.5" max="20" value="7"> cm</label>
+  </div>
+  <div class="essai">
+    <div class="seg" id="tMode"><button data-m="add" class="on">J'ajoute la différence</button><button data-m="mul">Je multiplie par le coefficient</button></div>
+  </div>
+  <div class="player">
+    <svg class="scene" id="scene2" viewBox="-1.8 -1 22.8 22" role="img" aria-label="Puzzle agrandi"></svg>
+    <div><p class="verdict" id="tVerdict"></p><div id="tTable"></div><p class="small">Indice pour la troisième partie : si le côté de 6 cm devient 7 cm, le coefficient est 7 ÷ 6. La calculatrice donne 1,1666… : on arrondit les longueurs au millimètre.</p></div>
+  </div>
+</section>
+</main>
+<script>
+/* Pièces du puzzle de Brousseau (carré de 10 cm). Chaque pièce : point d'ancrage et sommets,
+   écrits avec les longueurs du puzzle, pour pouvoir appliquer une transformation f à chaque longueur. */
+const LENS = [2, 3, 4, 5, 6, 8, 10];
+const COL = { A: '#8fd0f5', B: '#ffcf9e', C: '#a6efa0', D: '#f6b5d2', E: '#d2a8e0', F: '#fff1a0' };
+const PIECES = [
+  { id: 'A', at: f => [0, f(10)], pts: f => [[0, 0], [f(4), 0], [0, -f(3)]] },
+  { id: 'B', at: f => [0, f(2)], pts: f => [[0, 0], [f(4), 0], [f(4), f(8)], [0, f(5)]] },
+  { id: 'C', at: f => [f(10), f(10)], pts: f => [[0, 0], [-f(4), 0], [0, -f(5)]] },
+  { id: 'D', at: f => [f(4), f(5)], pts: f => [[0, 0], [f(6), 0], [f(2), f(5)], [0, f(5)]] },
+  { id: 'E', at: f => [f(4), f(5)], pts: f => [[0, 0], [f(6), 0], [f(6), -f(5)], [0, -f(3)]] },
+  { id: 'F', at: f => [0, 0], pts: f => [[0, 0], [f(10), 0], [f(4), f(2)], [0, f(2)]] },
+];
+// positions « en vrac » (pièces dispersées) pour le début de l'animation
+const LOOSE = { A: [2.5, 17, -15], B: [16.5, 7.5, 10], C: [17.5, 16.5, 12], D: [9.5, 14.5, -8], E: [5, 7, 6], F: [10, 1.6, -3] };
+const ID = x => x;
+const fmt = x => (Math.round(x * 100) / 100).toString().replace('.', ',');
+const isCent = x => Math.abs(x * 100 - Math.round(x * 100)) < 1e-6;
+const H = 20; // hauteur du repère (y vers le haut)
+
+function geom(f) { // sommets absolus de chaque pièce
+  const g = {};
+  PIECES.forEach(p => { const [ax, ay] = p.at(f); g[p.id] = p.pts(f).map(([x, y]) => [ax + x, ay + y]); });
+  return g;
+}
+function centroid(pts) { let x = 0, y = 0; pts.forEach(p => { x += p[0]; y += p[1]; }); return [x / pts.length, y / pts.length]; }
+
+function makeScene(svg) {
+  svg.innerHTML = '';
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (n, a, parent = svg) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); parent.appendChild(e); return e; };
+  const grid = el('g', { stroke: 'var(--grid)', 'stroke-width': 0.04 });
+  for (let i = 0; i <= 20; i++) { el('line', { x1: i, y1: 0, x2: i, y2: H }, grid); el('line', { x1: 0, y1: i, x2: 20, y2: i }, grid); }
+  const ref = el('rect', { fill: 'none', stroke: 'var(--ok)', 'stroke-width': 0.12, 'stroke-dasharray': '0.4 0.25', opacity: 0 });
+  const polys = {}, labs = {};
+  PIECES.forEach(p => {
+    polys[p.id] = el('polygon', { fill: COL[p.id], 'fill-opacity': 0.82, stroke: '#1d2230', 'stroke-width': 0.08, 'stroke-linejoin': 'round' });
+    labs[p.id] = el('text', { class: 'lab', 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: '#1d2230' });
+    labs[p.id].textContent = p.id;
+  });
+  const dims = el('g', { 'font-size': 0.62, fill: 'var(--ink)', 'font-family': 'system-ui, sans-serif', 'text-anchor': 'middle' });
+  return { svg, el, ref, polys, labs, dims };
+}
+
+/* état affiché : pour chaque pièce, sommets + rotation autour du centre + décalage */
+function shapeState(f, loose) {
+  const g = geom(f), st = {};
+  PIECES.forEach(p => {
+    const pts = g[p.id], c = centroid(pts);
+    if (loose) { const [lx, ly, r] = LOOSE[p.id]; st[p.id] = { pts, dx: lx - c[0], dy: ly - c[1], r }; }
+    else st[p.id] = { pts, dx: 0, dy: 0, r: 0 };
+  });
+  return st;
+}
+const lerp = (a, b, t) => a + (b - a) * t;
+function mix(s0, s1, t) {
+  const out = {};
+  for (const id in s1) {
+    const a = s0[id], b = s1[id];
+    out[id] = { pts: b.pts.map((q, i) => [lerp(a.pts[i][0], q[0], t), lerp(a.pts[i][1], q[1], t)]), dx: lerp(a.dx, b.dx, t), dy: lerp(a.dy, b.dy, t), r: lerp(a.r, b.r, t) };
+  }
+  return out;
+}
+function draw(sc, st, refSide) {
+  for (const id in st) {
+    const s = st[id], c = centroid(s.pts), rad = s.r * Math.PI / 180;
+    const pts = s.pts.map(([x, y]) => { const ux = x - c[0], uy = y - c[1]; return [c[0] + ux * Math.cos(rad) - uy * Math.sin(rad) + s.dx, c[1] + ux * Math.sin(rad) + uy * Math.cos(rad) + s.dy]; });
+    sc.polys[id].setAttribute('points', pts.map(([x, y]) => `${x.toFixed(3)},${(H - y).toFixed(3)}`).join(' '));
+    sc.labs[id].setAttribute('x', c[0] + s.dx); sc.labs[id].setAttribute('y', H - (c[1] + s.dy));
+  }
+  if (refSide) { sc.ref.setAttribute('x', 0); sc.ref.setAttribute('y', H - refSide); sc.ref.setAttribute('width', refSide); sc.ref.setAttribute('height', refSide); sc.ref.setAttribute('opacity', 1); }
+  else sc.ref.setAttribute('opacity', 0);
+}
+function dimLabels(sc, list) {
+  sc.dims.innerHTML = '';
+  list.forEach(([x, y, t, col]) => { const e = sc.el('text', { x, y: H - y, fill: col || 'var(--ink)' }, sc.dims); e.textContent = t; });
+}
+function animate(sc, s0, s1, ms, refSide, done) {
+  const t0 = performance.now(); sc.anim = (sc.anim || 0) + 1; const me = sc.anim;
+  const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  (function tick(now) {
+    if (me !== sc.anim) return;
+    const t = Math.min(1, (now - t0) / ms);
+    draw(sc, mix(s0, s1, ease(t)), t === 1 ? refSide : 0);
+    if (t < 1) requestAnimationFrame(tick); else if (done) done();
+  })(t0);
+}
+
+/* =================== le film en étapes =================== */
+const ADD3 = x => x + 3, MUL = x => x * 1.75;
+const STEPS = [
+  { t: 'Six pièces', b: '<p>Voici les six pièces du puzzle, avec des côtés de 2, 3, 4, 5, 6, 8 et 10 cm. Toutes ont des angles droits.</p>',
+    from: () => shapeState(ID, true), to: () => shapeState(ID, true), dims: [] },
+  { t: 'Elles forment un carré', b: '<p>Bien placées, elles forment un <b>carré de 10 cm</b> de côté : 4 + 6 = 10 en haut, 2 + 8 = 10 à gauche…</p>',
+    from: () => shapeState(ID, true), to: () => shapeState(ID, false), ref: 10, dims: [[2, 10.25, '4'], [7, 10.25, '6'], [-0.5, 1, '2'], [-0.5, 6, '8']] },
+  { t: 'Idée d’Hugo : ajouter 3 cm', b: '<p>On veut que le côté de <b>4 cm</b> mesure <b>7 cm</b>. Hugo se dit : « 4 + 3 = 7, donc j’ajoute 3 cm à <b>toutes</b> les longueurs. »</p><table class="m"><tr><th>Départ</th>' + LENS.map(l => `<td>${l}</td>`).join('') + '</tr><tr><th>Hugo</th>' + LENS.map(l => `<td class="ko">${l + 3}</td>`).join('') + '</tr></table>',
+    from: () => shapeState(ID, false), to: () => shapeState(ADD3, false), dims: [] },
+  { t: 'Ça ne marche pas !', b: '<p><span class="tag ko">Raté</span> Les pièces se chevauchent et laissent des trous : ce n’est plus un carré. Par exemple, en haut à droite, le triangle C ne touche plus la pièce D.</p><p>Le côté de 2 cm devient 5 cm (il est multiplié par 2,5) alors que celui de 10 cm devient 13 cm (multiplié par 1,3) : <b>les pièces sont déformées</b>.</p>',
+    from: () => shapeState(ADD3, false), to: () => shapeState(ADD3, false), dims: [], flash: true },
+  { t: 'Idée de Lina : multiplier', b: '<p>Lina cherche par combien on multiplie 4 pour obtenir 7 : <b>7 ÷ 4 = 1,75</b>. Elle multiplie <b>toutes</b> les longueurs par 1,75.</p><table class="m"><tr><th>Départ</th>' + LENS.map(l => `<td>${l}</td>`).join('') + '</tr><tr><th>Lina</th>' + LENS.map(l => `<td class="ok">${fmt(l * 1.75)}</td>`).join('') + '</tr></table>',
+    from: () => shapeState(ADD3, false), to: () => shapeState(MUL, false), ref: 17.5, dims: [] },
+  { t: 'Un carré parfait !', b: '<p><span class="tag ok">Réussi</span> On obtient un carré de <b>17,5 cm</b> (10 × 1,75). Les pièces ont gardé leur forme : elles sont juste plus grandes.</p><p><b>À retenir :</b> pour agrandir (ou réduire) une figure, on <b>multiplie toutes les longueurs par le même nombre</b>. Les nouvelles longueurs sont <b>proportionnelles</b> aux anciennes, et 1,75 est le <b>coefficient de proportionnalité</b>.</p>',
+    from: () => shapeState(MUL, false), to: () => shapeState(MUL, false), ref: 17.5, dims: [[3.5, 17.75, '7'], [12.25, 17.75, '10,5'], [-0.8, 8.75, '17,5']] },
+];
+const sc1 = makeScene(document.getElementById('scene'));
+let cur = 0;
+const dots = document.getElementById('dots');
+STEPS.forEach((s, i) => { const b = document.createElement('button'); b.textContent = i + 1; b.title = s.t; b.onclick = () => go(i, true); dots.appendChild(b); });
+function go(i, anim) {
+  cur = i; const s = STEPS[i];
+  document.getElementById('capT').textContent = s.t;
+  document.getElementById('capB').innerHTML = s.b;
+  [...dots.children].forEach((b, k) => b.classList.toggle('on', k === i));
+  document.getElementById('prev').disabled = i === 0;
+  document.getElementById('next').disabled = i === STEPS.length - 1;
+  dimLabels(sc1, []);
+  const end = () => { dimLabels(sc1, s.dims); if (s.flash) flash(); };
+  if (anim) animate(sc1, s.from(), s.to(), 1600, s.ref, end); else { sc1.anim = (sc1.anim || 0) + 1; draw(sc1, s.to(), s.ref); end(); }
+}
+function flash() {
+  const ids = Object.keys(sc1.polys); let n = 0;
+  const iv = setInterval(() => { ids.forEach(id => sc1.polys[id].setAttribute('stroke', n % 2 ? '#1d2230' : '#c0392b')); ids.forEach(id => sc1.polys[id].setAttribute('stroke-width', n % 2 ? 0.08 : 0.16)); if (++n > 5) clearInterval(iv); }, 280);
+}
+document.getElementById('prev').onclick = () => go(cur - 1, false);
+document.getElementById('next').onclick = () => go(cur + 1, true);
+document.getElementById('replay').onclick = () => go(cur, true);
+go(0, false);
+
+/* =================== à toi de tester =================== */
+const sc2 = makeScene(document.getElementById('scene2'));
+const sel = document.getElementById('tFrom');
+LENS.forEach(l => { const o = document.createElement('option'); o.value = l; o.textContent = l; if (l === 4) o.selected = true; sel.appendChild(o); });
+let mode = 'add', last = shapeState(ID, false);
+document.querySelectorAll('#tMode button').forEach(b => b.onclick = () => { mode = b.dataset.m; document.querySelectorAll('#tMode button').forEach(x => x.classList.toggle('on', x === b)); test(); });
+sel.onchange = test; document.getElementById('tTo').oninput = test;
+function test() {
+  const a = +sel.value, b = parseFloat(String(document.getElementById('tTo').value).replace(',', '.'));
+  if (!(b > 0) || b > 20) { document.getElementById('tVerdict').textContent = 'Choisis une nouvelle longueur entre 0,5 et 20 cm.'; return; }
+  const k = b / a, d = b - a;
+  const f = mode === 'add' ? (x => x + d) : (x => x * k);
+  // on garde le dessin dans le cadre : réduction d'affichage si besoin
+  const maxv = Math.max(f(10) + f(4), f(2) + f(8), f(10));
+  const z = maxv > 20 ? 20 / maxv : 1;
+  const g = x => f(x) * z;
+  const ok = mode === 'mul' || Math.abs(d) < 1e-9;
+  const next = shapeState(g, false);
+  animate(sc2, last, next, 900, ok ? f(10) * z : 0); last = next;
+  const v = document.getElementById('tVerdict');
+  if (mode === 'add') v.innerHTML = ok ? 'Même longueur : rien ne change.' : `<span class="tag ko">Raté</span> On ajoute ${fmt(d)} cm partout : les pièces ne s'emboîtent plus.`;
+  else v.innerHTML = `<span class="tag ok">Réussi</span> Coefficient : ${fmt(b)} ÷ ${a} ${isCent(k) ? '=' : '≈'} ${fmt(k)}. Le carré mesure ${isCent(10 * k) ? '' : '≈ '}${fmt(10 * k)} cm.`;
+  document.getElementById('tTable').innerHTML = '<table class="m"><tr><th>Départ (cm)</th><th>Nouveau (cm)</th></tr>' +
+    LENS.map(l => { const n = f(l); return `<tr><td>${l}</td><td class="${ok ? 'ok' : 'ko'}">${isCent(n) ? '' : '≈ '}${fmt(n)}</td></tr>`; }).join('') + '</table>' + (z < 1 ? '<p class="small">Le dessin est réduit pour tenir dans le cadre.</p>' : '');
+}
+draw(sc2, last, 10); test();
+</script>
+</body></html>
