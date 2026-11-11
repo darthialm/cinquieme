@@ -37,6 +37,10 @@ Après chaque cours, indique « Fait », « Pas tout fini » ou « Annulé » : 
 ## Les cours
 Mise en page LaTeX (encadrés, couleurs et polices comme ton modèle). Pas de nom ni de prénom sur les cours. Une petite mention « Séance n » indique où commence chaque séance. Les cours ne renvoient plus à un cahier d'activités : chaque « S'entraîner » donne les numéros de la fiche d'exercices du chapitre. Les sources LaTeX sont dans `Sources_LaTeX.zip`.
 
+Exception : le cours de Proportionnalité (5 pages, une page par séance à partir de la séance 3) ne vient plus de LaTeX. Sa source est `sources/cours-Proportionnalite.html` (inutile de déposer ce dossier sur GitHub) : ouverte telle quelle, c'est la version élève ; avec `?prof` à la fin de l'adresse, la version complétée. Pour refaire les PDF : ouvrir chaque version dans Edge ou Chrome, Imprimer, « Enregistrer au format PDF », sans en-têtes ni pieds de page. Si la pagination change, mettre à jour les numéros de page dans `classeur.html` (`PDFP`).
+
+La diapo « Les courses en soldes » (pages 12 et 13 de `projection-Proportionnalite.pdf`) vient aussi d'une page HTML : `sources/diapo-soldes.html` (images dans `sources/img/`). Ouverte telle quelle, ce sont les questions ; avec `?rep`, les réponses. Pour la refaire : imprimer chaque version en PDF, puis remplacer les pages 12 et 13 du PDF de projection.
+
 ## Les contrôles sur papier, avec QR code
 Espace professeur → « Contrôle sur papier » (même principe qu'en 6e) :
 1. Coche les compétences, indique la classe, colle la liste des élèves, coche la version aménagée si besoin.
@@ -44,7 +48,7 @@ Espace professeur → « Contrôle sur papier » (même principe qu'en 6e) :
 3. « Imprimer les sujets » : une page par élève, avec en haut son nom et prénom, juste en dessous un code et un QR code. Tu disposes aussi d'un « Corrigé » et d'un « Fichier pour la correction assistée ».
 4. Colle les résultats (`CODE C1=TB C2=MF…`), vérifie le tableau, puis imprime les étiquettes QR (planche de 21 étiquettes L7160). Le QR ouvre « Mon contrôle » : le bilan de l'élève, le corrigé de son sujet et les exercices à refaire.
 
-Chaque copie est mise dans une boîte de 184 × 270 mm, un peu plus petite qu'une feuille A4 : elle tient sur une page même si le navigateur ajoute ses propres marges (Chrome, Edge, Firefox, Safari). Si le contenu est un peu trop long, il est légèrement réduit. Imprime à l'échelle 100 %, sans « ajuster à la page ».
+Chaque copie est mise dans une boîte de 184 × 270 mm, un peu plus petite qu'une feuille A4 : elle tient sur une page même si le navigateur ajoute ses propres marges (Chrome, Edge, Firefox, Safari). Si le contenu est trop long, il est écrit plus petit, sur toute la largeur de la page. Une copie qui ne tiendrait pas même très réduite (par exemple 36 questions) bloque le bouton « Imprimer » et le signale, plutôt que de perdre des questions. Un bouton « ← Retour au site » est en haut de chaque aperçu. Imprime à l'échelle 100 %, sans « ajuster à la page ».
 
 Rien n'est stocké sur un serveur : les contrôles restent sur l'appareil du professeur, et chaque sujet est recalculé à partir de son code.
 
