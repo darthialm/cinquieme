@@ -8,15 +8,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2026-11-05.2">
-  <link rel="stylesheet" href="chapitres-5e.css?v=2026-11-05.4">
+  <link rel="stylesheet" href="style.css?v=2026-11-17.1">
+  <link rel="stylesheet" href="chapitres-5e.css?v=2026-11-17.1">
 </head>
 <body>
 
 <header class="top">
-  <a href="#/" class="logo"><span class="logo-mark" id="logo-mark">5<sup>e</sup></span><span>Révisions 5<sup>e</sup></span></a>
+  <a href="#/" class="logo"><span class="logo-mark" id="logo-mark"><span>5<sup>e</sup></span></span><span>Révisions 5<sup>e</sup></span></a>
   <a href="#/" class="chap-pill" id="chap-pill" hidden></a>
   <nav id="nav" aria-label="Sections du chapitre"></nav>
+  <span class="top-links">
+    <a href="#/jeux" class="prof-link games-link" title="Tous les jeux du site">🎮 Jeux</a>
+    <a href="#/prof" class="prof-link" title="Espace professeur (protégé par un code)">🔒 Espace prof</a>
+  </span>
 </header>
 
 <main>
@@ -33,6 +37,60 @@
     <div class="chapters" id="chapters"></div>
     <p class="small muted">Ta progression est enregistrée uniquement sur cet appareil.
       <button type="button" id="reset" class="linkbtn">Tout remettre à zéro</button></p>
+  </section>
+
+  <!-- ===================================================== -->
+  <!-- SALLE DE JEUX (jeux repris du site de 6e, hors chapitre) -->
+  <!-- ===================================================== -->
+  <section class="page" data-ch="_" data-p="salle-jeux">
+    <div class="hero">
+      <p class="kicker">Mathématiques · 5<sup>e</sup></p>
+      <h1>🎮 Les jeux</h1>
+      <p class="lead">Des jeux pour entraîner ton œil et tes calculs, en dehors des chapitres.</p>
+    </div>
+    <div class="chapters" id="games-hub"></div>
+  </section>
+
+  <!-- Jeux hors chapitre (listés dans la salle de jeux, adresse #/jeux/<data-p>) -->
+  <section class="page" data-ch="_" data-p="estimangle" data-game="1" data-game-name="Estimangle" data-game-img="jeux-img/estimangle.jpg" data-game-desc="Trouve la mesure exacte d'un angle, sans rapporteur.">
+    <p><a class="chap-pill" href="#/jeux">Tous les jeux</a></p>
+    <h1>📐 Estimangle</h1>
+    <p class="lead">Trouve la mesure exacte d'un angle, sans rapporteur.</p>
+    <div class="game" data-game="estimangle"></div>
+  </section>
+
+  <section class="page" data-ch="_" data-p="droite-parfaite" data-game="1" data-game-name="Droite parfaite" data-game-img="jeux-img/droite-parfaite.jpg" data-game-desc="Trace une parallèle ou une perpendiculaire parfaite, sans équerre.">
+    <p><a class="chap-pill" href="#/jeux">Tous les jeux</a></p>
+    <h1>📏 Droite parfaite</h1>
+    <p class="lead">Trace une parallèle ou une perpendiculaire parfaite, sans équerre.</p>
+    <div class="game" data-game="droite"></div>
+  </section>
+
+  <section class="page" data-ch="_" data-p="pont-des-fractions" data-game="1" data-game-name="Le Pont des Fractions" data-game-img="jeux-img/pont-des-fractions.jpg" data-game-desc="Place des fractions sur la droite graduée, puis zoome à la loupe pour trouver leur écriture décimale… ou dis « pas possible ».">
+    <p><a class="chap-pill" href="#/jeux">Tous les jeux</a></p>
+    <h1>🦊 Le Pont des Fractions</h1>
+    <p class="lead">Aide le petit renard à atteindre le drapeau. Place la fraction sur la droite graduée ; dans les derniers niveaux, zoome ensuite à la loupe pour trouver son écriture décimale… ou dis « pas possible » !</p>
+    <div class="game-frame" data-frame="jeu-fractions/index.html?v=2026-11-17.1">
+      <div class="game-frame-bar">
+        <button type="button" class="btn game-full">⛶ Plein écran</button>
+        <a class="btn" href="jeu-fractions/index.html?v=2026-11-17.1" target="_blank" rel="noopener">Ouvrir dans un nouvel onglet ↗</a>
+      </div>
+      <iframe title="Le Pont des Fractions" allow="fullscreen" allowfullscreen></iframe>
+    </div>
+    <p class="small muted">Clavier : flèches ← → pour régler, Espace ou Entrée pour valider (clique d'abord dans le jeu). 🔊 Le son se coupe avec le bouton en haut à droite du jeu.</p>
+  </section>
+
+  <section class="page" data-ch="_" data-p="aura-rush" data-game="1" data-game-name="Aura Rush" data-game-img="jeux-img/aura-rush.jpg" data-game-desc="4 minutes pour calculer un max de vitesses (v = d ÷ t) et faire exploser ton aura.">
+    <p><a class="chap-pill" href="#/jeux">Tous les jeux</a></p>
+    <h1>⚡ Aura Rush</h1>
+    <p class="lead">Crée ton perso, puis calcule un maximum de vitesses en 4 minutes : chaque bonne réponse fait monter ton aura, chaque erreur la fait baisser !</p>
+    <div class="game-frame" data-frame="https://darthialm.github.io/calculvitesse/">
+      <div class="game-frame-bar">
+        <button type="button" class="btn game-full">⛶ Plein écran</button>
+        <a class="btn" href="https://darthialm.github.io/calculvitesse/" target="_blank" rel="noopener">Ouvrir dans un nouvel onglet ↗</a>
+      </div>
+      <iframe title="Aura Rush" allow="fullscreen" allowfullscreen></iframe>
+    </div>
   </section>
 
   <!-- ===================================================== -->
@@ -911,7 +969,7 @@
   <section class="page" data-ch="_" data-p="prof">
     <h1>Espace professeur</h1>
     <div id="prof-lock" class="card lock-card">
-      <p class="lead">Cet espace est réservé à l'enseignant. Entre le code d'accès (réglé dans <code>reglages.js</code>).</p>
+      <p class="lead">Cet espace est réservé à l'enseignant. Entre le code de l'Espace professeur (réglé dans <code>reglages.js</code>), ou ton <b>code d'accès</b> (le même que sur le site de 6e) : il règle aussi la sauvegarde en ligne sur cet appareil.</p>
       <p><input id="prof-code" class="ans" type="password" autocomplete="off" aria-label="Code d'accès" placeholder="Code d'accès"> <button type="button" class="btn primary" id="prof-unlock">Ouvrir</button></p>
       <p class="lock-msg ko small" aria-live="polite"></p>
     </div>
@@ -921,6 +979,7 @@
         <p>Le planning des séances de la période (mer. 4 nov. → jeu. 17 déc.), minuté, avec les 5 questions Plickers de chaque séance, les devoirs et le suivi de tes classes. On n'y accède que depuis cet espace, une fois le code saisi.</p>
         <p><a class="btn primary" href="classeur.html">Ouvrir le classeur →</a></p>
       </div>
+      <p class="small muted" id="prof-sync" aria-live="polite"></p>
       <div id="p5-ouverture"></div>
       <div id="p5-controles"></div>
       <p class="small muted"><button type="button" class="linkbtn" id="prof-relock">Verrouiller l'Espace professeur sur cet appareil</button></p>
@@ -938,12 +997,13 @@
   <p>Révisions 5<sup>e</sup> — site libre, à modifier et partager. · <a href="#/prof">Espace professeur</a></p>
 </footer>
 
-<script src="reglages.js?v=2026-11-03.1"></script>
-<script src="ouverture.js?v=2026-11-03.1"></script>
-<script src="script.js?v=2026-11-05.2"></script>
-<script src="chapitres-5e.js?v=2026-11-05.5"></script>
-<script src="espace-prof.js?v=2026-11-03.1"></script>
-<script src="qrcode.js?v=2026-11-03.1"></script>
-<script src="controles-5e.js?v=2026-11-05.1"></script>
+<script src="reglages.js?v=2026-11-17.1"></script>
+<script src="ouverture.js?v=2026-11-17.1"></script>
+<script src="script.js?v=2026-11-17.1"></script>
+<script src="chapitres-5e.js?v=2026-11-17.1"></script>
+<script src="espace-prof.js?v=2026-11-17.1"></script>
+<script src="qrcode.js?v=2026-11-17.1"></script>
+<script src="controles-5e.js?v=2026-11-17.1"></script>
+<script src="jeux.js?v=2026-11-17.1"></script>
 </body>
 </html>

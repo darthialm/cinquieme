@@ -2554,6 +2554,19 @@ function renderChapterHome(ch) {
   }).join('');
 }
 
+/** Salle de jeux (#/jeux) : une carte par jeu (miniature, nom, description). Les jeux viennent du site de 6e :
+    ce sont des pages hors chapitre (data-ch="_", adresse #/jeux/<data-p>), toujours ouvertes. */
+function renderGamesHub() {
+  const pages = [...document.querySelectorAll('.page[data-game][data-game-name]')]
+    .map((p) => ({ p, c: CHAPTERS.find((x) => x.id === p.dataset.ch) })).filter((x) => x.p.dataset.ch === '_' || (x.c && !x.c.locked))
+    .sort((a, b) => !a.c - !b.c);
+  document.getElementById('games-hub').innerHTML = pages.map(({ p, c }) => `<a class="game-card" href="${c ? `#/${c.id}/${p.dataset.p}` : `#/jeux/${p.dataset.p}`}">
+      <div class="game-thumb">${p.dataset.gameImg ? `<img src="${p.dataset.gameImg}" alt="" loading="lazy">` : '🎮'}</div>
+      <div class="game-body"><h2>${p.dataset.gameName}</h2>
+      <p>${p.dataset.gameDesc || ''}</p>
+      <span class="stat">Jouer →</span></div></a>`).join('') || '<p class="muted">Aucun jeu n’est ouvert pour l’instant.</p>';
+}
+
 /* =========================================================
    Navigation : #/chapitre/page
    ========================================================= */
@@ -2565,9 +2578,12 @@ function route() {
   if (OLD[h]) { location.replace('#/fractions/' + h); return; }
   if (h === 'accueil') h = '';
   let [ch, p] = h.split('/');
-  const retour = h.startsWith('r/');
-  const special = ch === 'prof' || retour;
-  if (retour) { ch = '_'; p = 'retour'; }
+  const retour = h.startsWith('r/'), mon = h === 'm' || h.startsWith('m/');
+  const hub = h === 'jeux', jeu = h.startsWith('jeux/') && document.querySelector(`.page[data-ch="_"][data-game][data-p="${CSS.escape(h.slice(5))}"]`);
+  const special = ch === 'prof' || retour || mon || hub || !!jeu;
+  if (retour || mon) { ch = '_'; p = 'retour'; }
+  else if (hub) { ch = '_'; p = 'salle-jeux'; }
+  else if (jeu) { ch = '_'; p = jeu.dataset.p; }
   else if (special) { ch = '_'; p = 'prof'; }
   else if (!CHAPTERS.some((c) => c.id === ch && !c.locked)) { ch = ''; p = ''; }
   p = p || 'accueil';
@@ -2578,7 +2594,7 @@ function route() {
   const chap = CHAPTERS.find((c) => c.id === ch);
   const pill = document.getElementById('chap-pill');
   const nav = document.getElementById('nav');
-  document.getElementById('logo-mark').innerHTML = chap ? chap.symbol : '5<sup>e</sup>';
+  document.getElementById('logo-mark').innerHTML = chap ? chap.symbol : '<span>5<sup>e</sup></span>';
   if (chap) {
     const nWeak = weakKeys(ch).length;
     pill.hidden = false; pill.textContent = `Chapitre ${chap.num} · ${chap.title}`; pill.title = 'Changer de chapitre';
@@ -2590,7 +2606,10 @@ function route() {
     pill.hidden = true; nav.innerHTML = '';
     document.title = 'Révisions 5e — Mathématiques';
   }
-  if (retour) { document.title = 'Mon contrôle — Révisions 5e'; const rc = typeof routeRetour === 'function' ? routeRetour(h.slice(2)) : ''; if (rc) document.body.dataset.ch = rc; }
+  if (hub) { document.title = 'Jeux — Révisions 5e'; renderGamesHub(); }
+  else if (jeu) document.title = `${jeu.dataset.gameName} — Révisions 5e`;
+  else if (mon) { document.title = 'Mon contrôle — Révisions 5e'; if (typeof routeMonCtl === 'function') routeMonCtl(decodeURIComponent(h.slice(2))); }
+  else if (retour) { document.title = 'Mon contrôle — Révisions 5e'; const rc = typeof routeRetour === 'function' ? routeRetour(h.slice(2)) : ''; if (rc) document.body.dataset.ch = rc; }
   else if (special) { document.title = 'Espace professeur — Révisions 5e'; if (typeof renderProfLock === 'function') renderProfLock(); }
   else if (!ch) renderChapters();
   else if (p === 'accueil') renderChapterHome(ch);

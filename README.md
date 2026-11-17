@@ -5,7 +5,9 @@ Quatre chapitres s'ajoutent : **4 Proportionnalité · 5 Angles · 6 Fractions (
 Ils sont **fermés aux élèves par défaut** : c'est toi qui décides quand les ouvrir.
 
 ## Ce qu'il faut déposer dans le dépôt GitHub de 5e (tout à la racine, sans dossier)
-- Le site : `index.html`, `script.js`, `style.css`, `chapitres-5e.js`, `chapitres-5e.css`, `espace-prof.js`, `controles-5e.js`, `qrcode.js`, `reglages.js`, `ouverture.js`, `classeur.html`
+- Le site : `index.html`, `script.js`, `style.css`, `chapitres-5e.js`, `chapitres-5e.css`, `espace-prof.js`, `controles-5e.js`, `qrcode.js`, `reglages.js`, `ouverture.js`, `classeur.html`, `jeux.js`, `acces.json`
+- Les dossiers `jeu-fractions/` (3 fichiers) et `jeux-img/` (4 images) : les jeux repris du site de 6e
+- Le dossier `resultats/` est créé tout seul par le bouton « 🌐 Mettre les résultats en ligne »
 - Les documents PDF (22 fichiers) :
   - `cours-eleve-<Chapitre>.pdf` : cours à trous, à imprimer pour les élèves
   - `cours-prof-<Chapitre>.pdf` : le même cours complété (réponses en bleu)
@@ -46,7 +48,7 @@ Espace professeur → « Contrôle sur papier » (même principe qu'en 6e) :
 1. Coche les compétences, indique la classe, colle la liste des élèves, coche la version aménagée si besoin.
 2. « Préparer le contrôle » : durée automatique (≈ 20, 30 ou 45 min), ajustable avec − et +, et vérification que chaque copie tient sur une page A4.
 3. « Imprimer les sujets » : une page par élève, avec en haut son nom et prénom, juste en dessous un code et un QR code. Tu disposes aussi d'un « Corrigé » et d'un « Fichier pour la correction assistée ».
-4. Colle les résultats (`CODE C1=TB C2=MF…`), vérifie le tableau, puis imprime les étiquettes QR (planche de 21 étiquettes L7160). Le QR ouvre « Mon contrôle » : le bilan de l'élève, le corrigé de son sujet et les exercices à refaire.
+4. Colle les résultats (`CODE C1=TB C2=MF…`), vérifie le tableau, puis clique sur **🌐 Mettre les résultats en ligne** (ou imprime les étiquettes QR, planche L7160). Le QR imprimé sur la copie ouvre « Mon contrôle » : le bilan de l'élève, le corrigé de son sujet et les exercices à refaire. L'élève peut aussi taper son code sur `…/#/m`.
 
 Chaque copie est mise dans une boîte de 184 × 270 mm, un peu plus petite qu'une feuille A4 : elle tient sur une page même si le navigateur ajoute ses propres marges (Chrome, Edge, Firefox, Safari). Si le contenu est trop long, il est écrit plus petit, sur toute la largeur de la page. Une copie qui ne tiendrait pas même très réduite (par exemple 36 questions) bloque le bouton « Imprimer » et le signale, plutôt que de perdre des questions. Un bouton « ← Retour au site » est en haut de chaque aperçu. Imprime à l'échelle 100 %, sans « ajuster à la page ».
 
@@ -55,3 +57,23 @@ Rien n'est stocké sur un serveur : les contrôles restent sur l'appareil du pro
 ## L'entraînement des élèves
 - Chaque exercice du site se fait par **séries de 8 questions** : 3 de niveau 1, 3 de niveau 2, 2 de niveau 3. Les nombres et les situations deviennent plus difficiles, et une question ne revient pas deux fois dans la même série. À la fin, l'élève a son bilan (par exemple 7 / 8, détaillé par niveau) ; le site retient sa meilleure série.
 - Le **contrôle blanc** ressemble au contrôle sur papier : 5 compétences du chapitre, 2 questions chacune (une facile, une plus difficile), toutes sur la page, sans indice, avec une durée conseillée et un chronomètre. Quand l'élève rend sa copie, il obtient son niveau dans chaque compétence (TB, MS, MF, MI), le corrigé de chaque question et un lien vers les exercices à refaire.
+
+## Repris du site de 6e (17/11/2026)
+
+### 🎮 Jeux
+Le bouton **🎮 Jeux**, en haut de chaque page, ouvre la salle de jeux (`#/jeux`) : Estimangle, Droite parfaite, Le Pont des Fractions et Aura Rush. Ce sont les jeux du site de 6e, hors chapitre (pages `data-ch="_"` avec `data-game="1"`, adresse `#/jeux/<nom>`), toujours ouverts aux élèves. Fichiers : `jeux.js`, `jeu-fractions/`, `jeux-img/`. Pour mettre à jour le Pont des Fractions, recopier le dossier `jeu-fractions/` du site de 6e (sa source reste dans le dossier de 6e).
+
+### Code d'accès et sauvegarde en ligne
+- À l'entrée de l'Espace professeur, le **code d'accès** du site de 6e marche aussi : il ouvre l'espace et règle la sauvegarde en ligne sur l'appareil (`acces.json`, le même fichier que sur le site de 6e ; s'il change en 6e, recopier `acces.json` ici). Le code `prof5e` de `reglages.js` ouvre toujours l'espace, sans rien régler.
+- L'Espace professeur est enregistré, chiffré, dans le **même dépôt GitHub privé** que le classeur de 6e, fichier `prof-5e.json` : contrôles (avec les résultats collés), listes d'élèves, classes, élèves en version aménagée, et le fichier pour la correction assistée de chaque contrôle. À l'ouverture, toutes les 30 s et après chaque modification.
+- Le **classeur** de 5e se synchronise de la même façon dans `classeur-5e.json` (encadré en bas du classeur). Si deux appareils ont modifié le classeur, il demande quelle version garder.
+- Rien à régler si le site de 6e est déjà synchronisé dans le navigateur : les deux sites sont à la même adresse (darthialm.github.io), ils partagent les réglages.
+- **📁 Mes contrôles** (carte Contrôle sur papier) : réimprimer les sujets, corrigé, fichier IA, supprimer. Les contrôles faits sur un autre appareil y apparaissent.
+
+### Résultats en ligne et page « Mon contrôle »
+- « 🌐 Mettre les résultats en ligne » écrit `resultats/ID.json` dans le dépôt public du site (`darthialm/cinquieme`) : codes anonymes, niveaux et détail ✓/✗, **aucun nom**. Il faut que le jeton GitHub de la sauvegarde ait le droit d'écrire dans ce dépôt (Contents : Read and write) ; sinon le fichier est téléchargé et il faut le déposer dans un dossier `resultats` du site.
+- Le QR imprimé sur la copie mène à `…/#/m/ABC-07`. L'élève peut aussi taper son code sur `…/#/m`. Les copies imprimées avant le 17/11/2026 ont un QR qui ne contient que le code : les élèves tapent leur code, ou tu imprimes les étiquettes.
+- Attention : ces résultats sont publics ; quelqu'un qui devine un code voit les niveaux, sans savoir de quel élève il s'agit.
+
+### Correction avec l'IA
+Le fichier pour la correction assistée reprend les consignes de 6e : question en partie juste = ½ pour le niveau, réponse en 4 parties (à vérifier, lignes à coller, une fiche par élève avec ✓ ½ ✗ et une remarque, bilan pour la classe). Les mêmes règles sont dans `CLAUDE.md`.

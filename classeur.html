@@ -128,6 +128,10 @@ table.ov{border-collapse:collapse;width:100%;min-width:760px;font-size:.92rem}
 table.ov th,table.ov td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
 table.ov thead th{background:var(--accent-soft)}
 table.ov tr.dn td{color:var(--muted)}
+.sync{border-top:1px solid var(--line);padding-top:12px;margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.sync h3{margin:0;font-size:1.05rem}
+#syncAlert{border-color:var(--danger);margin-bottom:10px}
+#syncAlert p{margin:0 0 8px}
 .filebtn{position:relative;overflow:hidden}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 @media (max-width:520px){h1{font-size:1.3rem}details.seance>summary{flex-wrap:wrap}}
@@ -148,6 +152,7 @@ table.ov tr.dn td{color:var(--muted)}
     </div>
     <div class="status" id="status" aria-live="polite">Chargement…</div>
   </div>
+  <div id="syncAlert" class="panel" hidden role="alert"></div>
   <div class="bar" id="classBar"></div>
   <div id="manage" class="panel" hidden></div>
   <div class="tabs" role="tablist" id="tabs"></div>
@@ -157,6 +162,7 @@ table.ov tr.dn td{color:var(--muted)}
     <p class="hint">Tes classes et ton suivi sont enregistrés dans ce navigateur, sur cet appareil. Pour les garder ailleurs ou les passer sur un autre appareil, fais une sauvegarde dans un fichier.</p>
     <div class="row"><button class="btn" id="btnExport">💾 Sauvegarder dans un fichier</button>
     <label class="btn filebtn">📂 Restaurer une sauvegarde<input type="file" id="fileImport" accept="application/json,.json"></label></div>
+    <div class="sync" id="syncBox"></div>
   </div>
 </div>
 <script>
@@ -736,8 +742,10 @@ function applyPeriode() {
 function persist() { clearTimeout(timer); setStatus('Enregistrement…'); timer = setTimeout(flush, 300); }
 function flush() {
   timer = null;
+  let ok = true;
   try { localStorage.setItem(STORE_KEY, JSON.stringify(data, (k, v) => (k === '_plan' ? undefined : v))); setStatus('Enregistré sur cet appareil.'); }
-  catch (e) { setStatus('⚠ Pas enregistré : le navigateur refuse (navigation privée ?). Fais une sauvegarde dans un fichier.'); }
+  catch (e) { ok = false; setStatus('⚠ Pas enregistré : le navigateur refuse (navigation privée ?). Fais une sauvegarde dans un fichier.'); }
+  if (sync) { syncEdits++; sync.dirty = true; saveSync(); if (ok) showSyncStatus(); scheduleSync(4000); }
 }
 function loadLocal() { try { const d = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); if (d && Array.isArray(d.classes)) data = norm(d); } catch (e) { /* rien */ } applyPeriode(); }
 
@@ -1126,9 +1134,164 @@ $('#fileImport').addEventListener('change', async (ev) => {
   ev.target.value = '';
 });
 
+
+/* =========================================================
+   SYNCHRONISATION ENTRE TES APPAREILS (comme le classeur de 6e)
+   Le classeur est envoyé, chiffré (AES-GCM), dans le fichier classeur-5e.json du MÊME dépôt GitHub privé que le
+   classeur de 6e (à côté de classeur.json et prof.json), avec la même clé. Rien à régler ici : la synchronisation
+   suit celle du classeur de 6e sur cet appareil, ou le code d'accès tapé à l'entrée de l'Espace professeur.
+   ========================================================= */
+const SYNC_FILE = 'classeur-5e.json', SYNC_TYPE = 'classeur-5e-sync', SYNC_STATE = 'revisions5e-classeur-sync-etat';
+let sync = null, syncKey = null, syncTimer = null, syncBusy = false, syncAgain = false, syncEdits = 0, syncRetries = 0, syncConflict = null, syncErr = '', started = false;
+const b64u8 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+const u8b64 = (u) => { let s = ''; for (let i = 0; i < u.length; i += 32768) s += String.fromCharCode.apply(null, u.subarray(i, i + 32768)); return btoa(s); };
+const syncStrip = (d) => JSON.parse(JSON.stringify(d, (k, v) => (k === '_plan' ? undefined : v)));
+function syncCfg() {
+  for (const k of ['revisions5e-sync', 'revisions6e-classeur-sync']) {
+    try { const s = JSON.parse(localStorage.getItem(k) || 'null'); if (s && s.repo && s.token && s.key) return { repo: s.repo, token: s.token, salt: s.salt, key: s.key }; } catch (e) { /* rien */ }
+  }
+  return null;
+}
+function saveSync() { try { if (sync) localStorage.setItem(SYNC_STATE, JSON.stringify({ repo: sync.repo, sha: sync.sha, dirty: sync.dirty, last: sync.last })); } catch (e) { /* rien */ } }
+async function loadSync() {
+  sync = null; syncKey = null;
+  const cfg = syncCfg(); if (!cfg || !window.crypto || !crypto.subtle) return;
+  let st = {}; try { st = JSON.parse(localStorage.getItem(SYNC_STATE) || '{}') || {}; } catch (e) { st = {}; }
+  if (st.repo && st.repo !== cfg.repo) st = {};
+  try { syncKey = await crypto.subtle.importKey('raw', b64u8(cfg.key), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']); sync = { ...cfg, sha: st.sha || null, dirty: st.sha ? !!st.dirty : data.classes.length > 0, last: st.last || 0 }; } catch (e) { /* rien */ }
+}
+async function syncEncrypt(obj) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, syncKey, new TextEncoder().encode(JSON.stringify(obj))));
+  const u = new Uint8Array(12 + ct.length); u.set(iv); u.set(ct, 12); return u8b64(u);
+}
+async function syncDecrypt(t) { const u = b64u8(t); return JSON.parse(new TextDecoder().decode(new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: u.slice(0, 12) }, syncKey, u.slice(12))))); }
+function SyncErr(code) { const e = new Error(code); e.code = code; return e; }
+async function ghFetch(path, opt = {}) {
+  try { return await fetch('https://api.github.com/repos/' + sync.repo + path, { method: opt.method || 'GET', body: opt.body, cache: 'no-store', headers: { Authorization: 'Bearer ' + sync.token, Accept: 'application/vnd.github+json', ...(opt.headers || {}) } }); }
+  catch (e) { throw SyncErr('reseau'); }
+}
+const ghErr = (r) => SyncErr(r.status === 401 ? 'jeton' : r.status === 403 || r.status === 429 ? (r.headers.get('x-ratelimit-remaining') === '0' || r.status === 429 ? 'limite' : 'droits') : r.status === 404 ? 'introuvable' : 'github');
+async function ghGet() {
+  const r = await ghFetch('/contents/' + SYNC_FILE);
+  if (r.status === 404) return null;
+  if (!r.ok) throw ghErr(r);
+  const j = await r.json(); let b64 = j.content;
+  if (!b64 || j.encoding !== 'base64') { const r2 = await ghFetch('/git/blobs/' + j.sha); if (!r2.ok) throw ghErr(r2); b64 = (await r2.json()).content; }
+  let file = null; try { file = JSON.parse(atob(String(b64).replace(/\s/g, ''))); } catch (e) { /* rien */ }
+  return { sha: j.sha, file };
+}
+async function ghPut(file, sha) {
+  const body = { message: 'Classeur 5e : enregistrement du ' + new Date().toLocaleString('fr-FR'), content: btoa(JSON.stringify(file)) };
+  if (sha) body.sha = sha;
+  const r = await ghFetch('/contents/' + SYNC_FILE, { method: 'PUT', body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
+  if (r.status === 409 || r.status === 422) throw SyncErr('conflit');
+  if (!r.ok) throw ghErr(r);
+  return (await r.json()).content.sha;
+}
+const syncMsg = (e) => ({ reseau: 'pas de connexion Internet. Nouvel essai automatique.',
+  jeton: 'GitHub refuse le jeton (il a peut-être expiré) : refais l\'accès avec ton code dans l\'Espace professeur.',
+  droits: 'le jeton n\'a pas le droit d\'écrire dans le dépôt privé (Contents : Read and write).',
+  introuvable: 'dépôt privé introuvable avec ce jeton.',
+  limite: 'GitHub limite les envois pour l\'instant. Nouvel essai automatique dans quelques minutes.',
+  code: 'la version en ligne est chiffrée avec une autre clé.',
+  fichier: 'le fichier classeur-5e.json du dépôt est abîmé.' })[e && e.code] || 'GitHub n\'a pas répondu correctement. Nouvel essai automatique.';
+function scheduleSync(ms) { clearTimeout(syncTimer); syncTimer = null; if (sync && started) syncTimer = setTimeout(syncNow, ms); }
+async function syncNow() {
+  clearTimeout(syncTimer); syncTimer = null;
+  if (!sync || !syncKey || !started) return;
+  if (syncBusy) { syncAgain = true; return; }
+  syncBusy = true; syncAgain = false; showSyncStatus();
+  let retry = 0;
+  try {
+    const rem = await ghGet();
+    if (rem && (!rem.file || rem.file.type !== SYNC_TYPE || !rem.file.data)) throw SyncErr('fichier');
+    if (rem && rem.sha !== sync.sha) {
+      let remData; try { remData = norm(await syncDecrypt(rem.file.data)); } catch (e) { throw SyncErr('code'); }
+      if (JSON.stringify(syncStrip(remData)) === JSON.stringify(syncStrip(data))) { sync.sha = rem.sha; sync.dirty = false; saveSync(); }
+      else if (!sync.dirty) adoptRemote(remData, rem.sha);
+      else {
+        const choix = await askConflict(remData, rem.file.date);
+        if (choix === 'rem') { keepCopy(data); adoptRemote(remData, rem.sha); }
+        else { keepCopy(remData); sync.sha = rem.sha; sync.dirty = true; saveSync(); }
+      }
+    }
+    if (!rem || sync.dirty) {
+      const n = syncEdits;
+      const file = { type: SYNC_TYPE, v: 1, salt: sync.salt, date: new Date().toISOString(), data: await syncEncrypt(syncStrip(data)) };
+      sync.sha = await ghPut(file, rem ? rem.sha : null);
+      sync.dirty = syncEdits !== n;
+    }
+    sync.last = Date.now(); saveSync(); syncErr = ''; syncRetries = 0;
+  } catch (e) {
+    syncErr = syncMsg(e);
+    if (e.code === 'conflit' && syncRetries < 2) { syncRetries++; syncAgain = true; }
+    else if (['reseau', 'github', 'limite', 'conflit'].includes(e.code)) retry = e.code === 'limite' ? 300000 : 60000;
+  } finally {
+    syncBusy = false;
+    if (sync) { showSyncStatus(); renderSync(); if (syncAgain) scheduleSync(300); else if (retry) scheduleSync(retry); }
+  }
+}
+function adoptRemote(d, sha) {
+  data = d; applyPeriode(); sync.sha = sha; sync.dirty = false; saveSync();
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(syncStrip(data))); } catch (e) { /* rien */ }
+  if (!data.classes.some((c) => c.id === ui.cls)) ui.cls = data.classes[0] ? data.classes[0].id : null;
+  render();
+}
+function keepCopy(d) { try { localStorage.setItem('revisions5e-classeur-ecarte', JSON.stringify({ date: new Date().toISOString(), data: syncStrip(d) })); } catch (e) { /* rien */ } }
+const resume = (d) => { const n = d.classes.length; return n + ' classe' + (n > 1 ? 's' : ''); };
+function askConflict(remData, date) {
+  return new Promise((res) => {
+    syncConflict = res;
+    const box = $('#syncAlert');
+    const quand = date ? new Date(date).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
+    box.innerHTML = `<p><b>Deux versions différentes du classeur.</b> La version en ligne${quand ? ' (enregistrée le ' + esc(quand) + ')' : ''} et celle de cet appareil ont toutes les deux été modifiées. Laquelle garder ?</p>
+      <div class="row"><button class="btn primary" data-garde="rem">Garder la version en ligne (${esc(resume(remData))})</button>
+      <button class="btn" data-garde="loc">Garder celle de cet appareil (${esc(resume(data))})</button></div>
+      <p class="hint">L'autre version est gardée sur cet appareil (revisions5e-classeur-ecarte). En cas de doute, fais d'abord « 💾 Sauvegarder dans un fichier » (en bas de page).</p>`;
+    box.hidden = false; showSyncStatus();
+  });
+}
+$('#syncAlert').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-garde]'); if (!b || !syncConflict) return;
+  const r = syncConflict; syncConflict = null; $('#syncAlert').hidden = true; $('#syncAlert').innerHTML = ''; r(b.dataset.garde);
+});
+function showSyncStatus() {
+  if (!sync || !started) return;
+  if (syncConflict) setStatus('⚠ Choisis la version du classeur à garder (en haut de la page).');
+  else if (syncErr) setStatus('⚠ Enregistré sur cet appareil, mais pas en ligne : ' + syncErr);
+  else if (syncBusy || sync.dirty) setStatus('Enregistré sur cet appareil · envoi en ligne…');
+  else setStatus('Enregistré sur cet appareil et en ligne ✓');
+}
+function renderSync() {
+  const box = $('#syncBox'); if (!box) return;
+  if (sync) {
+    const last = sync.last ? new Date(sync.last).toLocaleString('fr-FR', { weekday: 'long', hour: '2-digit', minute: '2-digit' }) : 'pas encore';
+    box.innerHTML = `<h3>☁️ Synchronisation entre tes appareils</h3>
+      <p class="hint">Active avec le dépôt privé <b>${esc(sync.repo)}</b> (le même que le classeur de 6e, fichier <code>${SYNC_FILE}</code>, chiffré). Dernière synchronisation : ${esc(last)}.</p>
+      ${syncErr ? `<p class="warn">${esc(syncErr)}</p>` : ''}
+      <div class="row"><button class="btn" id="syncBtn">🔄 Synchroniser maintenant</button></div>`;
+    return;
+  }
+  box.innerHTML = `<h3>☁️ Synchroniser entre tes appareils</h3>
+    <p class="hint">Pas encore active sur cet appareil. Pour l'activer : <a href="index.html#/prof">Espace professeur</a> → « Verrouiller l'Espace professeur sur cet appareil », puis rouvre-le avec ton <b>code d'accès</b> (le même que sur le site de 6e). Si le classeur de 6e est déjà synchronisé dans ce navigateur, recharge simplement cette page.</p>`;
+}
+$('#syncBox').addEventListener('click', (e) => { if (e.target.closest('#syncBtn')) syncNow(); });
+document.addEventListener('visibilitychange', () => {
+  if (!sync || !started) return;
+  if (document.visibilityState === 'visible') syncNow();
+  else { if (timer) { clearTimeout(timer); flush(); } if (sync.dirty) syncNow(); }
+});
+window.addEventListener('online', () => { if (sync && started) syncNow(); });
+setInterval(() => {
+  const a = document.activeElement, tag = a && a.tagName;
+  if (sync && started && !syncBusy && document.visibilityState === 'visible' && !/^(INPUT|TEXTAREA|SELECT)$/.test(tag || '')) syncNow();
+}, 120000);
+
 loadLocal();
 if (!data.classes.length) { /* l'écran « Commence par ta classe » s'affiche */ }
 render();
+(async () => { await loadSync(); started = true; renderSync(); if (sync) { showSyncStatus(); syncNow(); } })();
 
 </script>
 </body>

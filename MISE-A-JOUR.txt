@@ -1,0 +1,21 @@
+MISE À JOUR 2026-11-17.1 : le site de 5e fonctionne comme celui de 6e
+
+À DÉPOSER (dans le dépôt du site de 5e, à la racine) :
+  index.html, script.js, style.css, espace-prof.js, controles-5e.js, classeur.html, README.md
+  et les NOUVEAUX fichiers : jeux.js, acces.json, CLAUDE.md (facultatif)
+  et les NOUVEAUX dossiers : jeu-fractions/ (index.html, jeu.js, jeu.css), jeux-img/ (4 images)
+  (chapitres-5e.js, chapitres-5e.css, qrcode.js, reglages.js, ouverture.js et les PDF ne changent pas)
+
+- 🎮 Jeux : bouton en haut de chaque page, salle de jeux avec Estimangle, Droite parfaite, Le Pont des Fractions et
+  Aura Rush (les jeux du site de 6e, hors chapitre, toujours ouverts).
+- 🔒 Espace prof : bouton en haut de chaque page. Le code d'accès du site de 6e ouvre aussi l'Espace professeur de 5e
+  et règle la sauvegarde en ligne (le code prof5e marche toujours).
+- Espace professeur sauvegardé en ligne, chiffré, dans le même dépôt privé que le classeur de 6e (prof-5e.json) :
+  contrôles et résultats, listes d'élèves, classes, aménagements, fichier pour la correction assistée.
+- Classeur : synchronisation entre appareils (classeur-5e.json, même dépôt privé, même clé), encadré en bas de page.
+- Contrôles : le QR de la copie mène à la page « Mon contrôle » (…/#/m/ABC-07) ; l'élève peut aussi taper son code
+  sur …/#/m. Bouton « 🌐 Mettre les résultats en ligne » (resultats/ID.json, sans aucun nom). Les résultats collés
+  sont gardés avec le contrôle. Nouvelle liste « 📁 Mes contrôles » (sujets, corrigé, fichier IA, supprimer).
+- Fichier pour la correction assistée : mêmes consignes qu'en 6e (½ pour une question en partie juste, réponse en
+  4 parties, une fiche par élève avec des flèches ← →, bilan pour la classe).
+- Logo « 5e » en haut à gauche : le « e » n'est plus sous le 5.
