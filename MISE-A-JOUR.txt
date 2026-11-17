@@ -1,3 +1,12 @@
+MISE À JOUR 2026-11-17.2 : lien de la vidéo du journaliste (pourcentages)
+
+À DÉPOSER : classeur.html
+
+- Classeur, séance N3 (pourcentages) : la vidéo « l'erreur d'un journaliste » est dans les documents de la séance,
+  et dans le contenu de séance École Directe avec l'étape « appliquer un pourcentage ».
+
+=========================================================
+
 MISE À JOUR 2026-11-17.1 : le site de 5e fonctionne comme celui de 6e
 
 À DÉPOSER (dans le dépôt du site de 5e, à la racine) :

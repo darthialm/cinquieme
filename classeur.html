@@ -222,11 +222,12 @@ const SEANCES = [
     cours: 'Partie 2', mat: 'calculatrice',
     prep: 'Projeter la fiche à projeter, séance 3 (diapo « Les courses en soldes »). Vérifier que chacun a ses mesures de chambre (devoir).',
     act: 'Les courses en soldes',
+    liens: [['🎬 Vidéo : l\'erreur d\'un journaliste (pourcentages)', 'https://www.youtube.com/watch?v=gLbsxj8mv-U', 'Vidéo : analyse de l\'erreur d\'un journaliste']],
     actD: '<p>Diapo « Les courses en soldes » : six articles qui plaisent aux élèves (manga 8 €, carte Roblox 25 €, ballon 20 €, sweat 35 €, écouteurs 40 €, baskets 60 €). Plus on achète, plus la remise sur le panier est grande : 1 article −10 %, 2 articles −20 %, 3 −30 %, 4 −40 %, 5 et plus −50 %. Les élèves calculent le prix payé pour trois paniers (7,20 € ; 36 € ; 35,40 €), puis relèvent le défi : composer le plus gros panier avec 50 € (ex. 5 articles pour 96 €, soit 48 € après −50 %). Méthode à faire dire : total du panier → montant de la remise → prix à payer.</p>',
     b: [
       B(5, 'r', 'Vérifier les mesures de la chambre (devoir) ; rappel de la séance précédente', { ed: 'Vérification du travail à la maison (mesures de la chambre).' }),
       B(12, 'a', 'Activité « Les courses en soldes » : remise selon le nombre d\'articles, prix à payer', { ed: 'Activité : calculer le prix d\'un panier en soldes.' }),
-      B(18, 'r', 'Cours partie 2.1 : appliquer un pourcentage (35 % de 600), pourcentages à connaître, calcul d\'une remise', { ed: 'Cours : appliquer un pourcentage ; les pourcentages à connaître (50 %, 25 %, 10 %…).' }),
+      B(18, 'r', 'Cours partie 2.1 : appliquer un pourcentage (35 % de 600), pourcentages à connaître, calcul d\'une remise', { ed: 'Cours : appliquer un pourcentage ; les pourcentages à connaître (50 %, 25 %, 10 %…).', lien: ['Vidéo : analyse de l\'erreur d\'un journaliste', 'https://www.youtube.com/watch?v=gLbsxj8mv-U'] }),
       B(15, 'r', 'Cours partie 2.2 : calculer un pourcentage (8 sur 25 = 32 %)', { ed: 'Cours : calculer un pourcentage.' }),
       B(27, 'e', 'Exercices 10 à 14 (le 15 pour aller plus loin)', { min: 10, ex: ['prop', 10, 15], ed: 'Exercices 10 à 14 de la fiche d\'exercices (15 pour aller plus loin).' }),
       B(8, 'q', 'Plickers (fin) : pourcentages', { ed: 'Questions-bilan sur les pourcentages.' }),
@@ -699,6 +700,7 @@ function docLinks(sid) {
     L.push([`✅ Corrigés (${lab})`, pdfHref(`exercices-corriges-${en}.pdf`, ep.prof['exo:' + e[1]]), 1]);
   });
   Object.keys(PDFP.proj).forEach((pn) => { const pg = PDFP.proj[pn]['seance:' + sid]; if (pg) L.push([`🖥️ Projeter (${pn === n ? 'séance' : pn.replace('Proportionnalite', 'Proportionnalité').replace('Divisibilite', 'Divisibilité')})`, pdfHref(`projection-${pn}.pdf`, pg), 1]); });
+  (s.liens || []).forEach((l) => L.push([l[0], l[1], 0]));
   const seen = new Set();
   return L.filter((l) => !seen.has(l[1]) && seen.add(l[1]));
 }
@@ -833,6 +835,7 @@ function edContenu(x) {
     else if (p.suite) t = t.replace(/\.$/, '') + ' (suite et fin).';
     if (!lines.includes('- ' + t)) lines.push('- ' + t);
   });
+  parts.forEach((p) => { const b = SEANCES.find((q) => q.id === p.sid).b[p.i]; if (b.lien && !p.suite) { const t = '- ' + b.lien[0] + ' : ' + b.lien[1]; if (!lines.includes(t)) lines.push(t); } });
   return lines.join('\n');
 }
 function devPlainLines(sid) { const t = document.createElement('div'); t.innerHTML = DEV[sid].h; return [...t.querySelectorAll('p')].map((p) => p.textContent.trim()); }
