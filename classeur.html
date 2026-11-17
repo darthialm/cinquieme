@@ -810,16 +810,40 @@ function copyQ(spec, btn) {
 }
 
 /* ---------- devoirs ---------- */
-function siteLinks(sid) {
-  const d = DEV[sid]; if (!d.site || !d.site.length) return '';
-  return `<p>Pour s'entraîner sur le site : ${d.site.map(([ch, p]) => `<a href="${esc(SITE_URL + '#/' + ch + '/' + p)}">${esc(PAGES[ch][p])}</a>`).join(' · ')}</p>`;
+/* ---------- Devoir en ligne sur le site (mode devoir, résultats dans le même Grist que la 6e) ----------
+   Exercices de 5e de chaque page d'entraînement (clés de GENS dans script.js / chapitres-5e.js du site de 5e). */
+const PAGE_KEYS = {
+  proportionnalite: { tableaux: ['p-reconnaitre', 'p-coef', 'p-completer'], problemes: ['p-probleme'], pourcentages: ['p-pct-appliquer', 'p-pct-calculer', 'p-solde'], echelles: ['p-echelle-app', 'p-echelle-calc', 'p-vitesse', 'p-duree'] },
+  angles: { triangles: ['a-180', 'a-rect', 'a-iso', 'a-nature'], parallelisme: ['a-vocab', 'a-par-calc', 'a-prouver'] },
+  fractions2: { denominateur: ['f-meme', 'f-couple'], comparer: ['f-comparer', 'f-encadrer'], addsub: ['f-add-meme', 'f-add-1', 'f-add-2', 'f-probleme'] },
+  divisibilite: { division: ['d-euclid', 'd-egalite', 'd-decimal'], multiples: ['d-vocab', 'd-multiples', 'd-diviseurs'], criteres: ['d-criteres', 'd-critere-nb', 'd-premier'] },
+};
+/** nombre de questions d'une séance : 10 pour une page, 15 pour deux, 20 pour trois ou plus */
+const nbQ = (sid) => { const k = (DEV[sid].site || []).length; return k ? Math.min(20, 5 + 5 * k) : 0; };
+/** classe telle qu'elle arrive dans la colonne Classe de Grist : toujours « 5e … » pour la distinguer de la 6e */
+function classeGrist() {
+  const c = cur(); let n = c ? String(c.nom || '').trim().replace(/\//g, '-').replace(/,/g, ' ') : '';
+  if (n && !/^5/.test(n)) n = '5e ' + n;
+  return n;
+}
+/** UN seul lien pour les devoirs de plusieurs séances : toutes leurs notions, questions additionnées (20 au plus) */
+function lienDevoir(sids) {
+  sids = sids.filter((sid) => DEV[sid] && (DEV[sid].site || []).length);
+  const ks = [...new Set(sids.flatMap((sid) => DEV[sid].site.flatMap(([ch, p]) => (PAGE_KEYS[ch] || {})[p] || [])))];
+  if (!ks.length) return null;
+  const n = Math.min(20, sids.reduce((a, sid) => a + nbQ(sid), 0)), cl = classeGrist();
+  return { n, url: SITE_URL + `#/devoir/${ks.join(',')}/${n}` + (cl ? '/c=' + encodeURIComponent(cl) : '') + '/g=1' };
+}
+function siteLinks(sids) {
+  const l = lienDevoir(sids); if (!l) return '';
+  return `<p><b>Exercices en ligne : faire les ${l.n} questions : <a href="${esc(l.url)}">${esc(l.url)}</a></b></p>`;
 }
 function dueText(P, e) {
   if (!e || e.give < 0) return '';
   if (e.due >= 0) return `<p><b>À rendre pour le ${esc(fmtLong(P.cr[e.due].date))}.</b></p>`;
   return '<p><b>À rendre à la rentrée.</b></p>';
 }
-function devoirHtml(sid, P, e) { return DEV[sid].h + siteLinks(sid) + dueText(P, e); }
+function devoirHtml(sid, P, e, lien = true) { return DEV[sid].h + (lien ? siteLinks([sid]) : '') + dueText(P, e); }
 function devoirPlain(html) { const t = document.createElement('div'); t.innerHTML = html; return [...t.querySelectorAll('p')].map((p) => p.textContent).join('\n'); }
 
 /* ---------- École Directe : textes à copier ---------- */
@@ -839,17 +863,17 @@ function edContenu(x) {
   return lines.join('\n');
 }
 function devPlainLines(sid) { const t = document.createElement('div'); t.innerHTML = DEV[sid].h; return [...t.querySelectorAll('p')].map((p) => p.textContent.trim()); }
-function siteLine(sid) {
-  const d = DEV[sid]; if (!d.site || !d.site.length) return '';
-  return `Pour s'entraîner (facultatif) : site Révisions 5e (${SITE_URL}), ${d.site.length > 1 ? 'pages' : 'page'} ${d.site.map(([ch, p]) => `« ${PAGES[ch][p]} »`).join(', ')}.`;
+function siteLine(sids) {
+  const l = lienDevoir(sids); if (!l) return '';
+  return `Exercices en ligne : faire les ${l.n} questions : ${l.url}`;
 }
 function edTravail(P, i, gives, D) {
   const out = [];
   gives.forEach((s) => {
 
     devPlainLines(s.id).forEach((l) => out.push('- ' + l));
-    const sl = siteLine(s.id); if (sl) out.push(sl);
   });
+  const sl = siteLine(gives.map((s) => s.id)); if (sl) out.push(sl);
   const ap = apporter(P, i);
   if (ap) { const t = document.createElement('div'); t.innerHTML = ap; if (out.length) out.push(''); out.push(t.textContent.trim().replace(/^Pour le [^,]*, apporter/, 'Apporter à la prochaine séance')); }
   return out.join('\n');
@@ -932,7 +956,7 @@ function renderCreneaux(c) {
         ${quiz.map((p) => `<div class="box"><h3>Plickers · ${esc(QUIZ[p.sid].titre)} <span class="tag plk">${QUIZ[p.sid].quand} de séance</span></h3>
           <details class="inner"><summary>Voir les 5 questions</summary>${quizHtml(p.sid)}</details></div>`).join('')}
         ${gives.length ? `<div class="box"><h3>Devoir à donner en fin de créneau</h3>
-          <div class="devoir" id="devc-${x.id}">${gives.map((s) => devoirHtml(s.id, P, D[s.id])).join('')}${apporter(P, i)}</div>
+          <div class="devoir" id="devc-${x.id}">${gives.map((s) => devoirHtml(s.id, P, D[s.id], false)).join('')}${siteLinks(gives.map((s) => s.id))}${apporter(P, i)}</div>
           <div class="row">${gives.filter((s) => DEV[s.id].fiche).map((s) => devDocs(s.id)).join('')}</div></div>` : (apporter(P, i) ? `<div class="box"><h3>Pas de devoir ce jour-là</h3><div class="devoir">${apporter(P, i)}</div><p class="hint">Les devoirs sont donnés le jeudi, à rendre la semaine suivante.</p></div>` : '')}
       </div></details>`;
   });
@@ -1088,7 +1112,7 @@ document.addEventListener('click', (ev) => {
   if (t.dataset.copydevs) {
     const sid = t.dataset.copydevs, P = plan(c), e = devoirsPlan(P)[sid] || { due: -1 };
     const lines = devPlainLines(sid).map((l) => '- ' + l);
-    const sl = siteLine(sid); if (sl) lines.push(sl);
+    const sl = siteLine([sid]); if (sl) lines.push(sl);
     copyText(lines.join('\n'), t); return;
   }
   if (t.dataset.copyset) { copyText(quizText(t.dataset.copyset), t); return; }

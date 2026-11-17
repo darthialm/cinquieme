@@ -1,3 +1,23 @@
+MISE À JOUR 2026-11-17.3 : devoirs en ligne (mode devoir, résultats dans Grist)
+
+À DÉPOSER (dans le dépôt du site de 5e, à la racine) :
+  index.html, script.js, chapitres-5e.css, classeur.html, README.md
+  et le NOUVEAU fichier : devoir-5e.js
+
+- Mode devoir, comme sur le site de 6e : un lien …/#/devoir/<exercices>/<nombre>/c=<classe>/g=1 ouvre les questions
+  (exercices de 5e uniquement). L'élève écrit son prénom ; il a droit aux indices et au deuxième essai ; il peut
+  aussi choisir « Je préfère faire ce devoir sur papier ».
+- Le résultat arrive tout seul dans le MÊME document Grist que la 6e (prénom, code, classe, devoir, score, détail).
+  La classe commence toujours par « 5e » (ex. « 5e Judo ») : on distingue ainsi les deux niveaux. Le widget
+  « Mes devoirs » de Grist et l'API les reconnaissent.
+- Classeur : la ligne « Pour s'entraîner (facultatif) : site Révisions 5e… » est remplacée par UN seul lien de devoir
+  en ligne par travail à faire : « Exercices en ligne : faire les N questions : … » (10, 15 ou 20 questions selon
+  le nombre de pages d'exercices, 20 au plus). Le lien porte le nom de la classe du classeur.
+- Les devoirs restent donnés le jeudi pour la semaine suivante : jamais du jour au lendemain.
+- Un devoir marche même si le chapitre est encore fermé aux élèves (le lien de la fiche n'apparaît alors pas).
+
+=========================================================
+
 MISE À JOUR 2026-11-17.2 : lien de la vidéo du journaliste (pourcentages)
 
 À DÉPOSER : classeur.html

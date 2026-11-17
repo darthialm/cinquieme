@@ -5,7 +5,7 @@ Quatre chapitres s'ajoutent : **4 Proportionnalité · 5 Angles · 6 Fractions (
 Ils sont **fermés aux élèves par défaut** : c'est toi qui décides quand les ouvrir.
 
 ## Ce qu'il faut déposer dans le dépôt GitHub de 5e (tout à la racine, sans dossier)
-- Le site : `index.html`, `script.js`, `style.css`, `chapitres-5e.js`, `chapitres-5e.css`, `espace-prof.js`, `controles-5e.js`, `qrcode.js`, `reglages.js`, `ouverture.js`, `classeur.html`, `jeux.js`, `acces.json`
+- Le site : `index.html`, `script.js`, `style.css`, `chapitres-5e.js`, `chapitres-5e.css`, `espace-prof.js`, `controles-5e.js`, `devoir-5e.js`, `qrcode.js`, `reglages.js`, `ouverture.js`, `classeur.html`, `jeux.js`, `acces.json`
 - Les dossiers `jeu-fractions/` (3 fichiers) et `jeux-img/` (4 images) : les jeux repris du site de 6e
 - Le dossier `resultats/` est créé tout seul par le bouton « 🌐 Mettre les résultats en ligne »
 - Les documents PDF (22 fichiers) :
@@ -77,3 +77,9 @@ Le bouton **🎮 Jeux**, en haut de chaque page, ouvre la salle de jeux (`#/jeux
 
 ### Correction avec l'IA
 Le fichier pour la correction assistée reprend les consignes de 6e : question en partie juste = ½ pour le niveau, réponse en 4 parties (à vérifier, lignes à coller, une fiche par élève avec ✓ ½ ✗ et une remarque, bilan pour la classe). Les mêmes règles sont dans `CLAUDE.md`.
+
+## Devoirs en ligne (17/11/2026)
+- Même fonctionnement que le mode devoir du site de 6e : un lien `…/#/devoir/<exercices>/<nombre>/c=<classe>/g=1` (fichier `devoir-5e.js`, exercices de 5e uniquement : clés de `GENS`). Indices et deuxième essai permis, version papier possible, carte de résultat.
+- `/g=1` envoie le résultat au **même formulaire Grist que la 6e** (`GRIST_SITE`, table `Table1`). La colonne Classe commence par « 5e » (« 5e Judo ») pour distinguer les niveaux. Le code de 14 caractères a le même format qu'en 6e : le widget « Mes devoirs » de Grist le reconnaît.
+- Le classeur donne **un seul lien par travail à faire** (« Exercices en ligne : faire les N questions »), avec toutes les notions des pages d'exercices de la séance (`DEV[…].site` → `PAGE_KEYS`), 10 questions pour une page, 15 pour deux, 20 au plus. Un nouvel exercice de 5e doit être ajouté à `PAGE_KEYS` dans `classeur.html` pour entrer dans les devoirs.
+- L'API ÉcoleDirecte lit ces résultats : `GET /v1/devoirs-en-ligne?classe=5e`.

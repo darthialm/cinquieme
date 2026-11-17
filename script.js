@@ -2296,10 +2296,10 @@ function levelPick(gen, level, seen) {
 const SERIE_N = 8;
 const serieLevel = (i) => (i < 3 ? 1 : i < 6 ? 2 : 3);
 function makeExercise(root, gen, opts = {}) {
-  const limit = opts.limit || 0;
+  const limit = opts.limit || 0, noHelp = !!limit && !opts.help; // devoir (opts.help) : indices et 2e essai permis
   const serie = !limit && !opts.weakCh && opts.key ? SERIE_N : 0;
   let seen = new Set(), sHist = [];
-  let cur = null, answered = false, count = 0, good = 0, history = [], used = 0, animSeen = false, tries = 0;
+  let cur = null, answered = false, count = 0, good = 0, history = [], used = 0, animSeen = false, tries = 0, helpedCount = 0;
   if (opts.makeGen) gen = opts.makeGen();
 
   root.innerHTML = `
@@ -2334,7 +2334,7 @@ function makeExercise(root, gen, opts = {}) {
   }
   function hintButton() {
     const n = cur.hints ? cur.hints.length : 0;
-    bHint.hidden = !!limit || !n || answered || !!cur.empty;
+    bHint.hidden = noHelp || !n || answered || !!cur.empty;
     bHint.disabled = used >= n;
     bHint.textContent = used === 0 ? `💡 Un indice (${n})` : used < n ? `💡 Indice suivant (${used + 1}/${n})` : '💡 Plus d\'indice';
   }
@@ -2361,7 +2361,7 @@ function makeExercise(root, gen, opts = {}) {
 
   function filmButton() {
     // avant la réponse : un exemple (autres données) ; après : la correction animée
-    const can = answered ? !!cur.anim : !!cur.example && !limit;
+    const can = answered ? !!cur.anim : !!cur.example && !noHelp;
     bFilm.hidden = !can;
     bFilm.textContent = answered ? '🎬 Voir la construction' : '🎬 Voir un exemple';
   }
@@ -2392,7 +2392,7 @@ function makeExercise(root, gen, opts = {}) {
   function check() {
     if (answered || cur.empty) return;
     // 1er essai : si l'erreur est une erreur classique, on la signale et on laisse un 2e essai
-    if (!limit && tries === 0 && cur.remediate) {
+    if (!noHelp && tries === 0 && cur.remediate) {
       const m = cur.remediate(qEl);
       if (m) {
         tries = 1;
@@ -2411,7 +2411,8 @@ function makeExercise(root, gen, opts = {}) {
     if (k && !limit) saveStat(k, res.ok, h);
     const w = k ? updateWeak(k, res.ok, h) : null;
     if (w && GENS[k]) refreshWeakBadge(GENS[k].ch);
-    if (limit) history.push({ label: label(), ok: res.ok });
+    if (res.ok && h) helpedCount++;
+    if (limit) history.push({ label: label(), ok: res.ok, helped: res.ok && h });
     if (serie) sHist.push({ ok: res.ok, h, lv: serieLevel(count - 1) });
     root.classList.add('done');
     qEl.querySelectorAll('input').forEach((i) => { i.disabled = true; });
@@ -2422,12 +2423,27 @@ function makeExercise(root, gen, opts = {}) {
     filmButton();
     hintButton();
     bNext.disabled = false;
-    bNext.textContent = limit && count >= limit ? 'Voir ma note' : serie && count >= serie ? 'Voir le bilan de la série →' : 'Question suivante →';
+    bNext.textContent = limit && count >= limit ? (opts.summary ? 'Voir mon résultat' : 'Voir ma note') : serie && count >= serie ? 'Voir le bilan de la série →' : 'Question suivante →';
     bar();
     bNext.focus({ preventScroll: true });
   }
 
   function summary() {
+    if (opts.summary) {
+      const list = `<ul class="res-list">${history.map((x) => `<li class="${x.ok ? 'ok' : 'ko'}">${x.label}${x.helped ? ' <span class="small muted">(avec aide)</span>' : ''}</li>`).join('')}</ul>`;
+      qEl.innerHTML = opts.summary({ good, limit, helpedCount, history }).replace('{{LIST}}', list);
+      fb.className = 'ex-fb'; fb.innerHTML = ''; hEl.innerHTML = ''; aEl.innerHTML = '';
+      bCheck.hidden = true; bHint.hidden = true; bFilm.hidden = true;
+      bNext.textContent = opts.restartLabel || 'Recommencer';
+      sEl.textContent = ''; cEl.textContent = '';
+      restart = () => {
+        restart = null; count = 0; good = 0; history = []; helpedCount = 0;
+        if (opts.onRestart) opts.onRestart();
+        if (opts.makeGen) gen = opts.makeGen();
+        render(true);
+      };
+      return;
+    }
     const note = Math.round((good / limit) * 20 * 2) / 2;
     const k = opts.examKey;
     stats[k] = { last: note, best: Math.max(note, stats[k]?.best ?? 0), n: (stats[k]?.n ?? 0) + 1 };
@@ -2578,10 +2594,11 @@ function route() {
   if (OLD[h]) { location.replace('#/fractions/' + h); return; }
   if (h === 'accueil') h = '';
   let [ch, p] = h.split('/');
-  const retour = h.startsWith('r/'), mon = h === 'm' || h.startsWith('m/');
+  const retour = h.startsWith('r/'), mon = h === 'm' || h.startsWith('m/'), devoir = h.startsWith('devoir/') && typeof routeDevoir === 'function';
   const hub = h === 'jeux', jeu = h.startsWith('jeux/') && document.querySelector(`.page[data-ch="_"][data-game][data-p="${CSS.escape(h.slice(5))}"]`);
-  const special = ch === 'prof' || retour || mon || hub || !!jeu;
-  if (retour || mon) { ch = '_'; p = 'retour'; }
+  const special = ch === 'prof' || retour || mon || hub || !!jeu || devoir;
+  if (devoir) { ch = '_'; p = 'devoir'; }
+  else if (retour || mon) { ch = '_'; p = 'retour'; }
   else if (hub) { ch = '_'; p = 'salle-jeux'; }
   else if (jeu) { ch = '_'; p = jeu.dataset.p; }
   else if (special) { ch = '_'; p = 'prof'; }
@@ -2606,7 +2623,8 @@ function route() {
     pill.hidden = true; nav.innerHTML = '';
     document.title = 'Révisions 5e — Mathématiques';
   }
-  if (hub) { document.title = 'Jeux — Révisions 5e'; renderGamesHub(); }
+  if (devoir) { const r = routeDevoir(h.slice(7)); document.title = 'Devoir — Révisions 5e'; if (r.ch) document.body.dataset.ch = r.ch; }
+  else if (hub) { document.title = 'Jeux — Révisions 5e'; renderGamesHub(); }
   else if (jeu) document.title = `${jeu.dataset.gameName} — Révisions 5e`;
   else if (mon) { document.title = 'Mon contrôle — Révisions 5e'; if (typeof routeMonCtl === 'function') routeMonCtl(decodeURIComponent(h.slice(2))); }
   else if (retour) { document.title = 'Mon contrôle — Révisions 5e'; const rc = typeof routeRetour === 'function' ? routeRetour(h.slice(2)) : ''; if (rc) document.body.dataset.ch = rc; }
