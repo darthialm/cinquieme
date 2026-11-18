@@ -1,0 +1,1079 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MathClash Plickers</title>
+<meta name="theme-color" content="#0f1630">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="../reglages.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{
+  --bg:#0f1630; --panel:#18213f; --panel2:#212c52; --line:#2e3a66; --txt:#eef2ff; --mut:#9aa6cf;
+  --ok:#22c55e; --ko:#ef4444; --warn:#f59e0b; --acc:#7c5cff;
+  --A:#ff5d73; --B:#3fa7ff; --C:#2fd18b; --D:#ffc93c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:Lexend,system-ui,Segoe UI,Roboto,sans-serif}
+button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:.7em 1.2em;background:var(--panel2);color:var(--txt);font-weight:600}
+button:hover:not(:disabled){filter:brightness(1.15)}
+button:disabled{opacity:.35;cursor:default}
+.hidden{display:none!important}
+.btn-go{background:var(--acc)} .btn-ok{background:var(--ok);color:#06210f} .btn-warn{background:var(--warn);color:#2a1800}
+input,select{font:inherit;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:.5em .7em}
+.fr{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;line-height:1.05;margin:0 .1em}
+.fr>span:first-child{border-bottom:.08em solid currentColor;padding:0 .15em}
+.fr>span{font-size:.85em}
+
+/* ---------- HOME ---------- */
+#home{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:24px;text-align:center}
+#home h1{font-size:clamp(2rem,6vw,4rem);margin:0;letter-spacing:-.02em}
+#home h1 span{background:linear-gradient(90deg,var(--A),var(--D),var(--C),var(--B));-webkit-background-clip:text;background-clip:text;color:transparent}
+#home p{color:var(--mut);max-width:560px;margin:0}
+.home-choices{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.home-choices button{width:min(300px,86vw);padding:28px 20px;font-size:1.2rem;border:2px solid var(--line);background:var(--panel)}
+.home-choices button b{display:block;font-size:2.4rem;margin-bottom:8px}
+.home-choices small{display:block;color:var(--mut);font-weight:400;font-size:.85rem;margin-top:6px}
+
+/* ---------- SCREEN ---------- */
+#screen{height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.logo{font-weight:800;font-size:1.25rem}
+.logo i{font-style:normal;color:var(--D)}
+.chip{background:var(--panel2);border-radius:999px;padding:.35em .9em;font-size:.95rem;color:var(--mut);white-space:nowrap}
+.chip b{color:var(--txt)}
+.dot{display:inline-block;width:.6em;height:.6em;border-radius:50%;background:var(--ko);margin-right:.4em;vertical-align:middle}
+.dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.spacer{flex:1}
+.topbar button{padding:.45em .9em;font-size:.95rem}
+.split{flex:1;display:grid;grid-template-columns:60% 40%;min-height:0}
+.left{display:flex;flex-direction:column;padding:20px 26px;gap:16px;min-height:0;border-right:1px solid var(--line)}
+.right{display:flex;flex-direction:column;padding:16px 18px;gap:14px;min-height:0;overflow:hidden}
+.qmeta{display:flex;gap:10px;align-items:center;color:var(--mut);font-size:1rem}
+.qmeta .tag{background:var(--panel2);padding:.25em .8em;border-radius:999px;color:var(--txt)}
+.qtext{font-size:clamp(1.6rem,3.2vw,3rem);font-weight:600;line-height:1.25;min-height:2.5em}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.opt{position:relative;display:flex;align-items:center;gap:16px;background:var(--panel);border:3px solid var(--line);border-radius:18px;padding:14px 18px;font-size:clamp(1.3rem,2.4vw,2.2rem);font-weight:600;overflow:hidden;transition:.3s}
+.opt .L{flex:none;width:1.7em;height:1.7em;border-radius:12px;display:grid;place-items:center;font-weight:800;color:#111}
+.opt[data-l=A] .L{background:var(--A)} .opt[data-l=B] .L{background:var(--B)} .opt[data-l=C] .L{background:var(--C)} .opt[data-l=D] .L{background:var(--D)}
+.opt .bar{position:absolute;left:0;bottom:0;height:6px;background:var(--mut);width:0;transition:width .8s}
+.opt .cnt{margin-left:auto;font-size:.7em;color:var(--mut)}
+.opt.good{border-color:var(--ok);background:#123726;box-shadow:0 0 30px #22c55e55}
+.opt.good .bar{background:var(--ok)}
+.opt.dim{opacity:.4}
+.timer{display:flex;align-items:center;gap:16px}
+.tbar{flex:1;height:18px;background:var(--panel2);border-radius:999px;overflow:hidden}
+.tbar div{height:100%;width:100%;background:linear-gradient(90deg,var(--C),var(--D));border-radius:999px}
+.tbar.low div{background:var(--ko)}
+.tnum{font-size:2.4rem;font-weight:800;min-width:2.4em;text-align:right;font-variant-numeric:tabular-nums}
+.phase{font-size:1.1rem;color:var(--mut);min-height:1.4em}
+.ctrls{display:flex;gap:12px;flex-wrap:wrap}
+.ctrls button{font-size:1.15rem;padding:.8em 1.4em}
+.ctrls kbd{font-size:.7em;opacity:.7;margin-left:.4em;font-family:inherit}
+.sol{background:var(--panel);border-left:6px solid var(--ok);border-radius:12px;padding:12px 16px;font-size:clamp(1rem,1.6vw,1.4rem);line-height:1.45}
+.card{background:var(--panel);border-radius:16px;padding:12px 14px;border:1px solid var(--line)}
+.card h3{margin:0 0 10px;font-size:1.05rem;color:var(--mut);font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
+.card h3 b{color:var(--txt);font-size:1.4rem}
+.names{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.nm{background:var(--panel2);border-radius:8px;padding:5px 8px;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.25s;border:2px solid transparent}
+.nm.ans{background:#3b2f86;border-color:var(--acc)}
+.nm.ok{background:#14532d;border-color:var(--ok)}
+.nm.ko{background:#5b1a1a;border-color:var(--ko)}
+.nm.none{opacity:.45}
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end}
+.pod{background:var(--panel2);border-radius:12px;padding:8px;text-align:center;font-size:.95rem}
+.pod .m{font-size:1.6rem}
+.pod .t{color:var(--mut);font-size:.85rem}
+.pod.p1{background:linear-gradient(#4a3a0a,#2c2410);border:2px solid var(--D);padding:14px 8px}
+.standings{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.ladder{display:flex;flex-direction:column;gap:4px;flex:1;min-height:0}
+.rung{display:flex;align-items:center;gap:8px;border-radius:10px;padding:4px 6px;min-height:30px;flex:1}
+.rung .bl{flex:none;width:72px;font-size:.8rem;font-weight:800;text-transform:uppercase;padding:3px 0;text-align:center;border-radius:6px}
+.rung .who{display:flex;flex-wrap:wrap;gap:4px}
+.rung .who span{background:#0008;border-radius:6px;padding:1px 6px;font-size:.8rem}
+.rung .who span.up{outline:2px solid var(--ok)} .rung .who span.dn{outline:2px solid var(--ko)}
+.lb{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:.92rem;overflow:hidden}
+.lb div{display:flex;gap:6px;border-bottom:1px solid var(--line);padding:2px 0}
+.lb .r{color:var(--mut);width:1.6em} .lb .p{margin-left:auto;font-weight:800;font-variant-numeric:tabular-nums}
+.lb .g{color:var(--ok);font-size:.8em}
+.connect-box{display:flex;gap:14px;align-items:center}
+.connect-box svg{background:#fff;border-radius:8px;width:92px;height:92px}
+.cam-float{position:fixed;right:16px;bottom:16px;width:320px;background:#000;border-radius:14px;overflow:hidden;border:2px solid var(--line);z-index:30}
+.cam-float video,.cam-float canvas{display:block;width:100%}
+.cam-float canvas{position:absolute;inset:0;height:100%}
+.cam-float .bar{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--panel);font-size:.8rem;color:var(--mut)}
+.cam-float .bar button{padding:2px 8px;font-size:.8rem}
+.modal{position:fixed;inset:0;background:#000a;display:grid;place-items:center;z-index:50;padding:16px}
+.modal .box{background:var(--panel);border-radius:18px;padding:22px;width:min(640px,100%);max-height:92vh;overflow:auto;border:1px solid var(--line)}
+.modal h2{margin-top:0}
+.row{display:flex;gap:10px;align-items:center;margin:10px 0;flex-wrap:wrap}
+.row label{min-width:150px;color:var(--mut)}
+.themes{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:.92rem}
+.themes label{display:flex;gap:6px;align-items:center}
+.flash{animation:flash .6s}
+@keyframes flash{0%{transform:scale(1.08)}100%{transform:scale(1)}}
+
+/* ---------- PHONE ---------- */
+#phone{position:fixed;inset:0;display:flex;flex-direction:column;background:#000}
+#phConnect{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;background:var(--bg);text-align:center}
+#phConnect input{font-size:2.6rem;width:5.2em;text-align:center;letter-spacing:.3em;font-weight:800}
+#phConnect button{font-size:1.3rem;padding:.9em 2em}
+#phStatus{color:var(--mut);min-height:1.4em}
+#phMain{flex:1;display:flex;flex-direction:column;min-height:0}
+.ph-top{display:flex;gap:8px;align-items:center;padding:8px 12px;background:var(--panel);font-size:.95rem;flex-wrap:wrap}
+.ph-top b{font-size:1.1rem}
+.ph-view{position:relative;flex:1;min-height:0;background:#000}
+.ph-view video,.ph-view canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.ph-start{position:absolute;inset:0;display:grid;place-items:center;z-index:5}
+.ph-start button{font-size:1.4rem;padding:1em 2em;background:var(--acc)}
+.ph-last{position:absolute;left:8px;right:8px;top:8px;display:flex;flex-wrap:wrap;gap:6px;z-index:4;pointer-events:none}
+.ph-last span{background:#14532dcc;border:1px solid var(--ok);border-radius:8px;padding:2px 8px;font-size:.85rem}
+.ph-fps{position:absolute;right:8px;bottom:8px;font-size:.75rem;color:#fff9;z-index:4}
+.ph-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom));background:var(--panel)}
+.ph-btns button{font-size:1.05rem;padding:1.1em .4em;line-height:1.15}
+@media (max-width:900px){
+  #screen{height:auto;min-height:100vh;overflow:visible}
+  .split{display:block}
+  .left{border-right:0}
+  .standings{min-height:420px}
+}
+</style>
+</head>
+<body>
+
+<!-- ======================= ACCUEIL ======================= -->
+<section id="home" class="hidden">
+  <h1>Math<span>Clash</span> Plickers</h1>
+  <p>Montante-Descendante avec les cartes Plickers. Ouvrez le mode <b>Écran</b> sur le PC projeté, puis le mode <b>Caméra</b> sur votre téléphone.</p>
+  <div class="home-choices">
+    <button id="goScreen"><b>🖥️</b>Écran projeté<small>PC du tableau : questions, chrono, classement</small></button>
+    <button id="goPhone"><b>📱</b>Caméra / Télécommande<small>Téléphone du prof : scanne les cartes</small></button>
+  </div>
+</section>
+
+<!-- ======================= ÉCRAN PROJETÉ ======================= -->
+<section id="screen" class="hidden">
+  <div class="topbar">
+    <div class="logo">Math<i>Clash</i></div>
+    <span class="chip" id="modeChip"></span>
+    <span class="chip" id="classChip"></span>
+    <span class="chip">Question <b id="qNum">1</b></span>
+    <a class="chip" href="../index.html#/prof" style="text-decoration:none" title="Retour à l'Espace professeur">← Espace prof</a>
+    <div class="spacer"></div>
+    <div class="connect-box">
+      <div>
+        <div class="chip">Code session : <b id="sessCode" style="font-size:1.3rem;letter-spacing:.12em">····</b></div>
+        <div class="chip" style="margin-top:6px"><span class="dot" id="phoneDot"></span><span id="phoneTxt">Aucun téléphone</span></div>
+      </div>
+      <div id="qr" title="Scannez avec le téléphone"></div>
+    </div>
+    <button id="btnWebcam">📷 Webcam locale</button>
+    <button id="btnSettings">⚙️ Réglages</button>
+    <button id="btnFull" title="Plein écran (F)">⛶</button>
+  </div>
+  <div class="split">
+    <div class="left">
+      <div class="qmeta"><span class="tag" id="qTheme"></span><span id="qLevel"></span></div>
+      <div class="qtext" id="qText"></div>
+      <div class="opts" id="opts"></div>
+      <div class="timer"><div class="tbar" id="tbar"><div id="tfill"></div></div><div class="tnum" id="tnum">30</div></div>
+      <div class="phase" id="phaseTxt"></div>
+      <div class="ctrls">
+        <button class="btn-go" id="btnLaunch">▶ Lancer<kbd>Espace</kbd></button>
+        <button class="btn-ok" id="btnReveal">✔ Révéler &amp; Résoudre<kbd>R</kbd></button>
+        <button class="btn-warn" id="btnNext">⏭ Question suivante<kbd>N</kbd></button>
+      </div>
+      <div class="sol hidden" id="sol"></div>
+    </div>
+    <div class="right">
+      <div class="card"><h3><span id="ansTitle">Réponses reçues</span><b id="ansCount">0 / 27</b></h3><div class="names" id="names"></div></div>
+      <div class="card standings"><h3><span id="stTitle">Classement</span></h3><div id="standings" style="flex:1;min-height:0;display:flex;flex-direction:column"></div></div>
+    </div>
+  </div>
+  <div class="cam-float hidden" id="camFloat">
+    <div style="position:relative"><video id="lvVideo" playsinline muted></video><canvas id="lvOverlay"></canvas></div>
+    <div class="bar"><span id="lvInfo">Webcam locale</span><button id="lvClose">Fermer</button></div>
+  </div>
+  <div class="modal hidden" id="settings">
+    <div class="box">
+      <h2>⚙️ Réglages</h2>
+      <div class="row"><label>Classe</label>
+        <select id="sClass" style="min-width:160px"></select>
+        <button id="sNewClass" type="button">＋ Nouvelle classe</button>
+        <button id="sDelClass" type="button" style="background:#5b1a1a">Supprimer</button></div>
+      <div class="row" style="align-items:flex-start"><label>Élèves et n° de carte</label>
+        <div style="flex:1;min-width:240px">
+          <textarea id="sList" rows="8" style="width:100%;font:inherit;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:.5em .7em" placeholder="Une ligne par élève, prénom puis n° de carte Plickers :&#10;Adélie 12&#10;Celia 23&#10;…"></textarea>
+          <div id="sListMsg" style="color:var(--mut);font-size:.85rem"></div>
+          <div style="color:var(--mut);font-size:.8rem">Copiez la liste de la classe depuis Plickers (« Prénom numéro »). Elle reste sur cet appareil : elle n'est jamais publiée sur le site.</div>
+        </div></div>
+      <div class="row"><label>Durée d'une question</label>
+        <select id="sDur"><option>15</option><option>20</option><option selected>30</option><option>45</option><option>60</option><option>90</option><option>120</option></select> s</div>
+      <div class="row"><label>Niveau</label>
+        <select id="sLvl"><option value="1">1 — Facile</option><option value="2" selected>2 — Moyen</option><option value="3">3 — Difficile</option></select></div>
+      <div class="row"><label>Révélation auto</label><input type="checkbox" id="sAuto"> <span style="color:var(--mut)">à la fin du chrono</span></div>
+      <div class="row"><label>Sans réponse (ceintures)</label>
+        <select id="sNoAns"><option value="stay">reste sur place</option><option value="down">descend</option></select></div>
+      <div class="row"><label style="align-self:flex-start">Thèmes</label><div class="themes" id="sThemes"></div></div>
+      <div class="row" style="margin-top:18px">
+        <button class="btn-go" id="sClose">Enregistrer</button>
+        <button id="sDemo" title="Simule des réponses d'élèves pour tester l'affichage">🎲 Simuler des réponses</button>
+        <button id="sReset" style="background:#5b1a1a">Remettre les ceintures à zéro</button>
+      </div>
+      <p style="color:var(--mut);font-size:.85rem">Lien téléphone : <span id="sLink" style="word-break:break-all"></span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= TÉLÉPHONE ======================= -->
+<section id="phone" class="hidden">
+  <div id="phConnect">
+    <h1 style="margin:0">📱 Caméra MathClash</h1>
+    <p style="color:var(--mut);margin:0">Entrez le code à 4 chiffres affiché au tableau</p>
+    <input id="phCode" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="0000">
+    <button class="btn-go" id="phJoin">Se connecter</button>
+    <div id="phStatus"></div>
+  </div>
+  <div id="phMain" class="hidden">
+    <div class="ph-top">
+      <span class="dot" id="phDot"></span><b id="phPhase">—</b>
+      <span id="phTime" style="font-variant-numeric:tabular-nums"></span>
+      <span class="spacer"></span><span>Réponses <b id="phCount">0/27</b></span>
+    </div>
+    <div class="ph-view" id="phView">
+      <video id="phVideo" playsinline muted></video>
+      <canvas id="phOverlay"></canvas>
+      <div class="ph-last" id="phLast"></div>
+      <div class="ph-fps" id="phFps"></div>
+      <div class="ph-start" id="phStartWrap"><button id="phStart">📷 Activer la caméra</button></div>
+    </div>
+    <div class="ph-btns">
+      <button class="btn-go" id="phLaunch">▶<br>Lancer Question</button>
+      <button class="btn-ok" id="phReveal">✔<br>Révéler &amp; Résoudre</button>
+      <button class="btn-warn" id="phNext">⏭<br>Question Suivante</button>
+    </div>
+  </div>
+</section>
+
+<script>
+"use strict";
+/* =====================================================================
+   DONNÉES : cartes Plickers (version 1) extraites du PDF imprimé.
+   Grille 5x5, ligne par ligne, A en haut, 1 = noir. Coins noirs, centre blanc.
+   ===================================================================== */
+/*DETECTOR_START*/
+const CARD_GRIDS = {1:"1111111111110111111110101",2:"1111111111010111111111101",3:"1111111111010111111110001",4:"1111101111110111111111101",5:"1111101111110111111110001",6:"1111101111010111111111001",7:"1111101111010111111110101",8:"1101111111110111111111101",9:"1101111111110111111110001",10:"1101111111010111111111001",11:"1101111111010111111110101",12:"1101101111110111111111001",13:"1101101111110111111110101",14:"1101101111010111111111101",15:"1101101111010111111110001",16:"1110111111110111111111101",17:"1110111111110111111110001",18:"1110111111010111111111001",19:"1110111111010111111110101",20:"1110101111110111111111001",21:"1110101111110111111110101",22:"1110101111010111111111101",23:"1110101111010111111110001",24:"1100111111110111111111001",25:"1100111111110111111110101",26:"1100111111010111111111101",27:"1100111111010111111110001",28:"1100101111110111111111101",29:"1100101111110111111110001",30:"1100101111010111111111001",31:"1100101111010111111110101",32:"1111111111110101111111101",33:"1111111111110101111110001",34:"1111111111010101111111001",35:"1111111111010101111110101",36:"1111101111110101111111001",37:"1111101111110101111110101",38:"1111101111010101111111101",39:"1111101111010101111110001",40:"1101111111110101111111001"};
+
+/* Rotation horaire de 90° : nouvelle[y][x] = ancienne[4-x][y].
+   Carte tournée de k quarts de tour horaires → lettre en haut : A, D, C, B. */
+const ANSWER_BY_ROT = ["A","D","C","B"];
+function rotCW(s){ let r=""; for(let y=0;y<5;y++) for(let x=0;x<5;x++) r+=s[(4-x)*5+y]; return r; }
+const CODE_MAP = new Map();
+for (const [id, g] of Object.entries(CARD_GRIDS)) {
+  let s = g;
+  for (let k=0;k<4;k++){ CODE_MAP.set(s, {card:+id, ans:ANSWER_BY_ROT[k]}); s = rotCW(s); }
+}
+const FIXED_BLACK = [0,4,20,24, 6,7,8,11,13,16,17,18]; // coins + anneau intérieur (toujours noirs sur ces cartes)
+
+/* =====================================================================
+   DÉTECTEUR : niveaux de gris → seuillage adaptatif (image intégrale)
+   → composantes connexes → quadrilatère (4 coins) → homographie
+   → échantillonnage 5x5 (médiane de 9 points/cellule, seuil local
+   entre noir de référence et blanc de référence = anti-reflets).
+   ===================================================================== */
+const Detector = (() => {
+  let W=0, H=0, gray, integ, bin, lab, pix, bnd;
+  function alloc(w,h){
+    if (w===W && h===H) return;
+    W=w; H=h; const n=w*h;
+    gray=new Uint8Array(n); bin=new Uint8Array(n); lab=new Int32Array(n);
+    pix=new Int32Array(n); bnd=new Int32Array(n); integ=new Uint32Array((w+1)*(h+1));
+  }
+  function homography(q){ // carré unité → quadrilatère q[0..3] (TL,TR,BR,BL)
+    const [x0,y0]=q[0],[x1,y1]=q[1],[x2,y2]=q[2],[x3,y3]=q[3];
+    const sx=x0-x1+x2-x3, sy=y0-y1+y2-y3;
+    let a,b,c,d,e,f,g=0,h=0;
+    if (Math.abs(sx)<1e-9 && Math.abs(sy)<1e-9){ a=x1-x0;b=x3-x0;c=x0;d=y1-y0;e=y3-y0;f=y0; }
+    else {
+      const dx1=x1-x2, dx2=x3-x2, dy1=y1-y2, dy2=y3-y2, den=dx1*dy2-dx2*dy1;
+      if (Math.abs(den)<1e-9) return null;
+      g=(sx*dy2-dx2*sy)/den; h=(dx1*sy-sx*dy1)/den;
+      a=x1-x0+g*x1; b=x3-x0+h*x3; c=x0; d=y1-y0+g*y1; e=y3-y0+h*y3; f=y0;
+    }
+    return (u,v)=>{ const w=g*u+h*v+1; return [(a*u+b*v+c)/w,(d*u+e*v+f)/w]; };
+  }
+  function grayAt(x,y){ x=x|0; y=y|0; if(x<0||y<0||x>=W||y>=H) return -1; return gray[y*W+x]; }
+  function median(a){ a.sort((p,q)=>p-q); return a[a.length>>1]; }
+
+  function detect(data, w, h, opts={}){
+    alloc(w,h);
+    const T = opts.thresh ?? 0.13;
+    const n=w*h;
+    for (let i=0,j=0;i<n;i++,j+=4) gray[i]=(data[j]*77+data[j+1]*150+data[j+2]*29)>>8;
+    const IW=w+1;
+    for (let y=0;y<h;y++){ let rs=0; const r0=y*w, a=y*IW, b=(y+1)*IW;
+      for (let x=0;x<w;x++){ rs+=gray[r0+x]; integ[b+x+1]=integ[a+x+1]+rs; } }
+    // deux fenêtres : petite (cartes lointaines, éclairage variable) + grande (cartes proches)
+    const R=Math.max(7,(Math.min(w,h)/8)|0), R2=Math.max(R+1,(Math.min(w,h)/2.5)|0), k=1-T;
+    const box=(x,y,r)=>{ const x0=x>r?x-r:0, x1=x+r+1<w?x+r+1:w, y0=y>r?y-r:0, y1=y+r+1<h?y+r+1:h;
+      return (integ[y1*IW+x1]-integ[y0*IW+x1]-integ[y1*IW+x0]+integ[y0*IW+x0])/((x1-x0)*(y1-y0)); };
+    for (let y=0;y<h;y++){
+      for (let x=0;x<w;x++){
+        const g=gray[y*w+x];
+        bin[y*w+x] = (g < box(x,y,R)*k || g < box(x,y,R2)*(k-0.05)) ? 1 : 0;
+      }
+    }
+    lab.fill(0);
+    const out=[]; let id=0;
+    const minA=opts.minArea ?? 90, maxA=n*0.6;
+    for (let s=0;s<n;s++){
+      if (!bin[s] || lab[s]) continue;
+      id++; lab[s]=id; pix[0]=s; let head=0, tail=1;
+      let minx=w,maxx=0,miny=h,maxy=0, sx=0, sy=0;
+      while (head<tail){
+        const p=pix[head++], x=p%w, y=(p/w)|0;
+        sx+=x; sy+=y; if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y;
+        if (x>0   && bin[p-1] && !lab[p-1]){ lab[p-1]=id; pix[tail++]=p-1; }
+        if (x<w-1 && bin[p+1] && !lab[p+1]){ lab[p+1]=id; pix[tail++]=p+1; }
+        if (y>0   && bin[p-w] && !lab[p-w]){ lab[p-w]=id; pix[tail++]=p-w; }
+        if (y<h-1 && bin[p+w] && !lab[p+w]){ lab[p+w]=id; pix[tail++]=p+w; }
+      }
+      const area=tail, bw=maxx-minx+1, bh=maxy-miny+1;
+      if (area<minA || area>maxA || bw<9 || bh<9) continue;
+      if (Math.max(bw,bh)/Math.min(bw,bh) > 3.2) continue;
+      const fill=area/(bw*bh); if (fill<0.3 || fill>0.97) continue;
+      const det = analyse(area, sx/area, sy/area);
+      if (det) out.push(det);
+    }
+    return out;
+  }
+
+  function analyse(area, cx, cy){
+    // pixels de bord
+    let nb=0;
+    for (let i=0;i<area;i++){
+      const p=pix[i], x=p%W, y=(p/W)|0;
+      if (x===0||x===W-1||y===0||y===H-1||!bin[p-1]||!bin[p+1]||!bin[p-W]||!bin[p+W]) bnd[nb++]=p;
+    }
+    if (nb<12) return null;
+    let p1=0,best=-1;
+    for (let i=0;i<nb;i++){ const p=bnd[i], dx=p%W-cx, dy=((p/W)|0)-cy, d=dx*dx+dy*dy; if(d>best){best=d;p1=p;} }
+    const x1=p1%W, y1=(p1/W)|0; let p2=0; best=-1;
+    for (let i=0;i<nb;i++){ const p=bnd[i], dx=p%W-x1, dy=((p/W)|0)-y1, d=dx*dx+dy*dy; if(d>best){best=d;p2=p;} }
+    const x2=p2%W, y2=(p2/W)|0; let p3=0,p4=0,bmax=-Infinity,bmin=Infinity;
+    for (let i=0;i<nb;i++){ const p=bnd[i], cr=(x2-x1)*((p/W|0)-y1)-(y2-y1)*(p%W-x1); if(cr>bmax){bmax=cr;p3=p;} if(cr<bmin){bmin=cr;p4=p;} }
+    let q=[[x1,y1],[p3%W,(p3/W)|0],[x2,y2],[p4%W,(p4/W)|0]];
+    // ordre horaire (y vers le bas) autour du centre
+    const mx=(q[0][0]+q[1][0]+q[2][0]+q[3][0])/4, my=(q[0][1]+q[1][1]+q[2][1]+q[3][1])/4;
+    q.sort((a,b)=>Math.atan2(a[1]-my,a[0]-mx)-Math.atan2(b[1]-my,b[0]-mx));
+    // le bord dont le milieu est le plus haut devient le bord supérieur (TL→TR)
+    let top=0, tb=Infinity;
+    for (let i=0;i<4;i++){ const m=(q[i][1]+q[(i+1)%4][1])/2; if(m<tb){tb=m;top=i;} }
+    q=[q[top],q[(top+1)%4],q[(top+2)%4],q[(top+3)%4]];
+    // contrôles géométriques
+    let qa=0; for(let i=0;i<4;i++){ const a=q[i],b=q[(i+1)%4]; qa+=a[0]*b[1]-b[0]*a[1]; } qa=Math.abs(qa)/2;
+    if (qa<50) return null;
+    const ratio=area/qa; if (ratio<0.5 || ratio>1.08) return null;
+    const L=i=>Math.hypot(q[i][0]-q[(i+1)%4][0], q[i][1]-q[(i+1)%4][1]);
+    const s0=L(0),s1=L(1),s2=L(2),s3=L(3);
+    if (Math.min(s0,s1,s2,s3)<8) return null;
+    if (s0/s2>2||s2/s0>2||s1/s3>2||s3/s1>2) return null;
+    // les coins = centres de pixels → on pousse d'un demi-pixel vers l'extérieur
+    q=q.map(([x,y])=>{ const dx=x-mx, dy=y-my, d=Math.hypot(dx,dy)||1; return [x+dx/d*0.7, y+dy/d*0.7]; });
+    const H_=homography(q); if(!H_) return null;
+    const vals=new Array(25), off=[-0.22,0,0.22], tmp=[];
+    for (let r=0;r<5;r++) for (let c=0;c<5;c++){
+      tmp.length=0;
+      for (const dv of off) for (const du of off){ const [x,y]=H_((c+0.5+du)/5,(r+0.5+dv)/5); const g=grayAt(x,y); if(g>=0) tmp.push(g); }
+      if (tmp.length<5) return null;
+      vals[r*5+c]=median(tmp);
+    }
+    // Modèle d'éclairage : un plan pour le niveau noir (12 cellules toujours noires),
+    // un plan pour le niveau blanc (marge de papier autour de la grille + centre).
+    const bp=FIXED_BLACK.map(i=>[(i%5+0.5)/5,((i/5|0)+0.5)/5,vals[i]]);
+    let wp=[[0.5,0.5,vals[12]]];
+    for (let t=0.1;t<1;t+=0.2) for (const [u,v] of [[t,-0.08],[1.08,t],[t,1.08],[-0.08,t]]){ const [x,y]=H_(u,v); const g=grayAt(x,y); if(g>=0) wp.push([u,v,g]); }
+    if (wp.length<8) return null;
+    const wm=median(wp.map(p=>p[2])); wp=wp.filter(p=>p[2]>wm-45); // ignore doigts / objets sombres dans la marge
+    const B=fitPlane(bp), Wt=fitPlane(wp);
+    if (Wt(0.5,0.5)-B(0.5,0.5)<28) return null;
+    let code="";
+    for (let i=0;i<25;i++){ const u=(i%5+0.5)/5, v=((i/5|0)+0.5)/5; code += vals[i] < (B(u,v)+Wt(u,v))/2 ? "1" : "0"; }
+    let hit=CODE_MAP.get(code);
+    if (!hit){ // 2e lecture : vote majoritaire sur l'image binarisée localement
+      code="";
+      for (let r=0;r<5;r++) for (let c=0;c<5;c++){ let s=0,nn=0;
+        for (const dv of off) for (const du of off){ const [x,y]=H_((c+0.5+du)/5,(r+0.5+dv)/5); const xi=x|0, yi=y|0; if(xi>=0&&yi>=0&&xi<W&&yi<H){ s+=bin[yi*W+xi]; nn++; } }
+        code += s*2>nn ? "1" : "0"; }
+      hit=CODE_MAP.get(code);
+    }
+    if (!hit) return null;
+    return {card:hit.card, ans:hit.ans, corners:q, code};
+  }
+  function fitPlane(pts){ // moindres carrés g = a + b·u + c·v
+    let n=0,su=0,sv=0,sg=0,suu=0,svv=0,suv=0,sug=0,svg=0;
+    for (const [u,v,g] of pts){ n++; su+=u; sv+=v; sg+=g; suu+=u*u; svv+=v*v; suv+=u*v; sug+=u*g; svg+=v*g; }
+    const M=[[n,su,sv],[su,suu,suv],[sv,suv,svv]], Y=[sg,sug,svg];
+    const det3=m=>m[0][0]*(m[1][1]*m[2][2]-m[1][2]*m[2][1])-m[0][1]*(m[1][0]*m[2][2]-m[1][2]*m[2][0])+m[0][2]*(m[1][0]*m[2][1]-m[1][1]*m[2][0]);
+    const D=det3(M); if (Math.abs(D)<1e-9){ const mean=sg/n; return ()=>mean; }
+    const col=(k)=>M.map((row,i)=>row.map((x,j)=>j===k?Y[i]:x));
+    const a=det3(col(0))/D, b=det3(col(1))/D, c=det3(col(2))/D;
+    return (u,v)=>a+b*u+c*v;
+  }
+  return { detect, get gray(){return gray;} };
+})();
+
+/* Validation sur 2 images consécutives + horodatage de la 1re image. */
+class Tracker {
+  constructor(){ this.reset(); }
+  reset(){ this.cand=new Map(); this.confirmed=new Map(); this.frame=0; }
+  update(dets, now){
+    this.frame++; const fresh=[];
+    for (const d of dets){
+      let c=this.cand.get(d.card);
+      if (c && c.ans===d.ans && c.last===this.frame-1){ c.n++; c.last=this.frame; }
+      else { c={ans:d.ans, n:1, last:this.frame, first:now}; this.cand.set(d.card,c); }
+      d.confirmed = c.n>=2;
+      if (d.confirmed && this.confirmed.get(d.card)!==d.ans){
+        this.confirmed.set(d.card,d.ans);
+        fresh.push({card:d.card, ans:d.ans, ts:c.first});
+      }
+    }
+    return fresh;
+  }
+}
+/*DETECTOR_END*/
+
+/* =====================================================================
+   LISTES DE CLASSE : n° de carte Plickers → prénom.
+   Le site est public : AUCUN prénom n'est écrit dans ce fichier. Les listes sont
+   saisies dans ⚙️ Réglages et restent dans le navigateur du professeur
+   (clé localStorage « revisions5e-plickers »). Le téléphone les reçoit de l'écran.
+   ===================================================================== */
+let ROSTER = [];
+const NAME = {};
+function setRoster(list){
+  ROSTER = [...list].sort((a,b)=>a.name.localeCompare(b.name,"fr"));
+  for (const k in NAME) delete NAME[k];
+  for (const s of ROSTER) NAME[s.id]=s.name;
+}
+/** « Adélie 12 », « 12 Adélie », « 12 - Adélie », « Adélie ; 12 »… une ligne par élève */
+function parseRoster(txt){
+  const out=[], seen=new Set(), errors=[];
+  for (const raw of String(txt).split(/\r?\n/)){
+    const line=raw.trim(); if(!line) continue;
+    let m=line.match(/^(.*?)[\s:;,.\-–\t]+(\d{1,2})$/) || line.match(/^(\d{1,2})[\s:;,.\-–\t]+(.+)$/);
+    if (!m){ errors.push(line); continue; }
+    let [id,name] = /^\d+$/.test(m[1]) ? [+m[1],m[2]] : [+m[2],m[1]];
+    name=name.trim();
+    if (!name || id<1 || id>40 || seen.has(id)){ errors.push(line); continue; }
+    seen.add(id); out.push({id,name});
+  }
+  return {list:out, errors};
+}
+const BELTS = [
+  {n:"Blanche",bg:"#f1f5f9",fg:"#111"},{n:"Jaune",bg:"#facc15",fg:"#111"},{n:"Orange",bg:"#fb923c",fg:"#111"},
+  {n:"Verte",bg:"#22c55e",fg:"#062"},{n:"Bleue",bg:"#3b82f6",fg:"#fff"},{n:"Marron",bg:"#92400e",fg:"#fff"},{n:"Noire",bg:"#0a0a0a",fg:"#fff"}
+];
+const PEER_PREFIX = "mathclash5e-v1-";
+
+/* =====================================================================
+   UTILITAIRES
+   ===================================================================== */
+const $ = id => document.getElementById(id);
+const rnd = (a,b) => a+Math.floor(Math.random()*(b-a+1));
+const pick = a => a[rnd(0,a.length-1)];
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=rnd(0,i);[a[i],a[j]]=[a[j],a[i]];} return a; };
+const nf = n => { if (typeof n==="string") return n; n=Math.round(n*100)/100; return String(Math.abs(n)).replace(".",",").replace(/^/, n<0?"−":""); };
+const rel = n => n<0 ? `(−${nf(-n)})` : `(+${nf(n)})`;
+const fr = (a,b) => `<span class="fr"><span>${nf(a)}</span><span>${nf(b)}</span></span>`;
+const euro = n => n.toFixed(2).replace(".",",")+" €";
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const gcd = (a,b) => b ? gcd(b,a%b) : Math.abs(a);
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+let audioCtx=null;
+function beep(freq=1250, dur=0.07, vol=0.15, type="sine"){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if (audioCtx.state==="suspended") audioCtx.resume();
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type; o.frequency.value=freq; g.gain.value=vol;
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur);
+    o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+dur+0.02);
+  }catch(e){}
+}
+
+/* =====================================================================
+   GÉNÉRATEUR DE QUESTIONS — programme de 5ème
+   Chaque générateur renvoie {text, good, bad[], sol}
+   ===================================================================== */
+function nums(g, cands, fmt=nf){
+  const seen=new Set([fmt(g)]), out=[];
+  const all=[...cands, g+1, g-1, g+2, g-2, g+10, g-10, g*2, g+5, g-5];
+  for (const c of all){ if(!Number.isFinite(c)) continue; const s=fmt(c); if(!seen.has(s)){ seen.add(s); out.push(s); } }
+  return out;
+}
+const GEN = {
+  prop:{label:"Proportionnalité", f(L){
+    const t=rnd(0,[2,4,5][L-1]);
+    if (t===0){ // prix unitaire
+      const it=pick(["cahiers","stylos","croissants","places de cinéma","bouteilles d'eau"]); const unit=pick(L===1?[1,2,3,5]:[0.5,1.5,2.5,1.2,0.8,3.5]);
+      const n1=rnd(2,6); let n2; do{ n2=rnd(2,12);}while(n2===n1);
+      const p1=unit*n1, g=unit*n2;
+      return {text:`${n1} ${it} coûtent ${euro(p1)}. Combien coûtent ${n2} ${it} ?`, good:euro(g),
+        bad:nums(g,[p1+(n2-n1), p1*n2, p1/n2*n1, g+unit, g-unit, p1+n2], euro),
+        sol:`Prix d'un seul : ${euro(p1)} ÷ ${n1} = ${euro(unit)}. Donc ${n2} × ${euro(unit)} = <b>${euro(g)}</b>.`};
+    }
+    if (t===1){ // recette
+      const ing=pick([["farine","g",50],["sucre","g",25],["lait","mL",100],["chocolat","g",20]]);
+      const p1=pick([2,4,6]), per=ing[2]*rnd(1,L===1?3:5); const q1=per*p1/2;
+      let p2; do{ p2=pick(L===1?[2,4,6,8,10,12]:[3,5,6,8,9,10,12]);}while(p2===p1);
+      const g=q1/p1*p2, u=ing[1];
+      return {text:`Pour ${p1} personnes, il faut ${nf(q1)} ${u} de ${ing[0]}. Combien en faut-il pour ${p2} personnes ?`, good:nf(g)+" "+u,
+        bad:nums(g,[q1+(p2-p1), q1*p2, q1*2, q1+p2, g+q1/p1*2],v=>nf(v)+" "+u),
+        sol:`Pour 1 personne : ${nf(q1)} ÷ ${p1} = ${nf(q1/p1)} ${u}. Pour ${p2} personnes : ${p2} × ${nf(q1/p1)} = <b>${nf(g)} ${u}</b>.`};
+    }
+    if (t===2){ // 4e proportionnelle dans un tableau
+      const k=L===3?pick([1.5,2.5,0.5,1.2]):rnd(2,9), a=rnd(2,9); let b; do{ b=rnd(2,12);}while(b===a);
+      const ka=k*a, g=k*b;
+      return {text:`Tableau de proportionnalité :<br><span style="font-size:.85em">${a} → ${nf(ka)} &nbsp;&nbsp;|&nbsp;&nbsp; ${b} → ?</span>`, good:nf(g),
+        bad:nums(g,[ka+(b-a), ka*b, ka+b, b*a, g+k]),
+        sol:`On passe de la 1re ligne à la 2e en multipliant par ${nf(ka)} ÷ ${a} = ${nf(k)}. Donc ${b} × ${nf(k)} = <b>${nf(g)}</b>.`};
+    }
+    if (t===3){ // coefficient
+      const k=pick([1.5,2,2.5,3,4,0.5,5]), a=rnd(2,8); let b; do{ b=rnd(2,10);}while(b===a);
+      return {text:`Quel est le coefficient de proportionnalité ?<br><span style="font-size:.85em">${a} → ${nf(k*a)} &nbsp;&nbsp;|&nbsp;&nbsp; ${b} → ${nf(k*b)}</span>`, good:nf(k),
+        bad:nums(k,[1/k, k*a-a, k*a, k+1, k*b-k*a]),
+        sol:`Le coefficient est le nombre par lequel on multiplie : ${nf(k*a)} ÷ ${a} = <b>${nf(k)}</b> (et ${nf(k*b)} ÷ ${b} = ${nf(k)} ✔).`};
+    }
+    if (t===4){ // vitesse constante
+      const v=pick([4,5,10,12,15,20,25,30]), h1=rnd(2,4); let h2; do{ h2=rnd(1,6);}while(h2===h1);
+      const d1=v*h1, g=v*h2;
+      return {text:`À vitesse constante, un cycliste parcourt ${d1} km en ${h1} h. Quelle distance parcourt-il en ${h2} h ?`, good:g+" km",
+        bad:nums(g,[d1+(h2-h1), d1*h2, d1+h2, g+v],v2=>nf(v2)+" km"),
+        sol:`En 1 h : ${d1} ÷ ${h1} = ${v} km. En ${h2} h : ${h2} × ${v} = <b>${g} km</b>.`};
+    }
+    // reconnaître un tableau de proportionnalité
+    const k=rnd(2,6), a=rnd(1,5), b=a+rnd(1,5), tab=(x,y,z,w)=>`${x} → ${y} ; ${z} → ${w}`;
+    const good=tab(a,k*a,b,k*b);
+    const bad=[tab(a,k*a,b,k*a+(b-a)), tab(a,a+k,b,b+k), tab(a,k*a,b,k*b+1), tab(a,k*a+1,b,k*b+1), tab(a,k*a,b,(k+1)*b)];
+    return {text:`Lequel de ces tableaux est un tableau de proportionnalité ?`, good, bad,
+      sol:`Dans un tableau de proportionnalité, on multiplie toujours par le même nombre : ${k*a} ÷ ${a} = ${k} et ${k*b} ÷ ${b} = ${k}. Réponse : <b>${good}</b>.`};
+  }},
+  pct:{label:"Pourcentages", f(L){
+    const t=pick([[0,0,1,4],[0,1,2,3,4],[0,1,2,3]][L-1]);
+    if (t===0){ // p % de N
+      const p=pick(L===1?[10,50,25]:L===2?[5,10,15,20,25,30,40,75]:[12,15,35,45,60,5]), N=pick([20,40,60,80,120,140,160,200,240,300,360,400]);
+      const g=p*N/100;
+      return {text:`Calcule ${p} % de ${N}.`, good:nf(g), bad:nums(g,[p*N/10,N/p,N-p,N-g,N+p]),
+        sol:`${p} % de ${N} = ${fr(p,100)} × ${N} = ${p*N} ÷ 100 = <b>${nf(g)}</b>.`};
+    }
+    if (t===1 || t===2){ // réduction / augmentation
+      const down=t===1, p=pick(L===1?[10,50]:[10,20,25,30,40,5,15]), P=pick([20,40,60,80,120,150,200,240]);
+      const r=p*P/100, g=down?P-r:P+r, it=pick(["un kimono","un sac de sport","une paire de baskets","un jeu vidéo"]);
+      return {text: down ? `${it[0].toUpperCase()+it.slice(1)} coûte ${P} €. Il est soldé à −${p} %. Quel est son nouveau prix ?`
+                         : `Le prix d'${it.replace(/^une? /,m=>m==="une "?"une ":"un ")} de ${P} € augmente de ${p} %. Quel est le nouveau prix ?`,
+        good:nf(g)+" €", bad:nums(g,[r, down?P-p:P+p, down?P+r:P-r, P],v=>nf(v)+" €"),
+        sol:`${p} % de ${P} € = ${nf(r)} €. Nouveau prix : ${P} ${down?"−":"+"} ${nf(r)} = <b>${nf(g)} €</b>.`};
+    }
+    if (t===3){ // calculer un pourcentage
+      const tot=pick([20,25,50,200,40]), part=pick([...Array(tot).keys()].filter(x=>x>0&&(x*100)%tot===0&&x<tot)), g=part*100/tot;
+      const sport=pick(["font du judo","viennent en bus","ont un chat","sont demi-pensionnaires"]);
+      return {text:`Sur ${tot} élèves, ${part} ${sport}. Quel pourcentage cela représente-t-il ?`, good:nf(g)+" %",
+        bad:nums(g,[part, tot-part, 100-g, part/tot, g/2],v=>nf(v)+" %"),
+        sol:`${fr(part,tot)} = ${fr(g,100)}, donc <b>${nf(g)} %</b>.`};
+    }
+    // équivalences
+    const E=[[50,"la moitié"],[25,"le quart"],[75,"les trois quarts"],[10,"le dixième"],[20,"le cinquième"]];
+    const [p,good]=pick(E);
+    return {text:`Prendre ${p} % d'une quantité, c'est prendre…`, good, bad:E.filter(e=>e[0]!==p).map(e=>e[1]),
+      sol:`${p} % = ${fr(p,100)} = ${{50:fr(1,2),25:fr(1,4),75:fr(3,4),10:fr(1,10),20:fr(1,5)}[p]} : c'est <b>${good}</b>.`};
+  }},
+  rel_add:{label:"Relatifs : addition", f(L){
+    const m=[10,25,60][L-1]; let a=rnd(-m,m)||-3, b=rnd(-m,m)||7; if(Math.sign(a)===Math.sign(b)&&Math.random()<.6) b=-b;
+    const g=a+b, same=Math.sign(a)===Math.sign(b);
+    return {text:`Calcule : ${rel(a)} + ${rel(b)}`, good:nf(g),
+      bad:nums(g,[a-b,-g,b-a,-(Math.abs(a)+Math.abs(b)),Math.abs(a)+Math.abs(b)]),
+      sol: same ? `Même signe : on additionne les distances à zéro (${nf(Math.abs(a))} + ${nf(Math.abs(b))} = ${nf(Math.abs(g))}) et on garde le signe commun. Résultat : <b>${nf(g)}</b>.`
+                : `Signes contraires : on soustrait les distances à zéro (${nf(Math.max(Math.abs(a),Math.abs(b)))} − ${nf(Math.min(Math.abs(a),Math.abs(b)))}) et on prend le signe du nombre le plus éloigné de zéro. Résultat : <b>${nf(g)}</b>.`};
+  }},
+  rel_sub:{label:"Relatifs : soustraction", f(L){
+    const m=[10,25,60][L-1]; const a=rnd(-m,m)||5, b=rnd(-m,m)||-4, g=a-b;
+    return {text:`Calcule : ${rel(a)} − ${rel(b)}`, good:nf(g), bad:nums(g,[a+b,-g,-(a+b),Math.abs(a)-Math.abs(b)]),
+      sol:`Soustraire, c'est ajouter l'opposé : ${rel(a)} − ${rel(b)} = ${rel(a)} + ${rel(-b)} = <b>${nf(g)}</b>.`};
+  }},
+  prio:{label:"Priorités opératoires", f(L){
+    const t=rnd(0, L===1?1:3);
+    if (t===0){ const a=rnd(2,15),b=rnd(2,9),c=rnd(2,9),g=a+b*c;
+      return {text:`Calcule : ${a} + ${b} × ${c}`, good:nf(g), bad:nums(g,[(a+b)*c,a*b+c,a+b+c]), sol:`La multiplication est prioritaire : ${b} × ${c} = ${b*c}, puis ${a} + ${b*c} = <b>${g}</b>.`}; }
+    if (t===1){ const b=rnd(2,6),c=rnd(2,6),a=b*c+rnd(1,20),g=a-b*c;
+      return {text:`Calcule : ${a} − ${b} × ${c}`, good:nf(g), bad:nums(g,[(a-b)*c,a-b-c,a*b-c]), sol:`D'abord ${b} × ${c} = ${b*c}, puis ${a} − ${b*c} = <b>${g}</b>.`}; }
+    if (t===2){ const a=rnd(2,9),b=rnd(2,9),c=rnd(2,6),d=rnd(1,9),g=(a+b)*c-d;
+      return {text:`Calcule : (${a} + ${b}) × ${c} − ${d}`, good:nf(g), bad:nums(g,[a+b*c-d,(a+b)*(c-d),a+b*c+d]), sol:`Parenthèses : ${a} + ${b} = ${a+b} ; puis ${a+b} × ${c} = ${(a+b)*c} ; enfin ${(a+b)*c} − ${d} = <b>${g}</b>.`}; }
+    const c=rnd(2,6),q=rnd(2,9),b=c*q,a=rnd(2,20),g=a+q;
+    return {text:`Calcule : ${a} + ${b} ÷ ${c}`, good:nf(g), bad:nums(g,[(a+b)/c,a+b-c,a*c]), sol:`La division est prioritaire : ${b} ÷ ${c} = ${q}, puis ${a} + ${q} = <b>${g}</b>.`};
+  }},
+  frac_simp:{label:"Fractions : simplifier", f(L){
+    let p,q; do{ q=rnd(2,[7,9,12][L-1]); p=rnd(1,q+L*3);}while(gcd(p,q)!==1||p===q);
+    const k=pick(L===1?[2,3,5]:[4,6,8,9,10,12]); const N=p*k,D=q*k;
+    const bad=[fr(q,p),fr(p+1,q),fr(N-D>0?N-D:p+2,q+1)];
+    for (const d of [2,3,4,5,6]) if (k%d===0 && d<k) bad.unshift(fr(N/d,D/d));
+    bad.push(fr(p,q+1),fr(p+2,q));
+    return {text:`Simplifie au maximum : ${fr(N,D)}`, good:fr(p,q), bad, sol:`${nf(N)} et ${nf(D)} sont tous deux divisibles par ${k} : ${fr(N,D)} = ${fr(N+" ÷ "+k,D+" ÷ "+k)} = <b>${fr(p,q)}</b>, qui est irréductible.`};
+  }},
+  frac_add:{label:"Fractions : addition", f(L){
+    const b=rnd(2,9), a=rnd(1,9), k=L===1?1:rnd(2,4), c=rnd(1,12), D=b*k, N=a*k+c;
+    const t = k===1 ? `Calcule (sans simplifier) : ${fr(a,b)} + ${fr(c,b)}` : `Calcule (sans simplifier) : ${fr(a,b)} + ${fr(c,D)}`;
+    const bad=[fr(a+c,b+D),fr(a+c,D),fr(N,D*2),fr(a*c,D),fr(N+1,D),fr(N,b),fr(N-1>0?N-1:N+2,D),fr(N,D+1),fr(a+c,b*D)];
+    const sol = k===1 ? `Même dénominateur : on additionne les numérateurs. ${fr(a+" + "+c,b)} = <b>${fr(N,D)}</b>.`
+      : `On met au même dénominateur ${D} : ${fr(a,b)} = ${fr(a*k,D)}. Puis ${fr(a*k,D)} + ${fr(c,D)} = <b>${fr(N,D)}</b>.`;
+    return {text:t, good:fr(N,D), bad, sol};
+  }},
+  frac_of:{label:"Fraction d'une quantité", f(L){
+    const d=rnd(2,[5,8,12][L-1]), n=rnd(1,d-1)||1, m=rnd(2,[6,12,20][L-1]), N=d*m, g=n*m;
+    return {text:`Combien valent les ${fr(n,d)} de ${N} ?`, good:nf(g), bad:nums(g,[N/d,N*n,N-n,N/n,N-g]),
+      sol:`On divise par ${d} puis on multiplie par ${n} : ${N} ÷ ${d} = ${m}, et ${m} × ${n} = <b>${g}</b>.`};
+  }},
+  angles:{label:"Angles d'un triangle", f(L){
+    const a=rnd(20,90), b=rnd(20,Math.min(130,170-a)), g=180-a-b;
+    return {text:`Dans un triangle ABC, Â = ${a}° et B̂ = ${b}°. Combien mesure Ĉ ?`, good:g+"°",
+      bad:nums(g,[360-a-b,a+b,90-a+b>0?Math.abs(90-a):g+20,180-a,g+10],v=>nf(v)+"°"),
+      sol:`La somme des angles d'un triangle vaut 180° : Ĉ = 180° − ${a}° − ${b}° = <b>${g}°</b>.`};
+  }},
+  litt:{label:"Calcul littéral", f(L){
+    const x=rnd(2,9), a=rnd(2,9), b=rnd(1,12), t=rnd(0,L===1?1:3);
+    if (t===0){ const g=a*x+b; return {text:`Calcule A = ${a}x + ${b} pour x = ${x}.`, good:nf(g), bad:nums(g,[Number(""+a+x)+b,a+x+b,a*(x+b)]), sol:`${a}x signifie ${a} × x : A = ${a} × ${x} + ${b} = ${a*x} + ${b} = <b>${g}</b>.`}; }
+    if (t===1){ const g=a*x-b; return {text:`Calcule B = ${a}x − ${b} pour x = ${x}.`, good:nf(g), bad:nums(g,[Number(""+a+x)-b,a+x-b,a*(x-b)]), sol:`B = ${a} × ${x} − ${b} = ${a*x} − ${b} = <b>${g}</b>.`}; }
+    if (t===2){ const g=x*x+b; return {text:`Calcule C = x² + ${b} pour x = ${x}.`, good:nf(g), bad:nums(g,[2*x+b,x+b,x*x*b]), sol:`x² = x × x = ${x} × ${x} = ${x*x}, donc C = ${x*x} + ${b} = <b>${g}</b>.`}; }
+    const g=a*(x+b); return {text:`Calcule D = ${a}(x + ${b}) pour x = ${x}.`, good:nf(g), bad:nums(g,[a*x+b,a+x+b,Number(""+a+x)+b]), sol:`D = ${a} × (${x} + ${b}) = ${a} × ${x+b} = <b>${g}</b>.`};
+  }},
+  aire:{label:"Aires", f(L){
+    const t=rnd(0,2), b=rnd(3,[10,15,25][L-1]), h=rnd(2,[9,14,20][L-1]);
+    if (t===0){ const B=b%2?b+1:b, g=B*h/2; return {text:`Aire d'un triangle de base ${B} cm et de hauteur ${h} cm ?`, good:nf(g)+" cm²", bad:nums(g,[B*h,B+h,2*(B+h),B*h*2],v=>nf(v)+" cm²"), sol:`Aire du triangle = base × hauteur ÷ 2 = ${B} × ${h} ÷ 2 = <b>${nf(g)} cm²</b>.`}; }
+    if (t===1){ const g=b*h; return {text:`Aire d'un parallélogramme de base ${b} cm et de hauteur ${h} cm ?`, good:g+" cm²", bad:nums(g,[g/2,b+h,2*(b+h)],v=>nf(v)+" cm²"), sol:`Aire du parallélogramme = base × hauteur = ${b} × ${h} = <b>${g} cm²</b>.`}; }
+    const g=2*(b+h); return {text:`Périmètre d'un rectangle de ${b} cm sur ${h} cm ?`, good:g+" cm", bad:nums(g,[b*h,b+h,2*b+h],v=>nf(v)+" cm"), sol:`Périmètre = 2 × (L + l) = 2 × (${b} + ${h}) = <b>${g} cm</b>.`};
+  }},
+  compare:{label:"Comparer des relatifs", f(L){
+    const S=new Set(); const m=[15,30,10][L-1]; const dec=L===3;
+    while(S.size<4){ let v=rnd(-m,m); if(dec) v=Math.round((Math.random()*2*m-m)*10)/10; S.add(v); }
+    const arr=[...S], small=Math.random()<.5, g=small?Math.min(...arr):Math.max(...arr);
+    return {text:`Quel est le plus ${small?"petit":"grand"} de ces nombres ?`, good:nf(g), bad:arr.filter(v=>v!==g).map(nf),
+      sol:`On les range : ${[...arr].sort((p,q)=>p-q).map(nf).join(" < ")}. Le plus ${small?"petit":"grand"} est <b>${nf(g)}</b>.`};
+  }},
+  equa:{label:"Tester une égalité", f(L){
+    const a=rnd(2,[5,9,12][L-1]), x=rnd(1,[6,9,12][L-1]), b=rnd(1,15), c=a*x+b;
+    return {text:`Quelle valeur de x vérifie l'égalité ${a}x + ${b} = ${c} ?`, good:nf(x), bad:nums(x,[c-b,Math.round(c/a),(c+b)/a,x+1,x-1].filter(v=>Number.isInteger(v))),
+      sol:`On teste x = ${x} : ${a} × ${x} + ${b} = ${a*x} + ${b} = ${c}. ✔ Donc <b>x = ${x}</b>.`};
+  }},
+  divis:{label:"Divisibilité", f(L){
+    const d=pick(L===1?[2,5,10]:[3,9,4,5]);
+    const isD=n=>n%d===0; let g; do{ g=rnd(100,L===1?400:2000);}while(!isD(g));
+    const bad=new Set(); while(bad.size<3){ const n=rnd(100,L===1?400:2000); if(!isD(n)) bad.add(String(n)); }
+    const rule={2:"son chiffre des unités est pair",5:"il se termine par 0 ou 5",10:"il se termine par 0",3:"la somme de ses chiffres est divisible par 3",9:"la somme de ses chiffres est divisible par 9",4:"le nombre formé par ses deux derniers chiffres est divisible par 4"}[d];
+    return {text:`Lequel de ces nombres est divisible par ${d} ?`, good:String(g), bad:[...bad], sol:`Un nombre est divisible par ${d} si ${rule}. <b>${g}</b> = ${d} × ${g/d}.`};
+  }}
+};
+function makeQuestion(themes, L){
+  const keys=themes.length?themes:Object.keys(GEN), key=pick(keys), q=GEN[key].f(L);
+  const bad=[...new Set(q.bad.map(String))].filter(s=>s!==q.good).slice(0,3);
+  const ch=shuffle([q.good,...bad]);
+  return {theme:GEN[key].label, text:q.text, choices:ch, correct:"ABCD"[ch.indexOf(q.good)], sol:q.sol};
+}
+
+/* =====================================================================
+   MODE ÉCRAN PROJETÉ
+   ===================================================================== */
+const Screen = (() => {
+  // Une entrée par classe : { list (texte collé), belts {n° carte: ceinture}, qnum }
+  const KEY="revisions5e-plickers";
+  const S = store.get(KEY, null) || {};
+  const settings = Object.assign({dur:30, lvl:2, auto:false, noAns:"stay", themes:["prop","pct"]}, S.settings||{});
+  const classes = S.classes || {};
+  let cur = S.cur && classes[S.cur] ? S.cur : (Object.keys(classes)[0] || "");
+  let belts={}, qnum=1;
+  let phase="ready", q=null, qid=0, answers={}, tStart=0, tEnd=0, accepting=false, lastDelta={}, timerIv=null;
+  let peer=null, code="", conns=new Set();
+  const save=()=>{ if(cur&&classes[cur]){ classes[cur].belts=belts; classes[cur].qnum=qnum; } store.set(KEY,{settings,classes,cur}); };
+  function loadClass(){
+    const c=classes[cur]||{list:"",belts:{},qnum:1};
+    setRoster(parseRoster(c.list).list);
+    belts={}; for (const s of ROSTER) belts[s.id] = (c.belts&&c.belts[s.id]!=null) ? c.belts[s.id] : 2;
+    qnum=c.qnum||1; lastDelta={};
+    $("classChip").innerHTML = cur ? `Classe <b>${esc(cur)}</b>` : `<b>Aucune classe</b>`;
+    for (const k of conns){ try{ k.send({type:"roster", names:NAME}); }catch(e){} }
+  }
+
+  function init(){
+    $("screen").classList.remove("hidden");
+    loadClass();
+    newQuestion(false); renderNames(); renderStandings(); renderMode();
+    if (!ROSTER.length) openSettings();
+    $("btnLaunch").onclick=launch; $("btnReveal").onclick=reveal; $("btnNext").onclick=next;
+    $("btnFull").onclick=fullscreen; $("btnSettings").onclick=openSettings; $("sClose").onclick=closeSettings;
+    $("sReset").onclick=()=>{ if(confirm("Remettre toutes les ceintures à zéro (Orange) ?")){ belts=Object.fromEntries(ROSTER.map(s=>[s.id,2])); qnum=1; lastDelta={}; save(); renderStandings(); $("qNum").textContent=qnum; } };
+    $("sDemo").onclick=()=>{ $("settings").classList.add("hidden"); simulate(); };
+    $("btnWebcam").onclick=LocalCam.toggle; $("lvClose").onclick=LocalCam.stop;
+    document.addEventListener("keydown",e=>{
+      if (e.target.tagName==="INPUT"||e.target.tagName==="SELECT"||!$("settings").classList.contains("hidden")) return;
+      if (e.code==="Space"){ e.preventDefault(); launch(); }
+      else if (e.key==="r"||e.key==="R") reveal();
+      else if (e.key==="n"||e.key==="N") next();
+      else if (e.key==="f"||e.key==="F") fullscreen();
+    });
+    startPeer();
+  }
+
+  /* ---------- PeerJS ---------- */
+  function startPeer(){
+    if (typeof Peer==="undefined"){ $("phoneTxt").textContent="PeerJS indisponible (hors-ligne ?) — webcam locale seulement"; return; }
+    code = String(rnd(1000,9999));
+    $("sessCode").textContent=code;
+    peer = new Peer(PEER_PREFIX+code);
+    peer.on("open",()=>{ renderQR(); updatePhones(); });
+    peer.on("error",err=>{
+      if (err.type==="unavailable-id"){ peer.destroy(); startPeer(); }
+      else { $("phoneTxt").textContent="Réseau : "+err.type; }
+    });
+    peer.on("disconnected",()=>{ try{ peer.reconnect(); }catch(e){} });
+    peer.on("connection",conn=>{
+      conn.on("open",()=>{ conns.add(conn); updatePhones(); try{ conn.send({type:"roster", names:NAME}); }catch(e){} sendState(conn); });
+      conn.on("data",msg=>onMsg(msg));
+      conn.on("close",()=>{ conns.delete(conn); updatePhones(); });
+      conn.on("error",()=>{ conns.delete(conn); updatePhones(); });
+    });
+  }
+  function phoneLink(){ return location.origin+location.pathname+"?mode=phone&code="+code; }
+  function renderQR(){
+    $("sLink").textContent=phoneLink();
+    if (typeof qrcode==="undefined" || location.protocol==="file:") return;
+    const qr=qrcode(0,"M"); qr.addData(phoneLink()); qr.make();
+    $("qr").innerHTML=qr.createSvgTag({cellSize:3,margin:2,scalable:true});
+  }
+  function updatePhones(){
+    const n=conns.size; $("phoneDot").classList.toggle("on",n>0);
+    $("phoneTxt").textContent = n ? `${n} téléphone${n>1?"s":""} connecté${n>1?"s":""}` : (peer&&peer.open?"En attente du téléphone…":"Connexion au serveur…");
+  }
+  function stateMsg(){
+    return {type:"state", phase, qid, qnum, accepting, endsIn:Math.max(0,tEnd-performance.now()),
+      answered:Object.keys(answers).length, total:ROSTER.length, correct:phase==="revealed"?q.correct:null};
+  }
+  function sendState(c){ const m=stateMsg(); if(c){ try{c.send(m);}catch(e){} return; } for(const k of conns){ try{k.send(m);}catch(e){} } }
+  function onMsg(m){
+    if (!m||typeof m!=="object") return;
+    if (m.type==="cmd"){ if(m.action==="launch")launch(); else if(m.action==="reveal")reveal(); else if(m.action==="next")next(); }
+    else if (m.type==="scan" && Array.isArray(m.items)){ for(const it of m.items) receiveScan(it.card,it.ans,it.t,m.qid); }
+  }
+
+  /* ---------- Déroulé ---------- */
+  function newQuestion(inc){
+    if (inc){ qnum++; save(); }
+    q=makeQuestion(settings.themes, +settings.lvl); qid++; answers={}; phase="ready"; accepting=false;
+    $("qNum").textContent=qnum; $("qTheme").textContent=q.theme; $("qLevel").textContent="Niveau "+settings.lvl;
+    $("qText").innerHTML=q.text;
+    $("opts").innerHTML=q.choices.map((c,i)=>`<div class="opt" data-l="${"ABCD"[i]}"><span class="L">${"ABCD"[i]}</span><span>${c}</span><span class="cnt"></span><div class="bar"></div></div>`).join("");
+    $("sol").classList.add("hidden");
+    $("tfill").style.width="100%"; $("tbar").classList.remove("low"); $("tnum").textContent=settings.dur;
+    setPhaseTxt("Prêt ! Appuyez sur « Lancer » quand les élèves sont prêts.");
+    renderNames(); updateButtons(); sendState();
+  }
+  function launch(){
+    if (phase!=="ready") return;
+    phase="question"; accepting=true; tStart=performance.now(); tEnd=tStart+settings.dur*1000;
+    LocalCam.resetTracker();
+    setPhaseTxt("📷 Levez vos cartes ! Scan en cours…"); beep(660,.15,.12,"triangle");
+    clearInterval(timerIv); timerIv=setInterval(tick,100); let lastSec=-1;
+    function tick(){
+      const left=Math.max(0,tEnd-performance.now()), s=Math.ceil(left/1000);
+      $("tfill").style.width=(left/(settings.dur*1000)*100)+"%"; $("tnum").textContent=s;
+      $("tbar").classList.toggle("low",left<5000);
+      if (s!==lastSec){ lastSec=s; if(s<=5&&s>0) beep(880,.06,.08); sendState(); }
+      if (left<=0){ clearInterval(timerIv); accepting=false; setPhaseTxt("⏰ Temps écoulé ! Révélez la réponse."); beep(330,.35,.15,"square"); sendState(); if(settings.auto) reveal(); }
+    }
+    updateButtons(); sendState();
+  }
+  function receiveScan(card, ans, t, fromQid){
+    if (phase!=="question" || !accepting) return;
+    if (fromQid!==undefined && fromQid!==qid) return;
+    if (!NAME[card] || !"ABCD".includes(ans)) return;
+    const prev=answers[card];
+    if (prev && prev.ans===ans) return;
+    answers[card]={ans, t:Math.max(0,+t||0)};
+    const el=document.querySelector(`.nm[data-id="${card}"]`);
+    if (el){ el.classList.add("ans"); el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+    $("ansCount").textContent=`${Object.keys(answers).length} / ${ROSTER.length}`;
+    sendState();
+  }
+  function reveal(){
+    if (phase!=="question") return;
+    clearInterval(timerIv); accepting=false; phase="revealed";
+    const cnt={A:0,B:0,C:0,D:0}; for(const a of Object.values(answers)) cnt[a.ans]++;
+    const tot=Math.max(1,Object.keys(answers).length);
+    document.querySelectorAll(".opt").forEach(o=>{
+      const l=o.dataset.l; o.classList.add(l===q.correct?"good":"dim");
+      o.querySelector(".cnt").textContent=cnt[l]+" élève"+(cnt[l]>1?"s":"");
+      o.querySelector(".bar").style.width=(cnt[l]/tot*100)+"%";
+    });
+    $("sol").innerHTML="💡 "+q.sol; $("sol").classList.remove("hidden");
+    // scoring
+    const correct=ROSTER.filter(s=>answers[s.id]&&answers[s.id].ans===q.correct);
+    lastDelta={};
+    for (const s of ROSTER){
+      const a=answers[s.id], d=(lastDelta[s.id]={});
+      let mv=0;
+      if (a && a.ans===q.correct) mv=1; else if (a) mv=-1; else if (settings.noAns==="down") mv=-1;
+      const nb=Math.min(BELTS.length-1,Math.max(0,belts[s.id]+mv)); d.belt=nb-belts[s.id]; belts[s.id]=nb;
+    }
+    save();
+    setPhaseTxt(`Bonne réponse : ${q.correct} — ${correct.length} / ${ROSTER.length} élèves ont trouvé.`);
+    beep(523,.12,.12,"triangle"); setTimeout(()=>beep(784,.2,.12,"triangle"),130);
+    renderNames(); renderStandings(); updateButtons(); sendState();
+  }
+  function next(){ if (phase==="question") return; clearInterval(timerIv); lastDelta={}; newQuestion(phase==="revealed"); renderStandings(); }
+
+  /* ---------- Rendu ---------- */
+  function setPhaseTxt(t){ $("phaseTxt").textContent=t; }
+  function updateButtons(){
+    $("btnLaunch").disabled=phase!=="ready"; $("btnReveal").disabled=phase!=="question"; $("btnNext").disabled=phase==="question";
+  }
+  function renderNames(){
+    $("ansTitle").textContent = phase==="revealed" ? "Résultats" : "Réponses reçues";
+    $("ansCount").textContent=`${Object.keys(answers).length} / ${ROSTER.length}`;
+    $("names").innerHTML=ROSTER.map(s=>{
+      const a=answers[s.id]; let cls="nm";
+      if (phase==="revealed") cls+= a ? (a.ans===q.correct?" ok":" ko") : " none"; else if (a) cls+=" ans";
+      const extra = phase==="revealed"&&a ? ` <small>${a.ans}</small>` : "";
+      return `<div class="${cls}" data-id="${s.id}" title="Carte ${s.id}">${esc(s.name)}${extra}</div>`;
+    }).join("");
+  }
+  function renderMode(){ $("modeChip").innerHTML = "🥋 <b>Montante-Descendante</b>"; }
+  function renderStandings(){
+    renderMode();
+    {
+      $("stTitle").textContent="🥋 Ceintures — bonne réponse : monte · erreur : descend";
+      $("standings").innerHTML=`<div class="ladder">${BELTS.map((b,i)=>i).reverse().map(i=>{
+        const who=ROSTER.filter(s=>belts[s.id]===i);
+        return `<div class="rung" style="background:${BELTS[i].bg}22"><span class="bl" style="background:${BELTS[i].bg};color:${BELTS[i].fg}">${BELTS[i].n}</span><div class="who">${who.map(s=>{
+          const d=lastDelta[s.id]; const c=d&&d.belt>0?"up":d&&d.belt<0?"dn":""; return `<span class="${c}">${c==="up"?"▲ ":c==="dn"?"▼ ":""}${esc(s.name)}</span>`;}).join("")}</div></div>`;
+      }).join("")}</div>`;
+    }
+  }
+  function fullscreen(){ if(!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(()=>{}); else document.exitFullscreen?.(); }
+  function fillClassSelect(){
+    $("sClass").innerHTML = Object.keys(classes).map(c=>`<option ${c===cur?"selected":""}>${esc(c)}</option>`).join("") || `<option value="">— aucune —</option>`;
+    $("sList").value = cur&&classes[cur] ? classes[cur].list : "";
+    $("sListMsg").textContent="";
+  }
+  function keepListText(){ if(cur&&classes[cur]) classes[cur].list=$("sList").value; }
+  function setupClassUI(){
+    $("sClass").onchange=()=>{ keepListText(); cur=$("sClass").value; fillClassSelect(); };
+    $("sNewClass").onclick=()=>{
+      const n=(prompt("Nom de la classe (ex. 5e JUDO) :")||"").trim(); if(!n) return;
+      keepListText(); if(!classes[n]) classes[n]={list:"",belts:{},qnum:1}; cur=n; fillClassSelect(); $("sList").focus();
+    };
+    $("sDelClass").onclick=()=>{
+      if(!cur||!confirm(`Supprimer la classe « ${cur} » (liste et ceintures) de cet appareil ?`)) return;
+      delete classes[cur]; cur=Object.keys(classes)[0]||""; fillClassSelect();
+    };
+    $("sList").oninput=()=>{ const r=parseRoster($("sList").value); $("sListMsg").textContent = `${r.list.length} élève(s) reconnu(s)` + (r.errors.length?` — ligne(s) ignorée(s) : ${r.errors.slice(0,3).join(" · ")}${r.errors.length>3?"…":""}`:""); };
+  }
+  function openSettings(){
+    if (!$("sClass").onchange) setupClassUI();
+    fillClassSelect();
+    $("sDur").value=settings.dur; $("sLvl").value=settings.lvl; $("sAuto").checked=settings.auto; $("sNoAns").value=settings.noAns;
+    $("sThemes").innerHTML=Object.entries(GEN).map(([k,g])=>`<label><input type="checkbox" value="${k}" ${settings.themes.includes(k)?"checked":""}>${g.label}</label>`).join("");
+    $("settings").classList.remove("hidden");
+  }
+  function closeSettings(){
+    const lvlChanged = settings.lvl!==$("sLvl").value, th=[...$("sThemes").querySelectorAll("input:checked")].map(i=>i.value);
+    const thChanged = th.join()!==settings.themes.join();
+    Object.assign(settings,{dur:+$("sDur").value, lvl:$("sLvl").value, auto:$("sAuto").checked, noAns:$("sNoAns").value, themes:th.length?th:Object.keys(GEN)});
+    if (!cur && $("sList").value.trim()){ cur="Ma classe"; classes[cur]={list:"",belts:{},qnum:1}; }
+    keepListText();
+    store.set(KEY,{settings,classes,cur}); loadClass();
+    if (phase!=="question") answers={};
+    save(); $("settings").classList.add("hidden"); renderNames(); renderStandings(); $("qNum").textContent=qnum; sendState();
+    if (phase==="ready"){ if(lvlChanged||thChanged){ qid++; newQuestion(false);} else $("tnum").textContent=settings.dur; }
+  }
+  function simulate(){
+    if (phase==="ready") launch();
+    if (phase!=="question") return;
+    const ids=shuffle(ROSTER.map(s=>s.id)).slice(0,rnd(Math.ceil(ROSTER.length*0.6),ROSTER.length));
+    ids.forEach((id,i)=>setTimeout(()=>receiveScan(id, Math.random()<.6?q.correct:pick(["A","B","C","D"]), performance.now()-tStart), 150*i+rnd(0,200)));
+  }
+  return { init, receiveLocal:(card,ans,ts)=>receiveScan(card,ans,ts-tStart), get phase(){return phase;} };
+})();
+
+/* ---------- Boucle caméra partagée (téléphone ou webcam locale) ---------- */
+function makeScanner({video, overlay, procWidth, onFresh, onFrame, isActive}){
+  const work=document.createElement("canvas"), wctx=work.getContext("2d",{willReadFrequently:true});
+  const octx=overlay.getContext("2d"); const tracker=new Tracker();
+  let running=false, busy=false, fps=0, lastT=performance.now(), frames=0, ms=0;
+  function loop(){
+    if (!running) return;
+    requestAnimationFrame(loop);
+    if (busy || video.readyState<2 || !video.videoWidth) return;
+    busy=true;
+    const vw=video.videoWidth, vh=video.videoHeight, pw=Math.min(procWidth,vw), ph=Math.round(vh*pw/vw);
+    if (work.width!==pw){ work.width=pw; work.height=ph; }
+    wctx.drawImage(video,0,0,pw,ph);
+    const t0=performance.now();
+    const dets=Detector.detect(wctx.getImageData(0,0,pw,ph).data,pw,ph);
+    const fresh=tracker.update(dets,t0);
+    ms=ms*0.9+(performance.now()-t0)*0.1;
+    if (fresh.length) onFresh(fresh);
+    draw(dets,pw,ph,vw,vh);
+    frames++; if (t0-lastT>1000){ fps=frames*1000/(t0-lastT); frames=0; lastT=t0; onFrame&&onFrame(fps,ms); }
+    busy=false;
+  }
+  function draw(dets,pw,ph,vw,vh){
+    const r=overlay.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+    if (overlay.width!==Math.round(r.width*dpr)){ overlay.width=Math.round(r.width*dpr); overlay.height=Math.round(r.height*dpr); }
+    octx.setTransform(1,0,0,1,0,0); octx.clearRect(0,0,overlay.width,overlay.height);
+    const sc=Math.min(r.width/vw,r.height/vh), ox=(r.width-vw*sc)/2, oy=(r.height-vh*sc)/2, k=vw/pw*sc;
+    octx.setTransform(dpr,0,0,dpr,0,0);
+    const active=isActive();
+    for (const d of dets){
+      const col = !active ? "#9aa6cf" : d.confirmed ? "#22c55e" : "#facc15";
+      octx.strokeStyle=col; octx.lineWidth=d.confirmed?4:2; octx.beginPath();
+      d.corners.forEach(([x,y],i)=>{ const X=ox+x*k, Y=oy+y*k; i?octx.lineTo(X,Y):octx.moveTo(X,Y); });
+      octx.closePath(); octx.stroke();
+      const [x,y]=d.corners[0]; const label=(NAME[d.card]||("Carte "+d.card))+" · "+d.ans;
+      octx.font="600 13px Lexend,system-ui"; const tw=octx.measureText(label).width;
+      octx.fillStyle=col; octx.fillRect(ox+x*k, oy+y*k-20, tw+10, 18);
+      octx.fillStyle="#000"; octx.fillText(label, ox+x*k+5, oy+y*k-6);
+    }
+  }
+  return {
+    start(){ if(!running){ running=true; loop(); } },
+    stop(){ running=false; octx.setTransform(1,0,0,1,0,0); octx.clearRect(0,0,overlay.width,overlay.height); },
+    reset(){ tracker.reset(); }
+  };
+}
+
+/* ---------- Webcam locale (secours sur le PC) ---------- */
+const LocalCam = (() => {
+  let stream=null, scanner=null;
+  async function start(){
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:{width:{ideal:1280},height:{ideal:720}},audio:false});
+    }catch(e){ alert("Impossible d'ouvrir la webcam : "+e.message); return; }
+    const v=$("lvVideo"); v.srcObject=stream; await v.play().catch(()=>{});
+    $("camFloat").classList.remove("hidden");
+    scanner = scanner || makeScanner({video:v, overlay:$("lvOverlay"), procWidth:1280,
+      isActive:()=>Screen.phase==="question",
+      onFresh:fr=>{ for(const f of fr) Screen.receiveLocal(f.card,f.ans,f.ts); if(Screen.phase==="question") beep(); },
+      onFrame:(fps,ms)=>{ $("lvInfo").textContent=`Webcam locale · ${fps.toFixed(0)} img/s · ${ms.toFixed(0)} ms`; }});
+    scanner.start();
+  }
+  function stop(){ scanner&&scanner.stop(); if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null; $("camFloat").classList.add("hidden"); }
+  return { toggle(){ stream?stop():start(); }, stop, resetTracker(){ scanner&&scanner.reset(); } };
+})();
+
+/* =====================================================================
+   MODE TÉLÉPHONE (caméra + télécommande)
+   ===================================================================== */
+const Phone = (() => {
+  let peer=null, conn=null, code="", st={phase:"—"}, stAt=0, launchLocal=0, curQid=-1, scanner=null, wake=null, timeIv=null;
+  const recent=[];
+  function init(){
+    $("phone").classList.remove("hidden");
+    const p=new URLSearchParams(location.search).get("code");
+    if (p){ $("phCode").value=p; }
+    $("phJoin").onclick=join; $("phCode").addEventListener("keydown",e=>{ if(e.key==="Enter") join(); });
+    $("phStart").onclick=startCam;
+    $("phLaunch").onclick=()=>cmd("launch"); $("phReveal").onclick=()=>cmd("reveal"); $("phNext").onclick=()=>cmd("next");
+    if (p && /^\d{4}$/.test(p)) join();
+    updateBtns();
+  }
+  function status(t){ $("phStatus").textContent=t; }
+  function join(){
+    code=$("phCode").value.trim();
+    if (!/^\d{4}$/.test(code)){ status("Le code doit contenir 4 chiffres."); return; }
+    if (typeof Peer==="undefined"){ status("PeerJS n'a pas pu se charger (connexion internet ?)."); return; }
+    status("Connexion…"); beep(1,0.01,0.0001); // débloque l'audio
+    if (peer) try{ peer.destroy(); }catch(e){}
+    peer=new Peer();
+    peer.on("open",()=>connect());
+    peer.on("error",err=>{ status(err.type==="peer-unavailable" ? "Aucun écran avec ce code. Vérifiez le code au tableau." : "Erreur réseau : "+err.type); setDot(false); });
+    peer.on("disconnected",()=>{ try{ peer.reconnect(); }catch(e){} });
+  }
+  function connect(){
+    conn=peer.connect(PEER_PREFIX+code,{reliable:true});
+    conn.on("open",()=>{ setDot(true); $("phConnect").classList.add("hidden"); $("phMain").classList.remove("hidden"); conn.send({type:"hello"}); });
+    conn.on("data",onState);
+    conn.on("close",()=>{ setDot(false); $("phPhase").textContent="Déconnecté — reconnexion…"; setTimeout(()=>{ if(peer&&!peer.destroyed) connect(); },1500); });
+  }
+  function setDot(on){ $("phDot").classList.toggle("on",on); }
+  function onState(m){
+    if (m && m.type==="roster" && m.names && typeof m.names==="object"){
+      setRoster(Object.entries(m.names).map(([id,name])=>({id:+id, name:String(name)}))); return; }
+    if (!m||m.type!=="state") return;
+    if (m.phase==="question" && m.qid!==curQid){ curQid=m.qid; launchLocal=performance.now()-0; scanner&&scanner.reset(); recent.length=0; renderRecent(); }
+    if (m.phase!=="question" && m.qid!==curQid){ curQid=-1; }
+    st=m; stAt=performance.now();
+    const label={ready:"Prêt — question "+m.qnum, question:"🔴 Scan en cours — Q"+m.qnum, revealed:"Réponse : "+m.correct}[m.phase]||m.phase;
+    $("phPhase").textContent=label; $("phCount").textContent=m.answered+"/"+m.total;
+    clearInterval(timeIv);
+    const tick=()=>{ if(st.phase==="question"){ const l=Math.max(0,st.endsIn-(performance.now()-stAt)); $("phTime").textContent=st.accepting?Math.ceil(l/1000)+" s":"⏰ temps écoulé"; } else $("phTime").textContent=""; };
+    tick(); timeIv=setInterval(tick,250);
+    updateBtns();
+  }
+  function updateBtns(){
+    const ok=conn&&conn.open;
+    $("phLaunch").disabled=!ok||st.phase!=="ready"; $("phReveal").disabled=!ok||st.phase!=="question"; $("phNext").disabled=!ok||st.phase==="question";
+  }
+  function cmd(a){ if(conn&&conn.open){ conn.send({type:"cmd",action:a}); navigator.vibrate&&navigator.vibrate(20); } }
+  async function startCam(){
+    let stream;
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
+    }catch(e){ alert("Caméra inaccessible : "+e.message+"\n(La page doit être ouverte en HTTPS.)"); return; }
+    const v=$("phVideo"); v.srcObject=stream; await v.play().catch(()=>{});
+    $("phStartWrap").classList.add("hidden");
+    try{ wake=await navigator.wakeLock?.request("screen"); }catch(e){}
+    document.addEventListener("visibilitychange",async()=>{ if(document.visibilityState==="visible"&&wake) try{ wake=await navigator.wakeLock.request("screen"); }catch(e){} });
+    beep(880,.08,.1);
+    scanner=makeScanner({video:v, overlay:$("phOverlay"), procWidth:1280,
+      isActive:()=>st.phase==="question"&&st.accepting!==false,
+      onFresh:fresh=>{
+        if (st.phase!=="question") return;
+        const items=fresh.map(f=>({card:f.card, ans:f.ans, t:Math.round(f.ts-launchLocal)}));
+        if (conn&&conn.open) conn.send({type:"scan", qid:st.qid, items});
+        for (const f of fresh){ if(NAME[f.card]){ recent.unshift(NAME[f.card]); } }
+        recent.length=Math.min(recent.length,8); renderRecent();
+        beep(1250,.07,.15); navigator.vibrate&&navigator.vibrate(25);
+      },
+      onFrame:(fps,ms)=>{ $("phFps").textContent=`${fps.toFixed(0)} img/s · ${ms.toFixed(0)} ms`; }});
+    scanner.start();
+  }
+  function renderRecent(){ $("phLast").innerHTML=recent.map(n=>`<span>✔ ${esc(n)}</span>`).join(""); }
+  return { init };
+})();
+
+/* =====================================================================
+   DÉMARRAGE
+   ===================================================================== */
+(function boot(){
+  const mode=new URLSearchParams(location.search).get("mode");
+  // L'écran projeté (listes de classe, ceintures) n'est ouvert qu'avec l'Espace professeur déverrouillé
+  // sur cet appareil, comme le classeur. Le mode téléphone ne contient aucune donnée : il reste libre.
+  let profOk=false;
+  try{ const c=String((window.REGLAGES&&window.REGLAGES.codeProf)||"prof5e").trim().toLowerCase(); profOk=localStorage.getItem("revisions5e-prof")===c+":ok"; }catch(e){}
+  if (mode!=="phone" && !profOk && new URLSearchParams(location.search).has("mode")){ location.replace("../index.html#/prof"); return; }
+  if (!profOk){ $("goScreen").disabled=true; $("goScreen").querySelector("small").textContent="Ouvrez d'abord l'Espace professeur sur cet appareil"; }
+  const go=m=>{ $("home").classList.add("hidden"); m==="phone"?Phone.init():Screen.init(); };
+  if (mode==="screen"||mode==="phone") return go(mode);
+  $("home").classList.remove("hidden");
+  $("goScreen").onclick=()=>{ history.replaceState(null,"","?mode=screen"); go("screen"); };
+  $("goPhone").onclick=()=>{ history.replaceState(null,"","?mode=phone"); go("phone"); };
+})();
+window.MathClash = { Detector, Tracker, CODE_MAP, CARD_GRIDS, makeQuestion, GEN };
+</script>
+</body>
+</html>

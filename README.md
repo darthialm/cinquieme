@@ -90,3 +90,11 @@ Chapitre 1 (Règles de calcul), page **🎮 Jeux** (`#/calculs/jeux`), aussi en 
 - `/g=1` envoie le résultat au **même formulaire Grist que la 6e** (`GRIST_SITE`, table `Table1`). La colonne Classe commence par « 5e » (« 5e Judo ») pour distinguer les niveaux. Le code de 14 caractères a le même format qu'en 6e : le widget « Mes devoirs » de Grist le reconnaît.
 - Le classeur donne **un seul lien par travail à faire** (« Exercices en ligne : faire les N questions »), avec toutes les notions des pages d'exercices de la séance (`DEV[…].site` → `PAGE_KEYS`), 10 questions pour une page, 15 pour deux, 20 au plus. Un nouvel exercice de 5e doit être ajouté à `PAGE_KEYS` dans `classeur.html` pour entrer dans les devoirs.
 - L'API ÉcoleDirecte lit ces résultats : `GET /v1/devoirs-en-ligne?classe=5e`.
+
+## MathClash — jeu Plickers en classe (18/11/2026)
+Espace professeur → carte **🥋 MathClash** → « Ouvrir l'écran à projeter » (`mathclash/index.html?mode=screen`, protégé comme le classeur).
+- Sur le téléphone : scanner le QR code affiché en haut de l'écran (ou ouvrir `…/mathclash/index.html?mode=phone` et taper le code à 4 chiffres). La caméra lit les cartes Plickers (version 1, n° 1 à 40) ; les boutons Lancer / Révéler / Suivante pilotent l'écran. Bouton « Webcam locale » en secours sur le PC.
+- Montante-Descendante : 7 ceintures, bonne réponse = monte d'une ceinture, erreur = descend. Pas de mode rapidité.
+- ⚙️ Réglages : classe et liste « Prénom numéro de carte », durée, niveau, thèmes (proportionnalité et pourcentages cochés au départ).
+- Les listes et les ceintures restent dans le navigateur du PC (clé `revisions5e-plickers`), elles ne sont ni publiées ni synchronisées.
+- Il faut internet (serveur public PeerJS pour relier le téléphone) et une adresse en HTTPS pour la caméra (GitHub Pages).
