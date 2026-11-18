@@ -85,6 +85,9 @@ Chapitre 1 (Règles de calcul), page **🎮 Jeux** (`#/calculs/jeux`), aussi en 
 - Quand plusieurs opérations peuvent se faire en premier (deux parenthèses, deux produits séparés par un +), le jeu accepte chacune.
 - Une page de chapitre avec `data-game="1"` passe en premier dans le menu du chapitre et apparaît dans la salle de jeux tant que le chapitre est ouvert.
 
+## Jeu « Z ou F ? » (18/11/2026)
+Chapitre Angles, page **🎮 Jeux** (`#/angles/jeux`), dossier `jeu-angles/`, vignette `jeux-img/z-ou-f.svg`. Reconnaître les angles alternes-internes (le Z) et correspondants (le F) sur des figures tirées au hasard, de plus en plus difficiles (figures tournées, droites non parallèles, droites en plus), puis les propriétés 1 et 2 (« Le Juge »). Les critères affichés sont ceux du cours (`sources/latex/src/angles.tex`). `jeu-angles/index.html?tout` ouvre toutes les missions. La page n'est visible des élèves que si le chapitre Angles est ouvert (`ouverture.js`).
+
 ## Devoirs en ligne (17/11/2026)
 - Même fonctionnement que le mode devoir du site de 6e : un lien `…/#/devoir/<exercices>/<nombre>/c=<classe>/g=1` (fichier `devoir-5e.js`, exercices de 5e uniquement : clés de `GENS`). Indices et deuxième essai permis, version papier possible, carte de résultat.
 - `/g=1` envoie le résultat au **même formulaire Grist que la 6e** (`GRIST_SITE`, table `Table1`). La colonne Classe commence par « 5e » (« 5e Judo ») pour distinguer les niveaux. Le code de 14 caractères a le même format qu'en 6e : le widget « Mes devoirs » de Grist le reconnaît.

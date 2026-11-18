@@ -1,3 +1,39 @@
+MISE À JOUR 2026-11-18.5 : jeu « Z ou F ? » (chapitre Angles : alternes-internes et correspondants)
+
+À DÉPOSER : index.html, README.md, le NOUVEAU dossier jeu-angles/ (index.html, jeu.js, jeu.css),
+la NOUVELLE image jeux-img/z-ou-f.svg
+
+- Chapitre « Angles et parallèles » : nouvelle page « 🎮 Jeux » (en premier dans le menu du chapitre, carte sur
+  l'accueil du chapitre, et dans la salle de jeux). Visible par les élèves quand le chapitre Angles est ouvert.
+- Z ou F ? : des figures tirées au hasard (deux droites, une sécante). Les alternes-internes dessinent un Z, les
+  correspondants un F : la lettre se dessine à chaque bonne réponse. Une erreur = un cœur en moins et l'explication
+  avec les critères du cours (intérieur/extérieur de la bande, même côté/de part et d'autre de la sécante, sommets
+  différents), la bande colorée. Le type raté revient plus souvent ensuite.
+- 7 missions : 1 Le Z (oui/non) · 2 Le F (oui/non) · 3 Z ou F ? (alternes-internes / correspondants / ni l'un ni
+  l'autre) · 4 Le jumeau (toucher le bon angle, figures tournées, sécante plus en couleur) · 5 Toutes les paires
+  (les 2 couples Z, les 4 couples F) · 6 Figures pièges (triangles, deuxième sécante : trouver la bonne sécante) ·
+  7 Le Juge (propriétés 1 et 2 : parallèles ou pas, calculer un angle ; droites presque parallèles). Puis Survie.
+- Pour tout ouvrir d'un coup (vidéoprojecteur) : …/jeu-angles/index.html?tout
+
+=========================================================
+
+MISE À JOUR 2026-11-18.4 : MathClash, jeu Plickers en classe (Espace professeur)
+
+À DÉPOSER (dans le dépôt du site de 5e, à la racine) :
+  index.html, README.md
+  le NOUVEAU dossier : mathclash/ (index.html)
+
+- Espace professeur : nouvelle carte « 🥋 MathClash » sous le classeur. Elle ouvre l'écran à projeter
+  (…/mathclash/index.html?mode=screen). Sans l'Espace professeur ouvert sur l'appareil, l'écran renvoie vers #/prof.
+- Le téléphone du prof scanne les cartes Plickers (caméra arrière) et sert de télécommande : il ouvre
+  …/mathclash/index.html?mode=phone, ou scanne le QR code affiché au tableau. Liaison par PeerJS (code à 4 chiffres).
+- Montante-Descendante : bonne réponse = une ceinture de plus, erreur = une de moins (Blanche → Noire).
+  Pas de classement à la rapidité. Thèmes par défaut : proportionnalité et pourcentages.
+- Listes de classe : dans ⚙️ Réglages du jeu (« Prénom numéro », une ligne par élève, plusieurs classes possibles).
+  Elles restent dans le navigateur (clé revisions5e-plickers) : aucun prénom dans les fichiers du site.
+
+=========================================================
+
 MISE À JOUR 2026-11-18.1 : jeu « Code Rouge » (chapitre 1, Règles de calcul)
 
 À DÉPOSER (dans le dépôt du site de 5e, à la racine) :
