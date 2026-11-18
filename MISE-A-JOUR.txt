@@ -1,3 +1,24 @@
+MISE À JOUR 2026-11-18.1 : jeu « Code Rouge » (chapitre 1, Règles de calcul)
+
+À DÉPOSER (dans le dépôt du site de 5e, à la racine) :
+  index.html, script.js, README.md
+  le NOUVEAU dossier : jeu-calculs/ (index.html, jeu.js, jeu.css)
+  la NOUVELLE image : jeux-img/code-rouge.svg
+
+- Chapitre « Règles de calcul » : nouvelle page « 🎮 Jeux » (en premier dans le menu du chapitre, et une carte sur
+  l'accueil du chapitre). Le jeu apparaît aussi en tête de la salle de jeux (bouton 🎮 Jeux).
+- Code Rouge : le Dr Désordre a piégé le collège. Chaque opération d'un calcul est un fil : on le coupe dans l'ordre
+  des règles du cours, on choisit le résultat de l'étape, et le dernier nombre est le code qui désamorce la bombe.
+  Une erreur = −4 s et un message qui rappelle la règle ; à zéro, BOUM, un cœur en moins et la correction étape par étape.
+- 7 missions qui suivent le cours : 1 Gauche → droite (règles 1-2), 2 × et ÷ d'abord (règles 3-4), 3 Les pièges,
+  4 Parenthèses (règle 5), 5 Poupées russes (règle 6), 6 Message codé (vocabulaire : somme, différence, produit,
+  quotient, dernière opération, phrase → calcul), 7 La Méga-bombe (tout le cours). Puis le mode Survie (sans fin).
+- Chaque mission commence par un briefing avec les règles du cours et un exemple animé. Étoiles (⭐⭐⭐ = aucune
+  explosion, au plus une erreur), combos, records ; une étoile ouvre la mission suivante. Progression sur l'appareil.
+- Pour tout ouvrir d'un coup (vidéoprojecteur) : …/jeu-calculs/index.html?tout
+
+=========================================================
+
 MISE À JOUR 2026-11-17.3 : devoirs en ligne (mode devoir, résultats dans Grist)
 
 À DÉPOSER (dans le dépôt du site de 5e, à la racine) :

@@ -78,6 +78,13 @@ Le bouton **🎮 Jeux**, en haut de chaque page, ouvre la salle de jeux (`#/jeux
 ### Correction avec l'IA
 Le fichier pour la correction assistée reprend les consignes de 6e : question en partie juste = ½ pour le niveau, réponse en 4 parties (à vérifier, lignes à coller, une fiche par élève avec ✓ ½ ✗ et une remarque, bilan pour la classe). Les mêmes règles sont dans `CLAUDE.md`.
 
+## Jeu « Code Rouge » (18/11/2026)
+Chapitre 1 (Règles de calcul), page **🎮 Jeux** (`#/calculs/jeux`), aussi en tête de la salle de jeux. Dossier `jeu-calculs/` (HTML, CSS et JS simples, sans dépendance), vignette `jeux-img/code-rouge.svg`.
+- On désamorce des bombes : chaque opération est un fil à couper dans l'ordre des règles du cours, puis on choisit le résultat de l'étape. Erreur = −4 s avec la règle rappelée ; explosion = un cœur en moins et la correction étape par étape.
+- 7 missions (règles 1-2, règles 3-4, pièges, parenthèses, parenthèses imbriquées, vocabulaire, Méga-bombe) puis le mode Survie. Une étoile ouvre la mission suivante ; `jeu-calculs/index.html?tout` ouvre tout (pour projeter).
+- Quand plusieurs opérations peuvent se faire en premier (deux parenthèses, deux produits séparés par un +), le jeu accepte chacune.
+- Une page de chapitre avec `data-game="1"` passe en premier dans le menu du chapitre et apparaît dans la salle de jeux tant que le chapitre est ouvert.
+
 ## Devoirs en ligne (17/11/2026)
 - Même fonctionnement que le mode devoir du site de 6e : un lien `…/#/devoir/<exercices>/<nombre>/c=<classe>/g=1` (fichier `devoir-5e.js`, exercices de 5e uniquement : clés de `GENS`). Indices et deuxième essai permis, version papier possible, carte de résultat.
 - `/g=1` envoie le résultat au **même formulaire Grist que la 6e** (`GRIST_SITE`, table `Table1`). La colonne Classe commence par « 5e » (« 5e Judo ») pour distinguer les niveaux. Le code de 14 caractères a le même format qu'en 6e : le widget « Mes devoirs » de Grist le reconnaît.

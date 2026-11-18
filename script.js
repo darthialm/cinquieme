@@ -2557,6 +2557,8 @@ function renderChapterHome(ch) {
       const n = weakKeys(ch).length;
       cls += n ? ' tile-weak' : '';
       body = n ? `<div class="stat"><b>📌 ${n} point${n > 1 ? 's' : ''} à retravailler</b></div>${weakListHTML(ch)}` : '<div class="stat">Aucun point faible pour l\'instant 🎉</div>';
+    } else if (p.dataset.game) {
+      body = '<div class="stat">Pour t’entraîner en t’amusant →</div>';
     } else if (p.dataset.exam) {
       const c = stats[ch + ':controle'];
       body = `<div class="bar"><span style="width:${c ? Math.round((c.best / 20) * 100) : 0}%"></span></div><div class="stat">${c ? `Meilleure note : ${fmt(c.best)} / 20` : 'Pas encore fait'}</div>`;
@@ -2570,8 +2572,9 @@ function renderChapterHome(ch) {
   }).join('');
 }
 
-/** Salle de jeux (#/jeux) : une carte par jeu (miniature, nom, description). Les jeux viennent du site de 6e :
-    ce sont des pages hors chapitre (data-ch="_", adresse #/jeux/<data-p>), toujours ouvertes. */
+/** Salle de jeux (#/jeux) : une carte par jeu (miniature, nom, description). Les jeux d'un chapitre (page « 🎮 Jeux »
+    du chapitre, ex. Code Rouge) viennent en premier, s'il est ouvert ; puis les jeux repris du site de 6e : pages hors
+    chapitre (data-ch="_", adresse #/jeux/<data-p>), toujours ouvertes. */
 function renderGamesHub() {
   const pages = [...document.querySelectorAll('.page[data-game][data-game-name]')]
     .map((p) => ({ p, c: CHAPTERS.find((x) => x.id === p.dataset.ch) })).filter((x) => x.p.dataset.ch === '_' || (x.c && !x.c.locked))
@@ -2615,8 +2618,9 @@ function route() {
   if (chap) {
     const nWeak = weakKeys(ch).length;
     pill.hidden = false; pill.textContent = `Chapitre ${chap.num} · ${chap.title}`; pill.title = 'Changer de chapitre';
-    nav.innerHTML = [...document.querySelectorAll(`.page[data-ch="${ch}"]`)].map((x) =>
-      `<a href="#/${ch}/${x.dataset.p}"${x === page ? ' aria-current="page"' : ''}${x.dataset.exam ? ' class="nav-exam"' : ''}>${x.dataset.title}${x.dataset.p === 'erreurs' && nWeak ? ` <span class="count">${nWeak}</span>` : ''}</a>`).join('');
+    const all = [...document.querySelectorAll(`.page[data-ch="${ch}"]`)];
+    nav.innerHTML = [...all.filter((x) => x.dataset.game), ...all.filter((x) => !x.dataset.game)].map((x) =>
+      `<a href="#/${ch}/${x.dataset.p}"${x === page ? ' aria-current="page"' : ''}${x.dataset.exam ? ' class="nav-exam"' : x.dataset.game ? ' class="nav-game"' : ''}>${x.dataset.title}${x.dataset.p === 'erreurs' && nWeak ? ` <span class="count">${nWeak}</span>` : ''}</a>`).join('');
     nav.querySelector('[aria-current]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
     document.title = `${chap.title} — Révisions 5e`;
   } else {
