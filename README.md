@@ -100,6 +100,12 @@ Espace professeur → carte **🥋 MathClash** → « Ouvrir l'écran à projete
 - Montante-Descendante : 5 ceintures (blanche, jaune, verte, bleue, noire) de 2 barrettes chacune. Bonne réponse = +1 barrette, erreur = −1 barrette. Pas de mode rapidité.
 - Pour que ça reste fun : 3 bonnes réponses de suite donnent un 🛡️ bouclier (annule une chute) ; en ceinture noire, chaque bonne réponse rapporte une ⭐ ; toutes les 5 questions, ⚡ question bonus (+2 barrettes, pas de chute) ; si 2 élèves sur 3 ont juste, 🏆 défi classe réussi (confettis). À la révélation, les prénoms glissent d'une ceinture à l'autre.
 - L'écran : barre du haut sur une ligne (le QR code s'ouvre en grand au démarrage, et en cliquant sur « Relier le téléphone »), question qui s'ajuste à la place libre, prénoms le plus gros possible.
+- **4 modes de jeu** (⚙️ Réglages → Mode de jeu, ou clic sur le mode en haut de l'écran) ; chaque mode garde sa partie en cours pour chaque classe, « ↺ Recommencer la partie » remet à zéro le mode choisi :
+  - 🥋 **Ceintures** (montante-descendante, décrit ci-dessus).
+  - 👹 **Boss de classe** : toute la classe contre un boss ; chaque bonne réponse = 1 dégât. Si moins de la moitié de la classe a juste, le boss attaque (−1 ❤️ sur 3). Boss vaincu = un boss plus fort arrive ; 3 ❤️ perdus = revanche.
+  - 🪢 **Tir à la corde** : 2 équipes (Rouges / Bleus, « 🔀 Nouvelles équipes » dans les réglages). L'équipe au meilleur pourcentage de bonnes réponses tire la corde ; au bout, manche gagnée.
+  - ❤️ **Survie** : 3 ❤️ chacun, −1 par erreur ; à 0, l'élève devient 👻 fantôme et revient avec 1 ❤️ après 2 bonnes réponses de suite.
+  - ⚡ La question bonus (toutes les 5 questions) existe dans tous les modes.
 - ⚙️ Réglages : classe et liste « Prénom numéro de carte », durée, niveau, thèmes (proportionnalité et pourcentages cochés au départ).
 - Les listes et les ceintures restent dans le navigateur du PC (clé `revisions5e-plickers`), elles ne sont ni publiées ni synchronisées.
 - Il faut internet (serveur public PeerJS pour relier le téléphone) et une adresse en HTTPS pour la caméra (GitHub Pages).

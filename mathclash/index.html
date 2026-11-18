@@ -100,6 +100,49 @@ input,select{font:inherit;background:var(--panel2);color:var(--txt);border:1px s
 .st.dn{box-shadow:0 0 0 3px var(--ko)}
 .st.saved{box-shadow:0 0 0 3px #60a5fa,0 0 14px #60a5fa}
 .rules{font-size:.82rem;color:var(--mut);line-height:1.35}
+.ladder{overflow:hidden}
+.who{display:flex;flex-wrap:wrap;gap:6px;min-height:0;overflow:hidden}
+.st.ghost{opacity:.6;filter:grayscale(.6)}
+/* Boss */
+.boss{position:relative;display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#3b0d1a,#1a1033);border:2px solid #7f1d1d;border-radius:16px;padding:10px 16px}
+.boss-emo{font-size:clamp(3.5rem,7vw,6rem);line-height:1;filter:drop-shadow(0 6px 14px #000a)}
+.boss-emo.hit{animation:hit .6s}
+@keyframes hit{0%,100%{transform:none}20%{transform:translateX(-14px) rotate(-8deg);filter:brightness(2) drop-shadow(0 0 20px #f00)}40%{transform:translateX(12px) rotate(6deg)}60%{transform:translateX(-8px)}80%{transform:translateX(5px)}}
+.boss-info{flex:1;min-width:0}
+.boss-name{font-weight:800;font-size:clamp(1.1rem,1.8vw,1.6rem)}
+.boss-name small{display:block;font-weight:400;font-size:.6em;color:var(--mut)}
+.hpbar{position:relative;height:26px;background:#0008;border-radius:999px;overflow:hidden;margin:8px 0;border:1px solid #fff3}
+.hpbar>div{height:100%;background:linear-gradient(90deg,#ef4444,#f59e0b);transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.hpbar span{position:absolute;inset:0;display:grid;place-items:center;font-weight:800;font-size:.9rem;text-shadow:0 1px 3px #000}
+.lives{font-size:1.3rem}
+.dmg{position:absolute;right:18px;top:6px;font-size:2.6rem;font-weight:800;color:#fde047;text-shadow:0 2px 8px #000;opacity:0;pointer-events:none}
+.dmg.pop{animation:pop 1.4s ease-out}
+@keyframes pop{0%{opacity:0;transform:translateY(10px) scale(.6)}20%{opacity:1;transform:translateY(0) scale(1.2)}100%{opacity:0;transform:translateY(-40px) scale(1)}}
+.ladder>.who{flex:1;align-content:flex-start;padding:6px 2px}
+body.redflash::after{content:"";position:fixed;inset:0;background:#ef4444;pointer-events:none;z-index:43;animation:rf .7s ease-out forwards}
+@keyframes rf{0%{opacity:.45}100%{opacity:0}}
+/* Tir à la corde */
+.tug-score{display:flex;align-items:center;justify-content:space-between;font-size:clamp(1.1rem,1.8vw,1.6rem);font-weight:700}
+.tug-score b{font-size:1.4em}
+.tug-score .tr{color:#ff8a9a} .tug-score .tb{color:#7cc4ff}
+.tug-score small{color:var(--mut);font-weight:400;font-size:.6em}
+.rope{position:relative;height:54px;border-radius:14px;background:linear-gradient(90deg,#7f1d1d55 0 8%,#0000 8% 92%,#1e3a8a55 92%);border:1px solid var(--line)}
+.rope .line{position:absolute;left:4%;right:4%;top:50%;height:8px;margin-top:-4px;border-radius:4px;background:repeating-linear-gradient(60deg,#d6b26e 0 8px,#a07a3a 8px 14px)}
+.rope .goal{position:absolute;top:6px;bottom:6px;width:4px;border-radius:2px}
+.rope .g0{left:6%;background:#ef4444} .rope .g1{right:6%;background:#3b82f6}
+.rope .knot{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:2rem;transition:left 1.1s cubic-bezier(.3,1.4,.4,1);filter:drop-shadow(0 2px 4px #000)}
+.tug-last{text-align:center;color:var(--mut);min-height:1.3em}
+.teams{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.team{display:flex;flex-direction:column;min-height:0;border-radius:12px;padding:6px 8px}
+.team.t0{background:#7f1d1d33;border:1px solid #ef444466} .team.t1{background:#1e3a8a33;border:1px solid #3b82f666}
+.team h4{margin:0 0 6px;font-size:1rem} .team h4 small{color:var(--mut);font-weight:400}
+.team .who{flex:1;align-content:flex-start;padding:0}
+/* Survie */
+.surv-head{display:flex;gap:18px;font-size:clamp(1rem,1.6vw,1.4rem)}
+.surv-head b{font-size:1.3em}
+.surv-alive{align-content:flex-start;padding:4px 2px}
+.surv-ghost-h{color:var(--mut);font-size:.9rem;border-top:1px dashed var(--line);padding-top:6px}
+.surv-ghosts{align-content:flex-start;padding:4px 2px;min-height:40px}
 .toast{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.6);opacity:0;z-index:45;pointer-events:none;background:linear-gradient(135deg,#7c5cff,#ff5d73);color:#fff;font-size:clamp(1.6rem,3.6vw,3.2rem);font-weight:800;padding:.5em 1.2em;border-radius:24px;box-shadow:0 20px 60px #0008;text-align:center;transition:.35s cubic-bezier(.2,1.4,.4,1)}
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .toast small{display:block;font-size:.45em;font-weight:600;opacity:.9}
@@ -165,7 +208,8 @@ input,select{font:inherit;background:var(--panel2);color:var(--txt);border:1px s
     <div class="logo">Math<i>Clash</i></div>
     <span class="chip" id="classChip"></span>
     <span class="chip">Question <b id="qNum">1</b></span>
-    <span class="chip" title="Défis classe réussis">🏆 <b id="trophies">0</b></span>
+    <button class="chip phone-pill" id="modeChip" title="Changer de mode de jeu"></button>
+    <span class="chip" id="trophyChip" title="Défis classe réussis">🏆 <b id="trophies">0</b></span>
     <div class="spacer"></div>
     <button class="chip phone-pill" id="phonePill" title="Relier le téléphone"><span class="dot" id="phoneDot"></span><span id="phoneTxt">Connexion…</span> · code <b id="sessCode">····</b></button>
     <button class="ibtn" id="btnWebcam" title="Webcam locale (secours)">📷</button>
@@ -194,7 +238,7 @@ input,select{font:inherit;background:var(--panel2);color:var(--txt);border:1px s
     <div class="right">
       <div class="rhead"><span class="t" id="ansTitle">Réponses</span><div class="pbar"><div id="pfill"></div></div><b id="ansCount">0 / 0</b></div>
       <div class="ladder" id="standings"></div>
-      <div class="rules">✅ juste : +1 barrette (2 barrettes = ceinture suivante) · ❌ faux : −1 barrette · 🔥 3 justes de suite = 🛡️ bouclier (annule une chute) · ⭐ juste en ceinture noire · ⚡ toutes les 5 questions : bonus ×2 sans chute · 🏆 2 élèves sur 3 justes = défi classe réussi</div>
+      <div class="rules" id="rules">✅ juste : +1 barrette (2 barrettes = ceinture suivante) · ❌ faux : −1 barrette · 🔥 3 justes de suite = 🛡️ bouclier (annule une chute) · ⭐ juste en ceinture noire · ⚡ toutes les 5 questions : bonus ×2 sans chute · 🏆 2 élèves sur 3 justes = défi classe réussi</div>
     </div>
   </div>
   <div class="modal hidden" id="connectModal">
@@ -215,6 +259,9 @@ input,select{font:inherit;background:var(--panel2);color:var(--txt);border:1px s
   <div class="modal hidden" id="settings">
     <div class="box">
       <h2>⚙️ Réglages</h2>
+      <div class="row"><label>Mode de jeu</label>
+        <select id="sMode"><option value="ladder">🥋 Ceintures (montante-descendante)</option><option value="boss">👹 Boss de classe (tous ensemble)</option><option value="tug">🪢 Tir à la corde (2 équipes)</option><option value="surv">❤️ Survie (3 cœurs chacun)</option></select></div>
+      <div class="row"><label>Équipes (tir à la corde)</label><button id="sTeams" type="button">🔀 Nouvelles équipes</button><span id="sTeamsMsg" style="color:var(--mut);font-size:.85rem"></span></div>
       <div class="row"><label>Classe</label>
         <select id="sClass" style="min-width:160px"></select>
         <button id="sNewClass" type="button">＋ Nouvelle classe</button>
@@ -236,7 +283,7 @@ input,select{font:inherit;background:var(--panel2);color:var(--txt);border:1px s
       <div class="row" style="margin-top:18px">
         <button class="btn-go" id="sClose">Enregistrer</button>
         <button id="sDemo" title="Simule des réponses d'élèves pour tester l'affichage">🎲 Simuler des réponses</button>
-        <button id="sReset" style="background:#5b1a1a">Remettre les ceintures à zéro</button>
+        <button id="sReset" style="background:#5b1a1a" title="Remet à zéro le mode choisi ci-dessus">↺ Recommencer la partie (mode choisi)</button>
       </div>
       <p style="color:var(--mut);font-size:.85rem">Lien téléphone : <span id="sLink" style="word-break:break-all"></span></p>
     </div>
@@ -709,14 +756,14 @@ const Screen = (() => {
      { list (texte collé), belts {carte: 0..4}, st {carte: {k: série, sh: bouclier, star: étoiles}}, troph, qnum, v } */
   const KEY="revisions5e-plickers";
   const S = store.get(KEY, null) || {};
-  const settings = Object.assign({dur:30, lvl:2, auto:false, noAns:"stay", themes:["prop","pct"]}, S.settings||{});
+  const settings = Object.assign({mode:"ladder", dur:30, lvl:2, auto:false, noAns:"stay", themes:["prop","pct"]}, S.settings||{});
   const classes = S.classes || {};
   let cur = S.cur && classes[S.cur] ? S.cur : (Object.keys(classes)[0] || "");
-  let belts={}, stats={}, troph=0, qnum=1;
+  let belts={}, stats={}, troph=0, qnum=1, ms={};
   let phase="ready", q=null, qid=0, answers={}, tStart=0, tEnd=0, accepting=false, lastDelta={}, timerIv=null, bonus=false, moveTimer=null;
   let peer=null, code="", conns=new Set(), askedConnect=false;
   const TOP=BELTS.length-1, MAXP=TOP*2, lvl=p=>p>>1;
-  const save=()=>{ if(cur&&classes[cur]) Object.assign(classes[cur],{belts,st:stats,troph,qnum,v:3}); store.set(KEY,{settings,classes,cur}); };
+  const save=()=>{ if(cur&&classes[cur]) Object.assign(classes[cur],{belts,st:stats,troph,qnum,modes:ms,v:3}); store.set(KEY,{settings,classes,cur}); };
   function loadClass(){
     const c=classes[cur]||{list:"",belts:{},qnum:1,v:3};
     if (c.v!==3 && c.belts){ // anciennes échelles : 7 ceintures (sans v), puis 5 ceintures sans barrettes (v:2)
@@ -728,6 +775,7 @@ const Screen = (() => {
       stats[s.id] = Object.assign({k:0,sh:0,star:0}, c.st&&c.st[s.id]);
     }
     troph=c.troph||0; qnum=c.qnum||1; lastDelta={};
+    ms=c.modes||{}; ensureModes();
     $("classChip").innerHTML = cur ? `Classe <b>${esc(cur)}</b>` : `<b>Aucune classe</b>`;
     $("trophies").textContent=troph;
     for (const k of conns){ try{ k.send({type:"roster", names:NAME}); }catch(e){} }
@@ -742,9 +790,12 @@ const Screen = (() => {
     $("btnFull").onclick=fullscreen; $("btnSettings").onclick=openSettings; $("sClose").onclick=closeSettings;
     $("phonePill").onclick=()=>$("connectModal").classList.remove("hidden");
     $("connClose").onclick=()=>$("connectModal").classList.add("hidden");
-    $("sReset").onclick=()=>{ if(confirm("Tout le monde repart en ceinture blanche (boucliers, étoiles et trophées remis à zéro) ?")){
-      for (const s of ROSTER){ belts[s.id]=0; stats[s.id]={k:0,sh:0,star:0}; } troph=0; qnum=1; lastDelta={}; save();
-      $("trophies").textContent=0; $("qNum").textContent=qnum; renderLadder(); } };
+    $("sReset").onclick=()=>{
+      const m=$("sMode").value, txt={ladder:"Tout le monde repart en ceinture blanche (boucliers, étoiles et trophées remis à zéro) ?", boss:"Recommencer contre le premier boss (niveau 1, 3 ❤️) ?", tug:"Remettre la corde au milieu et les manches à 0 – 0 ?", surv:"Tout le monde repart avec 3 ❤️ ?"}[m];
+      if (!confirm(txt)) return;
+      MODES[m].reset(); lastDelta={}; save(); renderMode(); };
+    $("sTeams").onclick=()=>{ if(!confirm("Tirer au sort de nouvelles équipes (Rouges / Bleus) ?")) return; ms.tug.teams=makeTeams(); save(); renderMode(); $("sTeamsMsg").textContent="✔ Nouvelles équipes tirées au sort."; };
+    $("modeChip").onclick=openSettings;
     $("sDemo").onclick=()=>{ $("settings").classList.add("hidden"); simulate(); };
     $("btnWebcam").onclick=LocalCam.toggle; $("lvClose").onclick=LocalCam.stop;
     document.addEventListener("keydown",e=>{
@@ -808,7 +859,7 @@ const Screen = (() => {
     clearTimeout(moveTimer);
     q=makeQuestion(settings.themes, +settings.lvl); qid++; answers={}; phase="ready"; accepting=false; lastDelta={};
     bonus = qnum%5===0;
-    $("bonusTag").classList.toggle("hidden",!bonus);
+    $("bonusTag").classList.toggle("hidden",!bonus); $("bonusTag").textContent="⚡ QUESTION BONUS : "+MODES[mode()].bonusTxt;
     $("qNum").textContent=qnum; $("qTheme").textContent=q.theme; $("qLevel").textContent="Niveau "+settings.lvl;
     $("qText").innerHTML=`<div>${q.text}</div>`;
     $("opts").innerHTML=q.choices.map((c,i)=>`<div class="opt" data-l="${"ABCD"[i]}"><span class="L">${"ABCD"[i]}</span><span>${c}</span><span class="cnt"></span><div class="bar"></div></div>`).join("");
@@ -816,7 +867,7 @@ const Screen = (() => {
     $("tfill").style.width="100%"; $("tbar").classList.remove("low"); $("tnum").textContent=settings.dur;
     setPhaseTxt(bonus ? "⚡ Question bonus ! Appuyez sur « Lancer » quand les élèves sont prêts." : "Prêt ! Appuyez sur « Lancer » quand les élèves sont prêts.");
     renderLadder(); updateButtons(); sendState(); fitQuestion();
-    if (bonus) toast("⚡ QUESTION BONUS ⚡","juste : +2 ceintures · faux : pas de chute",2200);
+    if (bonus) toast("⚡ QUESTION BONUS ⚡",MODES[mode()].bonusTxt,2200);
   }
   function launch(){
     if (phase!=="ready") return;
@@ -856,53 +907,34 @@ const Screen = (() => {
     });
     $("sol").innerHTML="💡 "+q.sol; $("sol").classList.remove("hidden");
     fitQuestion();
-    // 1) on montre d'abord qui a juste / faux, à sa place actuelle
-    renderLadder();
-    // 2) puis les ceintures bougent
-    const nOk=ROSTER.filter(s=>answers[s.id]&&answers[s.id].ans===q.correct).length;
-    // belts[id] = progression en barrettes : 2 barrettes = une ceinture (MAXP = ceinture noire)
-    let up=0, dn=0, saved=0, shields=0, stars=0, black=0, newBelt=0;
+    const nOk=ROSTER.filter(s=>isOk(s.id)).length, pct=ROSTER.length? nOk/ROSTER.length : 0;
+    // 1) on montre d'abord qui a juste / faux, sans rien bouger ;  2) le mode calcule ses effets ;  3) animation
     lastDelta={};
-    for (const s of ROSTER){
-      const a=answers[s.id], st=stats[s.id], old=belts[s.id], d=(lastDelta[s.id]={});
-      const ok=a&&a.ans===q.correct, fall = a ? !ok : settings.noAns==="down";
-      let nb=old;
-      if (ok){
-        if (old===MAXP){ st.star+= bonus?2:1; d.star=true; stars++; }
-        nb=Math.min(MAXP, old+(bonus?2:1));
-        st.k++; if (st.k>=3){ st.k=0; if(!st.sh){ st.sh=1; d.shield=true; shields++; } }
-      } else {
-        st.k=0;
-        if (fall && !bonus && old>0){ if (st.sh){ st.sh=0; d.saved=true; saved++; } else nb=old-1; }
-      }
-      d.belt=nb-old; d.lv=lvl(nb)-lvl(old); belts[s.id]=nb;
-      if (d.belt>0) up++; if (d.belt<0) dn++; if (d.lv>0) newBelt++; if (d.lv>0 && nb===MAXP) black++;
-    }
-    const pct=ROSTER.length? nOk/ROSTER.length : 0, win = ROSTER.length>0 && pct>=2/3;
-    if (win) troph++;
+    const M=MODES[mode()];
+    updateCount();
+    M.render(false, M.before?M.before():undefined);
+    const res=M.score(nOk,pct);
     save();
     setPhaseTxt(`Bonne réponse : ${q.correct} — ${nOk} / ${ROSTER.length} juste${nOk>1?"s":""} (${Math.round(pct*100)} %)`);
     beep(523,.12,.12,"triangle"); setTimeout(()=>beep(784,.2,.12,"triangle"),130);
     updateButtons(); sendState();
-    const blackNames=ROSTER.filter(s=>lastDelta[s.id].lv>0&&belts[s.id]===MAXP).map(s=>s.name).join(" · ");
     const myQ=qid;
     clearTimeout(moveTimer);
     moveTimer=setTimeout(()=>{
       if (qid!==myQ) return;
-      renderLadder(true);
-      const bits=[up&&`▲ ${up} progresse${up>1?"nt":""}`, newBelt&&`🥋 ${newBelt} nouvelle${newBelt>1?"s":""} ceinture${newBelt>1?"s":""}`, dn&&`▼ ${dn} recule${dn>1?"nt":""}`, saved&&`🛡️ ${saved} sauvé${saved>1?"s":""}`, shields&&`🔥 ${shields} nouveau${shields>1?"x":""} bouclier${shields>1?"s":""}`, stars&&`⭐ ${stars} étoile${stars>1?"s":""}`].filter(Boolean);
-      setPhaseTxt(`Bonne réponse : ${q.correct} — ${nOk} / ${ROSTER.length} juste${nOk>1?"s":""} · ${bits.join(" · ")||"personne ne bouge"}`);
-      if (up) { [523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.12,.1,"triangle"),i*90)); }
-      setTimeout(()=>{
-        if (qid!==myQ) return;
-        if (win){ $("trophies").textContent=troph; confetti(); toast("🏆 DÉFI CLASSE RÉUSSI !",`${Math.round(pct*100)} % de bonnes réponses`,2600); [523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.18,.12,"triangle"),i*120)); }
-        else if (black) { confetti(0.4); toast("🥋 CEINTURE NOIRE !", blackNames, 2400); }
-      },900);
+      (res.animate||(()=>M.render(true)))();
+      setPhaseTxt(`Bonne réponse : ${q.correct} — ${nOk} / ${ROSTER.length} juste${nOk>1?"s":""} · ${res.bits.filter(Boolean).join(" · ")||"rien ne bouge"}`);
+      if (res.good) [523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.12,.1,"triangle"),i*90));
+      setTimeout(()=>{ if (qid===myQ && res.fx) res.fx(); },1000);
     },1300);
   }
   function next(){ if (phase==="question") return; clearInterval(timerIv); newQuestion(phase==="revealed"); }
+  const isOk = id => !!(answers[id] && answers[id].ans===q.correct);
+  const mode = () => MODES[settings.mode] ? settings.mode : "ladder";
+  const plural = (n,s,p) => n>1 ? p : s;
+  function fanfare(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.18,.12,"triangle"),i*120)); }
 
-  /* ---------- Rendu ---------- */
+  /* ---------- Rendu commun ---------- */
   function setPhaseTxt(t){ $("phaseTxt").textContent=t; }
   function updateButtons(){
     $("btnLaunch").disabled=phase!=="ready"; $("btnReveal").disabled=phase!=="question"; $("btnNext").disabled=phase==="question";
@@ -913,31 +945,229 @@ const Screen = (() => {
     $("ansCount").textContent=`${n} / ${ROSTER.length}`;
     $("pfill").style.width=(ROSTER.length? n/ROSTER.length*100 : 0)+"%";
   }
-  function chip(s){
-    const a=answers[s.id], st=stats[s.id], d=lastDelta[s.id]||{};
-    let cls="st";
+  /** Étiquette d'un élève : s'allume quand sa carte est lue, verte / rouge à la révélation */
+  function chipHTML(s, extraCls, pre, icons){
+    const a=answers[s.id]; let cls="st";
     if (phase==="revealed") cls+= a ? (a.ans===q.correct?" ok":" ko") : " none"; else if (a) cls+=" ans";
-    if (d.belt>0) cls+=" up"; else if (d.belt<0) cls+=" dn"; else if (d.saved) cls+=" saved";
-    const ic=(st.sh?"🛡️":"")+(st.k===2?"🔥":"")+(st.star?`⭐${st.star>1?st.star:""}`:"")+(phase==="revealed"&&a?` ${a.ans}`:"");
-    const stripe = belts[s.id]%2 ? `<span class="stripe" title="1 barrette : encore une bonne réponse pour la ceinture suivante"></span>` : "";
-    return `<span class="${cls}" data-id="${s.id}" title="Carte ${s.id}">${stripe}${esc(s.name)}${ic?`<span class="ic">${ic}</span>`:""}</span>`;
+    const ic=(icons||"")+(phase==="revealed"&&a?` ${a.ans}`:"");
+    return `<span class="${cls}${extraCls?" "+extraCls:""}" data-id="${s.id}" title="Carte ${s.id}">${pre||""}${esc(s.name)}${ic?`<span class="ic">${ic}</span>`:""}</span>`;
   }
-  function renderLadder(animate){
-    updateCount();
+  /** Ré-affiche le panneau ; avec animate, chaque prénom glisse de son ancienne place à la nouvelle */
+  function flip(animate, draw){
     const before={};
     if (animate) document.querySelectorAll("#standings .st").forEach(e=>before[e.dataset.id]=e.getBoundingClientRect());
-    if (!ROSTER.length){ $("standings").innerHTML=`<p style="color:var(--mut)">Ajoutez la liste de la classe dans ⚙️ Réglages.</p>`; return; }
-    $("standings").innerHTML=[...BELTS.keys()].reverse().map(i=>{
-      const who=ROSTER.filter(s=>lvl(belts[s.id])===i).sort((x,y)=>belts[y.id]-belts[x.id]||x.name.localeCompare(y.name,"fr"));
-      return `<div class="rung" style="flex:${who.length+2} 1 0;background:${BELTS[i].bg}1f"><div class="bl" style="background:${BELTS[i].bg};color:${BELTS[i].fg}">${BELTS[i].n}<small>${who.length||""}</small></div><div class="who">${who.map(chip).join("")}</div></div>`;
-    }).join("");
-    fitLadder();
+    draw(); fitLadder();
     if (animate) document.querySelectorAll("#standings .st").forEach(e=>{
       const b=before[e.dataset.id]; if(!b) return; const r=e.getBoundingClientRect(), dx=b.left-r.left, dy=b.top-r.top;
       if (Math.abs(dx)<1 && Math.abs(dy)<1) return;
       e.style.transition="none"; e.style.transform=`translate(${dx}px,${dy}px)`; e.style.zIndex=2;
       requestAnimationFrame(()=>requestAnimationFrame(()=>{ e.style.transition="transform .9s cubic-bezier(.2,.8,.2,1),background .3s,border-color .3s,box-shadow .3s"; e.style.transform=""; }));
     });
+  }
+  function renderMode(animate){
+    updateCount();
+    const M=MODES[mode()];
+    $("modeChip").innerHTML=M.label;
+    $("trophyChip").classList.toggle("hidden", mode()!=="ladder");
+    $("rules").innerHTML=M.rules;
+    if (!ROSTER.length){ $("standings").innerHTML=`<p style="color:var(--mut)">Ajoutez la liste de la classe dans ⚙️ Réglages.</p>`; return; }
+    M.render(animate);
+  }
+  const renderLadder = renderMode; // compatibilité
+
+  /* =====================================================================
+     LES MODES DE JEU
+     ===================================================================== */
+  const BOSSES=[["🐉","Dragon des Fractions"],["🦑","Kraken des Pourcentages"],["👾","Pixel le Proportionnel"],["🤖","Robo-Relatif"],["👹","Oni des Priorités"],["🧟","Zombie des Angles"],["🦖","T-Rex du Calcul"],["🧙","Sorcier des Équations"]];
+  const newBoss = lv => { const max=Math.max(12, Math.round(Math.max(ROSTER.length,8)*2.5*(1+0.25*lv))); return {lv, i:lv%BOSSES.length, hp:max, max, lives:3, wins:(ms.boss&&ms.boss.wins)||0}; };
+  const TUG_WIN=6;
+  function makeTeams(){
+    const t={}; shuffle(ROSTER.map(s=>s.id)).forEach((id,i)=>t[id]=i%2); return t;
+  }
+  function ensureModes(){
+    if (!ms.boss || ms.boss.max==null) ms.boss=newBoss(0);
+    ms.tug = Object.assign({pos:0, score:[0,0], teams:{}}, ms.tug||{});
+    const t=ms.tug.teams, missing=ROSTER.filter(s=>t[s.id]==null);
+    if (missing.length){ for (const s of missing){ const n0=ROSTER.filter(x=>t[x.id]===0).length, n1=ROSTER.filter(x=>t[x.id]===1).length; t[s.id]= n0<=n1?0:1; } }
+    ms.surv = Object.assign({h:{}, g:{}}, ms.surv||{});
+    for (const s of ROSTER){ if (ms.surv.h[s.id]==null) ms.surv.h[s.id]=3; if (ms.surv.g[s.id]==null) ms.surv.g[s.id]=0; }
+  }
+
+  const MODES = {
+    /* ---------- 🥋 Ceintures ---------- */
+    ladder:{
+      label:"🥋 <b>Ceintures</b>", bonusTxt:"juste : +2 barrettes · faux : pas de chute",
+      rules:"✅ juste : +1 barrette (2 barrettes = ceinture suivante) · ❌ faux : −1 barrette · 🔥 3 justes de suite = 🛡️ bouclier (annule une chute) · ⭐ juste en ceinture noire · ⚡ toutes les 5 questions : bonus ×2 sans chute · 🏆 2 élèves sur 3 justes = défi classe réussi",
+      render(animate){
+        flip(animate, ()=>{
+          $("standings").innerHTML=[...BELTS.keys()].reverse().map(i=>{
+            const who=ROSTER.filter(s=>lvl(belts[s.id])===i).sort((x,y)=>belts[y.id]-belts[x.id]||x.name.localeCompare(y.name,"fr"));
+            return `<div class="rung" style="flex:${who.length+2} 1 0;background:${BELTS[i].bg}1f"><div class="bl" style="background:${BELTS[i].bg};color:${BELTS[i].fg}">${BELTS[i].n}<small>${who.length||""}</small></div><div class="who">${who.map(chip).join("")}</div></div>`;
+          }).join("");
+        });
+      },
+      score(nOk,pct){
+        let up=0, dn=0, saved=0, shields=0, stars=0, newBelt=0; const black=[];
+        for (const s of ROSTER){
+          const a=answers[s.id], st=stats[s.id], old=belts[s.id], d=(lastDelta[s.id]={});
+          const ok=isOk(s.id), fall = a ? !ok : settings.noAns==="down";
+          let nb=old;
+          if (ok){
+            if (old===MAXP){ st.star+= bonus?2:1; stars++; }
+            nb=Math.min(MAXP, old+(bonus?2:1));
+            st.k++; if (st.k>=3){ st.k=0; if(!st.sh){ st.sh=1; shields++; } }
+          } else {
+            st.k=0;
+            if (fall && !bonus && old>0){ if (st.sh){ st.sh=0; d.saved=true; saved++; } else nb=old-1; }
+          }
+          d.belt=nb-old; d.lv=lvl(nb)-lvl(old); belts[s.id]=nb;
+          if (d.belt>0) up++; if (d.belt<0) dn++; if (d.lv>0) newBelt++; if (d.lv>0 && nb===MAXP) black.push(s.name);
+        }
+        const win = ROSTER.length>0 && pct>=2/3; if (win) troph++;
+        return { good:up, bits:[up&&`▲ ${up} ${plural(up,"progresse","progressent")}`, newBelt&&`🥋 ${newBelt} ${plural(newBelt,"nouvelle ceinture","nouvelles ceintures")}`, dn&&`▼ ${dn} ${plural(dn,"recule","reculent")}`, saved&&`🛡️ ${saved} ${plural(saved,"sauvé","sauvés")}`, shields&&`🔥 ${shields} ${plural(shields,"nouveau bouclier","nouveaux boucliers")}`, stars&&`⭐ ${stars} ${plural(stars,"étoile","étoiles")}`],
+          fx(){
+            if (win){ $("trophies").textContent=troph; confetti(); toast("🏆 DÉFI CLASSE RÉUSSI !",`${Math.round(pct*100)} % de bonnes réponses`,2600); fanfare(); }
+            else if (black.length){ confetti(0.4); toast("🥋 CEINTURE NOIRE !", black.join(" · "), 2400); }
+          } };
+      },
+      reset(){ for (const s of ROSTER){ belts[s.id]=0; stats[s.id]={k:0,sh:0,star:0}; } troph=0; $("trophies").textContent=0; }
+    },
+
+    /* ---------- 👹 Boss de classe ---------- */
+    boss:{
+      label:"👹 <b>Boss de classe</b>", bonusTxt:"chaque bonne réponse fait 2 dégâts",
+      rules:"Toute la classe contre le boss : ✅ chaque bonne réponse = 1 dégât (⚡ question bonus : ×2) · 👹 si moins de la moitié de la classe a juste, le boss attaque : −1 ❤️ · 3 ❤️ perdus = le boss gagne, revanche ! · Boss vaincu = un boss plus fort arrive",
+      before(){ return {...ms.boss}; },
+      render(animate, view){
+        const b=view||ms.boss, [emo,name]=BOSSES[b.i];
+        $("standings").innerHTML=`
+          <div class="boss">
+            <div class="boss-emo" id="bossEmo">${emo}</div>
+            <div class="boss-info">
+              <div class="boss-name">${name} <small>niveau ${b.lv+1} · ${b.wins||0} boss vaincu${(b.wins||0)>1?"s":""}</small></div>
+              <div class="hpbar"><div id="hpFill" style="width:${b.hp/b.max*100}%"></div><span id="hpTxt">${b.hp} / ${b.max} PV</span></div>
+              <div class="lives" id="bossLives">Classe : ${"❤️".repeat(b.lives)}${"🖤".repeat(3-b.lives)}</div>
+            </div>
+            <div class="dmg" id="bossDmg"></div>
+          </div>
+          <div class="who">${ROSTER.map(s=>chipHTML(s)).join("")}</div>`;
+        fitLadder();
+      },
+      score(nOk){
+        const b=ms.boss, prev={...b}, dmg=nOk*(bonus?2:1);
+        const hp=Math.max(0,b.hp-dmg), killed=hp===0;
+        const attack = !killed && nOk < ROSTER.length/2;
+        b.hp=hp; if (attack) b.lives--;
+        const lost = b.lives<=0;
+        if (killed){ const w=(b.wins||0)+1; ms.boss=newBoss(b.lv+1); ms.boss.wins=w; }
+        else if (lost){ b.hp=b.max; b.lives=3; }
+        const view={...prev, hp, lives:Math.max(0,prev.lives-(attack?1:0))};
+        return { good:dmg,
+          bits:[dmg&&`⚔️ ${dmg} dégât${dmg>1?"s":""}`, attack&&"👹 le boss attaque : −1 ❤️", killed&&"💥 boss vaincu !"],
+          animate(){
+            const f=$("hpFill"); if (!f) return;
+            f.style.width=(hp/prev.max*100)+"%"; $("hpTxt").textContent=`${hp} / ${prev.max} PV`;
+            const d=$("bossDmg"); if (dmg){ d.textContent="−"+dmg; d.classList.remove("pop"); void d.offsetWidth; d.classList.add("pop"); }
+            const e=$("bossEmo"); e.classList.remove("hit"); void e.offsetWidth;
+            if (dmg){ e.classList.add("hit"); beep(180,.18,.15,"sawtooth"); }
+          },
+          fx(){
+            if (killed){ confetti(); fanfare(); toast("💥 BOSS VAINCU !", `${BOSSES[prev.i][1]} est K.O.`, 2600);
+              setTimeout(()=>{ if(phase==="revealed"){ MODES.boss.render(false); toast(`${BOSSES[ms.boss.i][0]} UN NOUVEAU BOSS !`, `${BOSSES[ms.boss.i][1]} · ${ms.boss.max} PV`, 2200);} },2800); }
+            else if (attack){
+              $("bossLives").innerHTML=`Classe : ${"❤️".repeat(view.lives)}${"🖤".repeat(3-view.lives)}`;
+              document.body.classList.remove("redflash"); void document.body.offsetWidth; document.body.classList.add("redflash");
+              beep(110,.4,.18,"square");
+              if (lost){ toast("😈 LE BOSS A GAGNÉ…", "Revanche : il revient avec tous ses PV !", 2800); setTimeout(()=>{ if(phase==="revealed") MODES.boss.render(false); },3000); }
+              else toast("👹 LE BOSS ATTAQUE !", `moins de la moitié de la classe a juste · −1 ❤️`, 2200);
+            }
+          } };
+      },
+      reset(){ ms.boss=newBoss(0); ms.boss.wins=0; }
+    },
+
+    /* ---------- 🪢 Tir à la corde ---------- */
+    tug:{
+      label:"🪢 <b>Tir à la corde</b>", bonusTxt:"la corde avance 2 fois plus",
+      rules:"2 équipes : à chaque question, l'équipe qui a le plus fort pourcentage de bonnes réponses tire la corde (⚡ question bonus : ×2) · la corde au bout = manche gagnée · équipes changeables dans ⚙️ Réglages",
+      render(animate, view){
+        const T=ms.tug, pos=view?view.pos:T.pos, last=view&&view.last;
+        const team=k=>ROSTER.filter(s=>T.teams[s.id]===k);
+        const left=50+pos/TUG_WIN*44;
+        $("standings").innerHTML=`
+          <div class="tug-score"><span class="tr">🔴 Rouges <b>${T.score[0]}</b></span><small>manches</small><span class="tb"><b>${T.score[1]}</b> Bleus 🔵</span></div>
+          <div class="rope"><div class="goal g0"></div><div class="goal g1"></div><div class="line"></div><div class="knot" id="knot" style="left:${left}%">🪢</div></div>
+          <div class="tug-last" id="tugLast">${last?`🔴 ${last[0]} % de justes · 🔵 ${last[1]} %`:"&nbsp;"}</div>
+          <div class="teams">
+            <div class="team t0"><h4>🔴 Rouges <small>${team(0).length}</small></h4><div class="who">${team(0).map(s=>chipHTML(s)).join("")}</div></div>
+            <div class="team t1"><h4>🔵 Bleus <small>${team(1).length}</small></h4><div class="who">${team(1).map(s=>chipHTML(s)).join("")}</div></div>
+          </div>`;
+        fitLadder();
+      },
+      before(){ return {pos:ms.tug.pos}; },
+      score(){
+        const T=ms.tug, pc=[0,1].map(k=>{ const m=ROSTER.filter(s=>T.teams[s.id]===k); return m.length? m.filter(s=>isOk(s.id)).length/m.length : 0; });
+        const P=pc.map(p=>Math.round(p*100));
+        let move=Math.round((pc[1]-pc[0])*10)*(bonus?2:1);
+        if (!move && pc[0]!==pc[1]) move = pc[1]>pc[0]?1:-1;
+        const prev=T.pos, np=Math.max(-TUG_WIN,Math.min(TUG_WIN,prev+move));
+        const win = Math.abs(np)>=TUG_WIN ? (np<0?0:1) : -1;
+        if (win>=0){ T.score[win]++; T.pos=0; } else T.pos=np;
+        const who = move<0?"🔴 les Rouges tirent":move>0?"🔵 les Bleus tirent":"égalité, la corde ne bouge pas";
+        return { good:Math.abs(move), bits:[`🔴 ${P[0]} % · 🔵 ${P[1]} %`, who+(Math.abs(move)>1?` (${Math.abs(move)} crans)`:"")],
+          animate(){ const k=$("knot"); if(k){ k.style.left=(50+np/TUG_WIN*44)+"%"; } $("tugLast").textContent=`🔴 ${P[0]} % de justes · 🔵 ${P[1]} %`; if(move) beep(move<0?330:440,.25,.12,"triangle"); },
+          fx(){ if (win>=0){ confetti(); fanfare(); toast(win?"🔵 LES BLEUS GAGNENT LA MANCHE !":"🔴 LES ROUGES GAGNENT LA MANCHE !", `Score : Rouges ${T.score[0]} – ${T.score[1]} Bleus`, 2800);
+            setTimeout(()=>{ if(phase==="revealed") MODES.tug.render(false); },3000); } } };
+      },
+      reset(){ ms.tug.pos=0; ms.tug.score=[0,0]; }
+    },
+
+    /* ---------- ❤️ Survie ---------- */
+    surv:{
+      label:"❤️ <b>Survie</b>", bonusTxt:"juste : +1 ❤️ · faux : pas de perte",
+      rules:"Chacun a 3 ❤️ · ❌ faux : −1 ❤️ · à 0 ❤️ : 👻 fantôme… qui revient en jeu avec 1 ❤️ après 2 bonnes réponses de suite · ⚡ question bonus : juste = +1 ❤️, faux = pas de perte",
+      render(animate){
+        const H=ms.surv.h, G=ms.surv.g;
+        const alive=ROSTER.filter(s=>H[s.id]>0).sort((a,b)=>H[b.id]-H[a.id]||a.name.localeCompare(b.name,"fr"));
+        const ghosts=ROSTER.filter(s=>H[s.id]<=0);
+        flip(animate, ()=>{
+          $("standings").innerHTML=`
+            <div class="surv-head"><span>❤️ <b>${alive.length}</b> en vie</span><span>👻 <b>${ghosts.length}</b> fantôme${ghosts.length>1?"s":""}</span></div>
+            <div class="who surv-alive" style="flex:${alive.length+3} 1 0">${alive.map(s=>{ const d=lastDelta[s.id]||{};
+              return chipHTML(s, d.revive?"up":d.lost?"dn":"", "", " "+"❤️".repeat(Math.min(3,H[s.id]))); }).join("")}</div>
+            <div class="surv-ghost-h">👻 Fantômes — 2 bonnes réponses de suite pour revenir</div>
+            <div class="who surv-ghosts" style="flex:${ghosts.length+1} 1 0">${ghosts.map(s=>chipHTML(s, "ghost", "👻 ", " "+"●".repeat(G[s.id])+"○".repeat(2-G[s.id]))).join("")||`<span style="color:var(--mut)">personne… pour l'instant</span>`}</div>`;
+        });
+      },
+      score(){
+        const H=ms.surv.h, G=ms.surv.g; let lost=0, healed=0; const elim=[], back=[];
+        for (const s of ROSTER){
+          const a=answers[s.id], ok=isOk(s.id), fall = a ? !ok : settings.noAns==="down", d=(lastDelta[s.id]={});
+          if (H[s.id]>0){
+            if (ok && bonus && H[s.id]<3){ H[s.id]++; healed++; }
+            else if (fall && !bonus){ H[s.id]--; d.lost=true; lost++; if (H[s.id]<=0){ G[s.id]=0; elim.push(s.name); } }
+          } else {
+            if (ok){ G[s.id]++; if (G[s.id]>=2){ H[s.id]=1; G[s.id]=0; d.revive=true; back.push(s.name); } }
+            else G[s.id]=0;
+          }
+        }
+        return { good:healed+back.length, bits:[lost&&`💔 ${lost} ${plural(lost,"perd","perdent")} un cœur`, healed&&`💖 ${healed} ${plural(healed,"regagne","regagnent")} un cœur`, elim.length&&`👻 ${elim.length} ${plural(elim.length,"éliminé","éliminés")}`, back.length&&`✨ ${back.length} ${plural(back.length,"revient","reviennent")}`],
+          fx(){
+            if (back.length){ confetti(0.5); fanfare(); toast("✨ RÉSURRECTION !", back.join(" · "), 2400); }
+            else if (elim.length){ beep(150,.4,.12,"sawtooth"); toast("👻 ÉLIMINÉ"+(elim.length>1?"S":"")+" !", elim.join(" · ")+" — 2 bonnes réponses de suite pour revenir", 2400); }
+            else if (!lost && ROSTER.length){ confetti(0.5); toast("🛡️ PERSONNE N'A PERDU DE CŒUR !", "", 2000); }
+          } };
+      },
+      reset(){ for (const s of ROSTER){ ms.surv.h[s.id]=3; ms.surv.g[s.id]=0; } }
+    }
+  };
+
+  function chip(s){
+    const st=stats[s.id], d=lastDelta[s.id]||{};
+    const extra = d.belt>0?"up":d.belt<0?"dn":d.saved?"saved":"";
+    const icons=(st.sh?"🛡️":"")+(st.k===2?"🔥":"")+(st.star?`⭐${st.star>1?st.star:""}`:"");
+    const stripe = belts[s.id]%2 ? `<span class="stripe" title="1 barrette : encore une bonne réponse pour la ceinture suivante"></span>` : "";
+    return chipHTML(s, extra, stripe, icons);
   }
   /* Le texte de la question prend la place libre, sans jamais passer sous les réponses */
   function fitQuestion(){
@@ -946,12 +1176,12 @@ const Screen = (() => {
     inner.style.fontSize=s+"px";
     while (s>16 && (inner.scrollHeight>box.clientHeight || inner.scrollWidth>box.clientWidth)){ s-=2; inner.style.fontSize=s+"px"; }
   }
-  /* Les prénoms sont le plus gros possible tant que chaque ceinture les contient */
+  /* Les prénoms sont le plus gros possible tant que tout tient dans le panneau */
   function fitLadder(){
     const lad=$("standings"); let s=1.45;
-    const over=()=>[...lad.querySelectorAll(".who")].some(w=>w.scrollHeight>w.clientHeight+1);
+    const over=()=>lad.scrollHeight>lad.clientHeight+1 || [...lad.querySelectorAll(".who")].some(w=>w.scrollHeight>w.clientHeight+1);
     lad.style.setProperty("--chip",s+"rem");
-    while (s>0.75 && over()){ s-=0.05; lad.style.setProperty("--chip",s.toFixed(2)+"rem"); }
+    while (s>0.7 && over()){ s-=0.05; lad.style.setProperty("--chip",s.toFixed(2)+"rem"); }
   }
   let toastT=null;
   function toast(big, small, ms){
@@ -991,6 +1221,7 @@ const Screen = (() => {
   function openSettings(){
     if (!$("sClass").onchange) setupClassUI();
     fillClassSelect();
+    $("sMode").value=mode(); $("sTeamsMsg").textContent="";
     $("sDur").value=settings.dur; $("sLvl").value=settings.lvl; $("sAuto").checked=settings.auto; $("sNoAns").value=settings.noAns;
     $("sThemes").innerHTML=Object.entries(GEN).map(([k,g])=>`<label><input type="checkbox" value="${k}" ${settings.themes.includes(k)?"checked":""}>${g.label}</label>`).join("");
     $("settings").classList.remove("hidden");
@@ -998,7 +1229,7 @@ const Screen = (() => {
   function closeSettings(){
     const lvlChanged = settings.lvl!==$("sLvl").value, th=[...$("sThemes").querySelectorAll("input:checked")].map(i=>i.value);
     const thChanged = th.join()!==settings.themes.join();
-    Object.assign(settings,{dur:+$("sDur").value, lvl:$("sLvl").value, auto:$("sAuto").checked, noAns:$("sNoAns").value, themes:th.length?th:Object.keys(GEN)});
+    Object.assign(settings,{mode:$("sMode").value, dur:+$("sDur").value, lvl:$("sLvl").value, auto:$("sAuto").checked, noAns:$("sNoAns").value, themes:th.length?th:Object.keys(GEN)});
     if (!cur && $("sList").value.trim()){ cur="Ma classe"; classes[cur]={list:"",belts:{},qnum:1,v:3}; }
     keepListText();
     store.set(KEY,{settings,classes,cur}); loadClass();
