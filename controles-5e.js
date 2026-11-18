@@ -297,8 +297,10 @@ function aiText(c) {
   L.push('- Niveau par compétence = (questions justes + 1/2 par question en partie juste) / nombre de questions : tout juste = TB ; au moins 2/3 = MS ; au moins 1/3 = MF ; sinon MI.');
   L.push('  (1 seule question, ex. un problème, jugée étape par étape : tout juste = TB ; démarche complète avec une seule erreur, la suite cohérente = MS ; au moins une étape juste, ou juste avec les nombres de l\'élève = MF ; aucune = MI, même si la démarche est la bonne.) Le niveau écrit dans la ligne l\'emporte sur les chiffres.');
   L.push('');
+  L.push('- DOUTE DE LECTURE (chiffre ou virgule peu lisible, rature, deux cases marquées, réponse surlignée mais pas cochée, case presque vide…) : NE JAMAIS CHOISIR SEUL. Relis d\'abord la zone en plus grande résolution. Si le doute reste, POSE LA QUESTION au professeur (copie, prénom, question, ce que tu lis, les deux lectures possibles, avec l\'image de la zone si tu peux) et ATTENDS sa réponse avant de donner la ligne de cette copie.');
+  L.push('');
   L.push('RÉPONDRE EN 4 PARTIES, dans cet ordre :');
-  L.push('1. À VÉRIFIER : seulement les réponses illisibles ou ambiguës (copie, question, ce que tu lis, ton choix, la ligne à mettre si c\'est l\'autre lecture). Signaler aussi les copies absentes du scan.');
+  L.push('1. À VÉRIFIER : les copies absentes du scan, et le rappel des doutes de lecture que le professeur a tranchés (copie, question, sa réponse). Aucun doute ne doit rester non posé.');
   L.push('2. LIGNES À COLLER : une ligne par copie, dans l\'ordre des codes, sans aucune remarque, exactement sous cette forme :');
   const ps = ctlVer(ctlPlan(c), c.k, 's');
   L.push(`   ${ctlCode(c.id, 1)} ${c.k.map((k, i) => `C${i + 1}=TB(${'1'.repeat(ps.n[i])})`).join(' ')}`);
@@ -706,13 +708,16 @@ function routeRetour(spec) {
       return `<li><span class="lv lv-${tone[l] || 'none'}">${l || '?'}</span> <b>${esc(lab)}</b> <span class="small muted">${l ? LEVEL_TXT[l] : ''}</span> ${act}</li>`;
     }).join('')}</ul>
     <p class="small muted">Les exercices sont sur ce site : fais-les jusqu'à réussir sans indice, ton bilan s'améliorera.</p></div>
-    <div class="card"><h2>Le corrigé de ton sujet</h2><div class="ctl-ret"></div></div>`;
+    <div class="card"><h2>Le corrigé de ton sujet</h2><div class="rq-sum"></div><div class="ctl-ret"></div></div>`;
   const list = host.querySelector('.ctl-ret');
   qs.forEach((x, j) => {
     const sec = document.createElement('section'); sec.className = 'ctl-rq';
     const b = bitOf(x);
+    // juste / faux visible d'un coup d'œil : carte bordée de vert ou de rouge
+    if (b === '1' || b === '0') sec.classList.add(b === '1' ? 'rq-ok' : 'rq-ko');
+    sec.id = 'rq-' + (j + 1);
     // énoncé à gauche (bonnes réponses écrites en vert dans les cases), correction à droite ; l'une sous l'autre sur téléphone
-    sec.innerHTML = `<h3><span class="qn">${j + 1}</span> <span class="small muted">${esc(GENS[x.k].label)}</span> ${b === '1' ? '<span class="ok-t">✔ juste</span>' : b === '0' ? '<span class="ko-t">✘ à revoir</span>' : ''}</h3>
+    sec.innerHTML = `<h3><span class="qn">${j + 1}</span> <span class="small muted">${esc(GENS[x.k].label)}</span> ${b === '1' ? '<span class="rq-badge rq-badge-ok">✔ Juste</span>' : b === '0' ? '<span class="rq-badge rq-badge-ko">✘ Faux : regarde la correction</span>' : ''}</h3>
       <div class="rq-grid"><div class="rq-q"><p class="rq-tag">L'énoncé et la bonne réponse</p><div class="ex-q"></div></div>
       <div class="rq-a"><p class="rq-tag">✔ La correction</p><p class="rq-good" hidden></p><div class="rq-why"></div></div></div>`;
     list.appendChild(sec);
@@ -725,6 +730,13 @@ function routeRetour(spec) {
     qd.querySelectorAll('input, button').forEach((i) => { i.disabled = true; });
     fb.innerHTML = res.msg || '';
   });
+  // en haut du corrigé : une pastille par question (verte juste, rouge faux), qui mène à la question
+  const sumBox = host.querySelector('.rq-sum'), marks = qs.map((x) => bitOf(x));
+  if (marks.some((m) => m === '0' || m === '1')) {
+    const nOk = marks.filter((m) => m === '1').length;
+    sumBox.innerHTML = `<p class="small muted">${nOk} question${nOk > 1 ? 's' : ''} juste${nOk > 1 ? 's' : ''} sur ${marks.length}. Touche une pastille pour aller à la question.</p><div class="rq-pills">${marks.map((m, j) => `<a href="#" data-q="${j + 1}" class="rq-pill ${m === '1' ? 'rq-pill-ok' : m === '0' ? 'rq-pill-ko' : ''}">${j + 1} ${m === '1' ? '✔' : m === '0' ? '✘' : ''}</a>`).join('')}</div>`;
+    sumBox.querySelectorAll('a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('rq-' + a.dataset.q)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  } else sumBox.remove();
   retourCh = GENS[keys.find((k) => GENS[k])]?.ch || '';
   return retourCh;
 }

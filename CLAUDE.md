@@ -13,6 +13,11 @@ est aussi joint, chiffré, à `prof-5e.json` dans le dépôt privé (le script `
 1. **Lire les copies** : chaque page une seule fois, 3 ou 4 par message. Calculer soi-même les réponses à partir des
    énoncés imprimés ; ne lire l'« Attendu » du fichier que pour une question douteuse. Le haut de la copie porte le nom :
    ne jamais le recopier ailleurs que dans les fiches « à écrire sur les copies ».
+   **Doute de lecture** (chiffre ou virgule peu lisible, rature, deux cases marquées, réponse surlignée mais pas
+   cochée, case presque vide…) : **ne jamais choisir seul**. Relire d'abord la zone en haute résolution ; si le doute
+   reste, **poser la question au professeur** avec l'outil de question (copie, prénom, question, ce qui est lu, les
+   deux lectures possibles, image de la zone si possible) et **attendre sa réponse** avant de donner la ligne de cette
+   copie. Regrouper les doutes en une ou deux séries de questions plutôt que de les poser un par un.
 2. **Noter** :
    - Par question : `1` si entièrement juste, `0` sinon (ces chiffres alimentent le corrigé en ligne de l'élève).
      Deux cases cochées = 0.
@@ -23,7 +28,7 @@ est aussi joint, chiffré, à `prof-5e.json` dans le dépôt privé (le script `
      MS ; au moins une étape juste, ou juste avec les nombres de l'élève, MF ; aucune MI.
    - Le niveau écrit dans la ligne l'emporte sur les chiffres.
 3. **Répondre en 4 parties** :
-   1. **À vérifier** : uniquement les lectures douteuses et les copies absentes du scan.
+   1. **À vérifier** : les copies absentes du scan, et le rappel des doutes de lecture tranchés par le professeur.
    2. **Lignes à coller**, dans l'ordre des codes, sans aucune remarque : `BMG-03 C1=MF(100) C2=MF(00001) C3=MS(0)`
    3. **À écrire sur les copies** : une fiche par élève, affichée avec l'outil de visuel interactif (`show_widget`), avec
       des flèches ← → (boutons et clavier), dans l'ordre des pages du scan (sinon un tableau, une ligne par copie).
