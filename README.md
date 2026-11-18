@@ -97,7 +97,9 @@ Chapitre Angles, page **🎮 Jeux** (`#/angles/jeux`), dossier `jeu-angles/`, vi
 ## MathClash — jeu Plickers en classe (18/11/2026)
 Espace professeur → carte **🥋 MathClash** → « Ouvrir l'écran à projeter » (`mathclash/index.html?mode=screen`, protégé comme le classeur).
 - Sur le téléphone : scanner le QR code affiché en haut de l'écran (ou ouvrir `…/mathclash/index.html?mode=phone` et taper le code à 4 chiffres). La caméra lit les cartes Plickers (version 1, n° 1 à 40) ; les boutons Lancer / Révéler / Suivante pilotent l'écran. Bouton « Webcam locale » en secours sur le PC.
-- Montante-Descendante : 7 ceintures, bonne réponse = monte d'une ceinture, erreur = descend. Pas de mode rapidité.
+- Montante-Descendante : 5 ceintures (blanche, jaune, verte, bleue, noire) de 2 barrettes chacune. Bonne réponse = +1 barrette, erreur = −1 barrette. Pas de mode rapidité.
+- Pour que ça reste fun : 3 bonnes réponses de suite donnent un 🛡️ bouclier (annule une chute) ; en ceinture noire, chaque bonne réponse rapporte une ⭐ ; toutes les 5 questions, ⚡ question bonus (+2 barrettes, pas de chute) ; si 2 élèves sur 3 ont juste, 🏆 défi classe réussi (confettis). À la révélation, les prénoms glissent d'une ceinture à l'autre.
+- L'écran : barre du haut sur une ligne (le QR code s'ouvre en grand au démarrage, et en cliquant sur « Relier le téléphone »), question qui s'ajuste à la place libre, prénoms le plus gros possible.
 - ⚙️ Réglages : classe et liste « Prénom numéro de carte », durée, niveau, thèmes (proportionnalité et pourcentages cochés au départ).
 - Les listes et les ceintures restent dans le navigateur du PC (clé `revisions5e-plickers`), elles ne sont ni publiées ni synchronisées.
 - Il faut internet (serveur public PeerJS pour relier le téléphone) et une adresse en HTTPS pour la caméra (GitHub Pages).
