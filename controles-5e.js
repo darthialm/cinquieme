@@ -362,9 +362,11 @@ function resFile(c, rows) {
   rows.forEach((x) => { r[x.n] = retourURL(c, x.n, x.lv, x.bits).split('#/r/')[1]; });
   return { v: 1, id: c.id, at: new Date().toISOString(), r };
 }
-/** Publie le fichier avec le jeton de la sauvegarde en ligne ; sinon le télécharge (à déposer dans resultats/). */
+/** Publie le fichier avec le jeton de la sauvegarde en ligne ; sinon le télécharge (à déposer dans resultats/).
+    Renvoie 'ok', ou la cause de l'échec : 'nocfg', 'expired', 'denied', 'net' ou 'GitHub <code>'. */
 async function publishResults(c, rows) {
   const file = resFile(c, rows), txt = JSON.stringify(file), path = `${RES_DIR}/${c.id}.json`, cfg = typeof psCfg === 'function' ? psCfg() : null;
+  let why = 'nocfg';
   if (cfg) {
     try {
       const api = (opt = {}) => fetch(`https://api.github.com/repos/${SITE_REPO}/contents/${path}`, { cache: 'no-store', ...opt,
@@ -373,10 +375,35 @@ async function publishResults(c, rows) {
       const sha = cur.ok ? (await cur.json()).sha : null;
       const r = await api({ method: 'PUT', body: JSON.stringify({ message: `Résultats du contrôle ${c.id} (codes anonymes)`, content: btoa(unescape(encodeURIComponent(txt))), ...(sha ? { sha } : {}) }) });
       if (r.ok) return 'ok';
-    } catch (e) { /* pas de connexion : téléchargement */ }
+      why = r.status === 401 ? 'expired' : (r.status === 403 || r.status === 404) ? 'denied' : 'GitHub ' + r.status;
+    } catch (e) { why = 'net'; }
   }
   download(`${c.id}.json`, txt, 'application/json');
-  return 'file';
+  return why;
+}
+/** Message affiché quand la publication automatique n'a pas marché : la cause, puis quoi faire. */
+function pubFailHTML(c, why) {
+  const repo = `<b>${SITE_REPO}</b>`, file = `<b>${c.id}.json</b>`;
+  const cause = {
+    nocfg: `la sauvegarde en ligne n'est pas réglée sur cet appareil.`,
+    expired: `ton jeton GitHub a expiré ou a été supprimé (la sauvegarde en ligne ne marche plus non plus).`,
+    denied: `ton jeton GitHub n'a pas le droit d'écrire dans le dépôt du site ${repo}. Il n'a accès qu'au dépôt de données privé.`,
+    net: `le site n'a pas pu joindre GitHub (pas de connexion ?).`,
+  }[why] || `GitHub a refusé la publication (${esc(String(why))}).`;
+  const fix = {
+    nocfg: `<p>Pour que ça marche tout seul : entre ton <b>code d'accès</b> à l'entrée de l'Espace professeur sur cet appareil, puis reclique sur « Mettre les résultats en ligne ».</p>`,
+    expired: `<p>Pour que ça marche tout seul : sur <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">github.com → Settings → Developer settings → Fine-grained tokens</a>, ouvre le jeton du site et clique sur <b>Regenerate token</b>, puis règle de nouveau la sauvegarde en ligne avec le nouveau jeton.</p>`,
+    denied: `<p><b>Pour que ça marche tout seul (une seule fois)</b> :</p><ol>
+      <li>Ouvre <a href="https://github.com/settings/personal-access-tokens" target="_blank" rel="noopener">github.com → photo de profil → Settings → Developer settings → Personal access tokens → Fine-grained tokens</a>.</li>
+      <li>Clique sur le jeton du site (celui qui a accès au dépôt de données), puis sur <b>Edit</b>.</li>
+      <li><b>Repository access</b> : garde le dépôt de données et ajoute <b>sixieme</b> et <b>cinquieme</b>.</li>
+      <li><b>Permissions → Repository permissions → Contents</b> : choisis <b>Read and write</b>.</li>
+      <li>Clique sur <b>Update</b>, puis reclique ici sur « Mettre les résultats en ligne ».</li></ol>
+      <p class="small">Le jeton garde la même valeur : rien à changer sur le site. Si ton jeton est dans « Tokens (classic) », coche la case <b>repo</b>.</p>`,
+    net: `<p>Vérifie la connexion, puis reclique sur « Mettre les résultats en ligne ».</p>`,
+  }[why] || '';
+  return `<p>⚠ <b>Pas de publication automatique</b> : ${cause}</p>${fix}
+    <p class="small">En attendant, le fichier ${file} a été téléchargé : tu peux le déposer toi-même dans le dossier <b>${RES_DIR}</b> du dépôt ${repo} sur GitHub (Add file → Upload files, en tapant « ${RES_DIR}/ » devant le nom). Les élèves verront ensuite leur contrôle avec le QR de la copie, ou en tapant leur code sur <b>${esc(siteURL())}#/m</b>.</p>`;
 }
 /* ---------- « Mon contrôle » par code : #/m (l'élève tape son code) ou #/m/ABC-07 (QR imprimé sur la copie) ---------- */
 function routeMonCtl(code) {
@@ -613,9 +640,9 @@ function setupControles() {
       b.disabled = false;
       c.res = { ...(c.res || {}), pub: Date.now() }; ctlSave(c); drawList();
       if (typeof profSyncSoon === 'function') profSyncSoon();
-      st.className = 'small ok-t';
+      st.className = how === 'ok' ? 'small ok-t' : 'small warn';
       st.innerHTML = how === 'ok' ? `✔ En ligne (dans 1 à 2 minutes) : QR des copies, ou code tapé sur <b>${esc(siteURL())}#/m</b>. Recommence si tu changes un niveau.`
-        : `Fichier <b>${c.id}.json</b> téléchargé : dépose-le dans le dossier <b>${RES_DIR}</b> du site sur GitHub (Add file → Upload files, en tapant « ${RES_DIR}/ » devant le nom, ou dans le dossier s'il existe déjà). Les élèves verront ensuite leur contrôle avec le QR de la copie, ou en tapant leur code sur <b>${esc(siteURL())}#/m</b>.`;
+        : pubFailHTML(c, how);
     });
     tb.querySelectorAll('select').forEach((s) => s.addEventListener('change', () => { const k = c.id + s.dataset.n; edits[k] = edits[k] || {}; edits[k][s.dataset.ci] = s.value; drawTable(); }));
     $('ctl-print-lbl')?.addEventListener('click', () => printLabels(c, done, Number($('ctl-skip').value)));
@@ -633,6 +660,25 @@ document.addEventListener('DOMContentLoaded', () => { try { if (profOpen()) setu
 /* ---------- Page « Mon contrôle » : #/r/2.ID.n.ver.plan.clés.niveaux.réponses.classe ---------- */
 let retourSpec = null, retourCh = '';
 const pageOfGen = (k) => { const pg = document.querySelector(`.page [data-gen="${k}"]`)?.closest('.page'); return pg ? `#/${pg.dataset.ch}/${pg.dataset.p}` : ''; };
+/** Écrit la bonne réponse en vert dans les cases (la correction met chaque résultat en gras, dans l'ordre des cases),
+    seulement si l'exercice l'accepte. Renvoie la réponse courte à afficher en grand ('' si on ne sait pas). */
+function retFill(o, q, msg) {
+  try {
+    if (o._correct !== undefined) { const t = document.createElement('div'); t.innerHTML = o._opts[o._correct]; return t.querySelector('svg') ? '' : t.innerHTML; }
+    const ins = [...q.querySelectorAll('.ans')];
+    if (!ins.length) return '';
+    let vals = [...String(msg).matchAll(/<b>([^<]*)<\/b>/g)].map((m) => (m[1].replace(/[\s\u202f\u00a0]/g, '').match(/^-?\d+(,\d+)?(\/\d+)?$/) || [])[0]).filter(Boolean);
+    if (ins.length === 1 && vals.length > 1) vals = [vals[vals.length - 1]];
+    if (vals.length !== ins.length) return '';
+    const box = document.createElement('div'); box.style.cssText = 'position:absolute;left:-9999px;top:0;width:800px';
+    document.body.appendChild(box); box.innerHTML = o.q;
+    [...box.querySelectorAll('.ans')].forEach((i, j) => { i.value = vals[j]; });
+    const chk = o.check(box); box.remove();
+    if (!chk || !chk.ok) return '';
+    ins.forEach((i, j) => { i.value = vals[j]; i.classList.add('right'); });
+    return ins.length === 1 ? vals[0] : '';
+  } catch (e) { return ''; }
+}
 function routeRetour(spec) {
   const page = document.querySelector('.page[data-p="retour"]'), host = page.querySelector('.retour');
   if (spec === retourSpec) return retourCh;
@@ -665,15 +711,19 @@ function routeRetour(spec) {
   qs.forEach((x, j) => {
     const sec = document.createElement('section'); sec.className = 'ctl-rq';
     const b = bitOf(x);
-    sec.innerHTML = `<h3><span class="qn">${j + 1}</span> <span class="small muted">${esc(GENS[x.k].label)}</span> ${b === '1' ? '<span class="ok-t">✔ juste</span>' : b === '0' ? '<span class="ko-t">✘ à revoir</span>' : ''}</h3><div class="ex-q"></div><div class="ex-fb ok"></div>`;
+    // énoncé à gauche (bonnes réponses écrites en vert dans les cases), correction à droite ; l'une sous l'autre sur téléphone
+    sec.innerHTML = `<h3><span class="qn">${j + 1}</span> <span class="small muted">${esc(GENS[x.k].label)}</span> ${b === '1' ? '<span class="ok-t">✔ juste</span>' : b === '0' ? '<span class="ko-t">✘ à revoir</span>' : ''}</h3>
+      <div class="rq-grid"><div class="rq-q"><p class="rq-tag">L'énoncé et la bonne réponse</p><div class="ex-q"></div></div>
+      <div class="rq-a"><p class="rq-tag">✔ La correction</p><p class="rq-good" hidden></p><div class="rq-why"></div></div></div>`;
     list.appendChild(sec);
-    const qd = sec.querySelector('.ex-q'), fb = sec.querySelector('.ex-fb');
+    const qd = sec.querySelector('.ex-q'), fb = sec.querySelector('.rq-why'), good = sec.querySelector('.rq-good');
     qd.innerHTML = x.o.q;
     let res = { msg: '' };
     try { res = revealAnswer(x.o, qd) || res; } catch (e) { /* rien */ }
+    const short = retFill(x.o, qd, res.msg);
+    if (short) { good.innerHTML = 'Réponse : <b>' + short + '</b>'; good.hidden = false; }
     qd.querySelectorAll('input, button').forEach((i) => { i.disabled = true; });
-    fb.innerHTML = res.msg ? '<strong>Correction :</strong> ' + res.msg : '';
-    if (!fb.innerHTML) fb.remove();
+    fb.innerHTML = res.msg || '';
   });
   retourCh = GENS[keys.find((k) => GENS[k])]?.ch || '';
   return retourCh;
