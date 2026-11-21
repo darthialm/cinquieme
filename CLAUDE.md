@@ -24,8 +24,9 @@ est aussi joint, chiffré, à `prof-5e.json` dans le dépôt privé (le script `
    - Une question **en partie juste** (inattention : retenue, virgule, recopie ; une étape fausse puis la suite
      cohérente ; 2 calculs justes sur 3 ; problème pas terminé) garde `0` mais compte **½ pour le niveau**.
    - Niveau = (justes + ½ × en partie justes) / nombre de questions : tout = TB, ≥ 2/3 MS, ≥ 1/3 MF, sinon MI.
-     Une seule question (un problème), jugée étape par étape : tout juste TB ; démarche complète avec une seule erreur
-     MS ; au moins une étape juste, ou juste avec les nombres de l'élève, MF ; aucune MI.
+     Une seule question (un problème), jugée d'abord sur le choix des opérations : tout juste TB ; bonnes opérations
+     à chaque étape, même avec des erreurs de calcul, ou problème presque fini (dernière étape manquante) MS ; au
+     moins une étape juste (bonne opération ou calcul juste), ou juste avec les nombres de l'élève, MF ; aucune MI.
    - Le niveau écrit dans la ligne l'emporte sur les chiffres.
 3. **Répondre en 4 parties** :
    1. **À vérifier** : les copies absentes du scan, et le rappel des doutes de lecture tranchés par le professeur.
