@@ -44,3 +44,11 @@ on les change, changer les deux (et `CLAUDE.md` du site de 6e). Ne jamais copier
 Après la correction, le professeur colle les lignes dans « Résultats » (Espace professeur) puis clique sur
 « 🌐 Mettre les résultats en ligne » : `resultats/ID.json` dans le dépôt public `darthialm/cinquieme` (codes anonymes,
 aucun nom). L'élève scanne le QR de sa copie (`#/m/ABC-07`) ou tape son code sur `#/m`.
+
+## Jeux (solo + duel sur tablette)
+
+- `jeux-commun/moteur.js` et `moteur.css` (questions, pavés, écran coupé gauche/droite, `Moteur.match` pour les duels au
+  tour par tour) et le dossier `jeu-trigone/` sont **identiques dans les deux sites** : toute modification se recopie
+  dans l'autre site (Trigone choisit sa version avec `<body data-niveau="6|5">`).
+- Un nouveau jeu doit avoir un mode solo et un mode duel, et une vraie mécanique où les décisions du joueur sont des
+  décisions mathématiques (pas un quiz habillé, pas seulement une course).

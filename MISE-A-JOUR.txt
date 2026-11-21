@@ -1,3 +1,19 @@
+MISE À JOUR 2026-11-21.2 : deux jeux pour la classe (solo + duel sur tablette)
+
+À DÉPOSER : index.html, jeux-classes.js, jeux-commun/, jeu-alchimix/, jeu-trigone/, jeux-img/alchimix.svg, jeux-img/trigone.svg
+
+- Alchimix (chapitre Fractions partie 2, page « 🎮 Alchimix ») : remplir le chaudron exactement jusqu'à la marque
+  avec des fioles de fractions ; loupe du dénominateur commun ; siphon, « tout sauf… », entre deux entiers.
+  Duel Fraction Jack. Visible quand le chapitre Fractions (partie 2) sera ouvert.
+- Trigone · cinquième (chapitre Triangles, page « 🎮 Trigone ») : triangle mystère, le pont (inégalité
+  triangulaire), la charpente (180°). Duels : triangle mystère ou course aux triangles.
+- Duel : deux élèves sur la même tablette, moitié gauche / moitié droite, chacun son tour. Prénom + classe ; à la
+  fin, une ligne par élève part dans Grist (code JEU-…, ignorée par le bilan des devoirs). Classes : jeux-classes.js.
+
+Après le dépôt : recharger le site avec Ctrl + F5.
+
+=========================================================
+
 MISE À JOUR 2026-11-18.5 : jeu « Z ou F ? » (chapitre Angles : alternes-internes et correspondants)
 
 À DÉPOSER : index.html, README.md, le NOUVEAU dossier jeu-angles/ (index.html, jeu.js, jeu.css),

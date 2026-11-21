@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360"><rect width="640" height="360" fill="#1a1030"/><circle cx="120" cy="80" r="140" fill="#7CFC9A" opacity=".08"/>
+<path d="M370 120 Q360 300 470 306 Q580 300 570 120 Z" fill="#7CFC9A" opacity=".85"/><path d="M370 120 Q360 300 470 306 Q580 300 570 120" fill="none" stroke="#5b4f78" stroke-width="16"/><rect x="352" y="104" width="236" height="22" rx="11" fill="#7a6aa3"/>
+<line x1="340" y1="190" x2="600" y2="190" stroke="#f5c542" stroke-width="5" stroke-dasharray="14 9"/>
+<g font-family="Trebuchet MS, sans-serif" font-weight="900" fill="#fff" text-anchor="middle"><text x="260" y="150" font-size="38">1</text><line x1="244" y1="162" x2="276" y2="162" stroke="#fff" stroke-width="4"/><text x="260" y="198" font-size="38">3</text>
+<text x="200" y="250" font-size="38">1</text><line x1="184" y1="262" x2="216" y2="262" stroke="#fff" stroke-width="4"/><text x="200" y="298" font-size="38">4</text></g>
+<text x="36" y="80" font-family="Palatino Linotype, Georgia, serif" font-style="italic" font-size="66" font-weight="700" fill="#f5c542">Alchimix</text></svg>
