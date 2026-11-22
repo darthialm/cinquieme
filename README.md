@@ -110,6 +110,16 @@ Espace professeur → carte **🥋 MathClash** → « Ouvrir l'écran à projete
 - Les listes et les ceintures restent dans le navigateur du PC (clé `revisions5e-plickers`), elles ne sont ni publiées ni synchronisées.
 - Il faut internet (serveur public PeerJS pour relier le téléphone) et une adresse en HTTPS pour la caméra (GitHub Pages).
 
+## Juniper Green (chapitre Divisibilité) (22/11/2026)
+
+Chapitre Divisibilité, page **🎮 Juniper Green** (`#/divisibilite/jeux`), dossier `jeu-juniper/`, vignette `jeux-img/juniper.svg`. Le jeu classique de Rob Harris : une grille de 1 à N ; chacun son tour, on touche un nombre libre qui est un **multiple ou un diviseur** du dernier nombre joué ; chaque nombre ne sert qu'une fois, le premier doit être pair ; celui qui ne peut plus jouer a perdu. Chaque coup juste s'affiche avec sa justification (24 = 8 × 3) ; un nombre interdit coûte un cœur, avec la division et son reste.
+
+- **Solo contre le robot** (grille 1–20, 1–40 ou 1–60) : Pousse (au hasard), Chêne (voit un coup d'avance), Séquoia (calcule loin). 3 cœurs.
+- **Solo « La plus longue chaîne »** (1–20, 1–30, 1–40) : départ libre ; le robot cherche sa meilleure chaîne, 3 étoiles si on l'égale.
+- **Duel** (moteur commun, tour par tour) : Jardin 1–20, Forêt 1–40, Jungle 1–60 ; Apprenti = 3 cœurs, Expert = une erreur et c'est perdu (règle officielle). Résultat envoyé dans Grist comme les autres duels.
+
+La page ne se voit que lorsque le chapitre Divisibilité est ouvert aux élèves (`ouverture.js`). **À déposer** : `index.html`, le dossier `jeu-juniper/`, `jeux-img/juniper.svg`.
+
 ## Jeux pour la classe : solo à la maison, duel sur tablette (21/11/2026)
 
 Deux nouveaux jeux, chacun avec un **mode solo** (à la maison, missions et étoiles) et un **mode Duel** pour 2 élèves sur la même tablette.

@@ -1,3 +1,17 @@
+MISE À JOUR 2026-11-22.1 : jeu « Juniper Green » (chapitre Divisibilité : multiples et diviseurs)
+
+À DÉPOSER : index.html, README.md, jeu-juniper/ (index.html, jeu.js, jeu.css), jeux-img/juniper.svg
+
+- Chapitre Divisibilité : nouvelle page « 🎮 Juniper Green » (aussi dans la salle de jeux). Visible par les élèves
+  quand le chapitre Divisibilité est ouvert.
+- Chacun son tour, on choisit un multiple ou un diviseur du dernier nombre ; celui qui ne peut plus jouer a perdu.
+- Solo : contre 3 robots (Pousse, Chêne, Séquoia) ou « la plus longue chaîne ». Duel sur tablette coupée en deux
+  (Apprenti 3 cœurs / Expert une erreur = perdu), résultat envoyé dans Grist.
+
+Après le dépôt : recharger le site avec Ctrl + F5.
+
+=========================================================
+
 MISE À JOUR 2026-11-21.2 : deux jeux pour la classe (solo + duel sur tablette)
 
 À DÉPOSER : index.html, jeux-classes.js, jeux-commun/, jeu-alchimix/, jeu-trigone/, jeux-img/alchimix.svg, jeux-img/trigone.svg
